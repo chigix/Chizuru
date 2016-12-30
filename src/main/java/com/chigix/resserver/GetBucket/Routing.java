@@ -23,7 +23,7 @@ public class Routing extends RoutingConfig.GET {
 
     @Override
     public String configurePath() {
-        return "/:key";
+        return "/:bucketName";
     }
 
     @Override

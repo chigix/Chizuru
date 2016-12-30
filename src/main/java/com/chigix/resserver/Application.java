@@ -1,11 +1,13 @@
 package com.chigix.resserver;
 
+import com.chigix.resserver.errorhandlers.ExceptionHandler;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelPipeline;
 import io.netty.channel.ChannelPromise;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -141,11 +143,16 @@ public class Application {
 
     public static HttpRouter configRouter(ApplicationContext application) {
         return new HttpRouter() {
+            @Override
+            protected void initExceptionRouting(ChannelPipeline pipeline) {
+                pipeline.addLast(ExceptionHandler.getInstance(application));
+            }
 
             @Override
             protected void initRoutings(ChannelHandlerContext ctx, HttpRouter router) {
                 this.newRouting(ctx, new com.chigix.resserver.GetService.Routing(application));
                 this.newRouting(ctx, new com.chigix.resserver.GetBucket.Routing(application));
+                this.newRouting(ctx, new com.chigix.resserver.HeadBucket.Routing(application));
             }
 
         };
