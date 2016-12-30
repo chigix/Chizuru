@@ -1,7 +1,6 @@
 package com.chigix.resserver;
 
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerAdapter;
@@ -17,14 +16,16 @@ import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseEncoder;
 import io.netty.handler.codec.http.router.FullResponseLengthFixer;
 import io.netty.handler.codec.http.router.HttpRouter;
-import io.netty.util.CharsetUtil;
 import java.io.File;
 import java.io.IOException;
 import java.util.Locale;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
+import org.mapdb.HTreeMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,8 +38,9 @@ public class Application {
     private static final Logger LOG = LoggerFactory.getLogger(Application.class.getName());
 
     public static void main(String[] args) throws InterruptedException {
-        DB db = DBMaker.fileDB("./data/bankai.db").transactionEnable().closeOnJvmShutdown().make();
-        ApplicationContext appctx = new ApplicationContext(new File("./data"), db);
+        AtomicReference<ApplicationContext> ctxInited = new AtomicReference<>();
+        initNode(ctxInited);
+        LOG.info("NODE_ID: " + ctxInited.get().getCurrentNodeId());
         EventLoopGroup bossGroup = new NioEventLoopGroup();
         EventLoopGroup workerGroup = new NioEventLoopGroup();
         ServerBootstrap sb = new ServerBootstrap();
@@ -57,7 +59,7 @@ public class Application {
                         }).addLast(new HttpRequestDecoder())
                                 .addLast(new HttpResponseEncoder())
                                 .addLast(new FullResponseLengthFixer())
-                                .addLast(headerFixer(), configRouter());
+                                .addLast(headerFixer(), configRouter(ctxInited.get()));
                     }
                 });
         try {
@@ -67,8 +69,33 @@ public class Application {
         } finally {
             bossGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();
-            db.close();
+            ctxInited.get().getDb().close();
         }
+    }
+
+    public static void initNode(AtomicReference<ApplicationContext> ctxInited) {
+        File db_file = new File("./data/chizuru.db");
+        String node_id = null;
+        if (!db_file.exists()) {
+            node_id = UUID.randomUUID().toString();
+        }
+        DB db = DBMaker.fileDB("./data/chizuru.db").transactionEnable().closeOnJvmShutdown().make();
+        HTreeMap CONFIG = db.hashMap("CHIZURU").createOrOpen();
+        if (CONFIG.get("NODE_ID") == null) {
+            if (node_id == null) {
+                throw new RuntimeException("Existing DB File without node inited.");
+            }
+            CONFIG.put("NODE_ID", node_id);
+            db.commit();
+        }
+        File chunks_dir = new File("./data/chunks");
+        if (!chunks_dir.exists()) {
+            chunks_dir.mkdirs();
+        }
+        if (!chunks_dir.isDirectory()) {
+            throw new RuntimeException("Unable to have chunks directory.");
+        }
+        ctxInited.set(new ApplicationContext((String) CONFIG.get("NODE_ID"), new File("./data/chunks"), db));
     }
 
     public static ChannelHandlerAdapter headerFixer() {
@@ -106,7 +133,7 @@ public class Application {
         };
     }
 
-    public static HttpRouter configRouter() {
+    public static HttpRouter configRouter(ApplicationContext ctx) {
         return new HttpRouter() {
 
             @Override
