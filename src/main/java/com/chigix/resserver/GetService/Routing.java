@@ -30,7 +30,7 @@ public class Routing extends RoutingConfig.GET {
 
     @Override
     public void configurePipeline(ChannelPipeline pipeline) {
-        pipeline.addLast(new ChunkedWriteHandler())
+        pipeline.addLast(LocationHandler.getInstance(ctx)).addLast(new ChunkedWriteHandler())
                 .addLast(new RoutedHandler())
                 .addLast(new ResponseHandler(this.ctx))
                 .addLast(new DefaultExceptionForwarder());

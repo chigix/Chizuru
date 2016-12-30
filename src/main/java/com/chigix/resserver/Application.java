@@ -101,7 +101,7 @@ public class Application {
         if (!chunks_dir.isDirectory()) {
             throw new RuntimeException("Unable to have chunks directory.");
         }
-        ctxInited.set(new ApplicationContext(CONFIG.get("NODE_ID"), "Chizuru", DateTime.parse(CONFIG.get("CREATION_DATE")), new File("./data/chunks"), db));
+        ctxInited.set(new ApplicationContext(CONFIG.get("NODE_ID"), "chizuru", DateTime.parse(CONFIG.get("CREATION_DATE")), new File("./data/chunks"), db));
     }
 
     public static ChannelHandlerAdapter headerFixer() {
@@ -145,6 +145,7 @@ public class Application {
             @Override
             protected void initRoutings(ChannelHandlerContext ctx, HttpRouter router) {
                 this.newRouting(ctx, new com.chigix.resserver.GetService.Routing(application));
+                this.newRouting(ctx, new com.chigix.resserver.GetBucket.Routing(application));
             }
 
         };
