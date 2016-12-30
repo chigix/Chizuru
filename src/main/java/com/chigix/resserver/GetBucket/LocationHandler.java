@@ -15,6 +15,7 @@ import io.netty.handler.codec.http.QueryStringDecoder;
 import io.netty.handler.codec.http.router.HttpRouted;
 import io.netty.util.AttributeKey;
 import io.netty.util.CharsetUtil;
+import io.netty.util.ReferenceCountUtil;
 import java.util.UUID;
 
 /**
@@ -74,6 +75,7 @@ public class LocationHandler extends ChannelHandlerAdapter {
             resp.headers().add(HttpHeaderNames.CONTENT_TYPE, "application/xml");
             ctx.writeAndFlush(resp);
         }
+        ReferenceCountUtil.release(msg);
     }
 
     private boolean isLocationRequest(ChannelHandlerContext ctx, Object msg) {
