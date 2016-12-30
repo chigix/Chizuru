@@ -1,4 +1,4 @@
-package com.chigix.resserver.GetService;
+package com.chigix.resserver.GetBucket;
 
 import com.chigix.resserver.ApplicationContext;
 import io.netty.buffer.Unpooled;

@@ -1,5 +1,6 @@
 package com.chigix.resserver.GetService;
 
+import com.chigix.resserver.GetBucket.LocationHandler;
 import com.chigix.resserver.ApplicationContext;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.http.router.RoutingConfig;
