@@ -26,6 +26,7 @@ import org.joda.time.DateTimeZone;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 import org.mapdb.HTreeMap;
+import org.mapdb.Serializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +41,8 @@ public class Application {
     public static void main(String[] args) throws InterruptedException {
         AtomicReference<ApplicationContext> ctxInited = new AtomicReference<>();
         initNode(ctxInited);
-        LOG.info("NODE_ID: " + ctxInited.get().getCurrentNodeId());
+        LOG.info("NODE ID: " + ctxInited.get().getCurrentNodeId());
+        LOG.info("Created At: " + ctxInited.get().getCreationDate());
         EventLoopGroup bossGroup = new NioEventLoopGroup();
         EventLoopGroup workerGroup = new NioEventLoopGroup();
         ServerBootstrap sb = new ServerBootstrap();
@@ -80,12 +82,16 @@ public class Application {
             node_id = UUID.randomUUID().toString();
         }
         DB db = DBMaker.fileDB("./data/chizuru.db").transactionEnable().closeOnJvmShutdown().make();
-        HTreeMap CONFIG = db.hashMap("CHIZURU").createOrOpen();
+        HTreeMap<String, String> CONFIG = (HTreeMap<String, String>) db.hashMap("CHIZURU", Serializer.STRING, Serializer.STRING).createOrOpen();
         if (CONFIG.get("NODE_ID") == null) {
             if (node_id == null) {
                 throw new RuntimeException("Existing DB File without node inited.");
             }
             CONFIG.put("NODE_ID", node_id);
+            db.commit();
+        }
+        if (CONFIG.get("CREATION_DATE") == null) {
+            CONFIG.put("CREATION_DATE", new DateTime(DateTimeZone.forID("GMT")).toString());
             db.commit();
         }
         File chunks_dir = new File("./data/chunks");
@@ -95,7 +101,7 @@ public class Application {
         if (!chunks_dir.isDirectory()) {
             throw new RuntimeException("Unable to have chunks directory.");
         }
-        ctxInited.set(new ApplicationContext((String) CONFIG.get("NODE_ID"), new File("./data/chunks"), db));
+        ctxInited.set(new ApplicationContext(CONFIG.get("NODE_ID"), "Chizuru", DateTime.parse(CONFIG.get("CREATION_DATE")), new File("./data/chunks"), db));
     }
 
     public static ChannelHandlerAdapter headerFixer() {
@@ -133,12 +139,12 @@ public class Application {
         };
     }
 
-    public static HttpRouter configRouter(ApplicationContext ctx) {
+    public static HttpRouter configRouter(ApplicationContext application) {
         return new HttpRouter() {
 
             @Override
             protected void initRoutings(ChannelHandlerContext ctx, HttpRouter router) {
-                this.newRouting(ctx, new com.chigix.resserver.GetService.Routing());
+                this.newRouting(ctx, new com.chigix.resserver.GetService.Routing(application));
             }
 
         };
