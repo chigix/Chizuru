@@ -46,7 +46,6 @@ public class ResponseHandler extends SimpleChannelInboundHandler<LastHttpContent
             XMLOutputFactory factory = XMLOutputFactory.newInstance();
             XMLStreamWriter xmlWriter = factory.createXMLStreamWriter(outputWriter);
             xmlWriter.writeStartDocument("UTF-8", "1.0");
-            xmlWriter.writeStartDocument();
             xmlWriter.writeStartElement("ListAllMyBucketsResult");
             xmlWriter.writeStartElement("Owner");
             xmlWriter.writeStartElement("ID");
