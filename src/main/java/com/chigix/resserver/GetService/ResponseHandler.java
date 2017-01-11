@@ -1,6 +1,7 @@
 package com.chigix.resserver.GetService;
 
 import com.chigix.resserver.ApplicationContext;
+import com.chigix.resserver.entity.Bucket;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.DefaultHttpResponse;
@@ -16,6 +17,8 @@ import java.io.OutputStreamWriter;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.Writer;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamWriter;
 import org.joda.time.format.ISODateTimeFormat;
@@ -56,16 +59,25 @@ public class ResponseHandler extends SimpleChannelInboundHandler<LastHttpContent
             xmlWriter.writeEndElement();// DisplayName
             xmlWriter.writeEndElement();// Owner
             xmlWriter.writeStartElement("Buckets");
-            xmlWriter.writeStartElement("Bucket");
-            xmlWriter.writeStartElement("Name");
-            xmlWriter.writeCharacters(application.getBucketName());
-            xmlWriter.writeEndElement();// Name
-            xmlWriter.writeStartElement("CreationDate");
-            xmlWriter.writeCharacters(
-                    ISODateTimeFormat.dateTime().print(application.getCreationDate())
-            );
-            xmlWriter.writeEndElement();// CreationDate
-            xmlWriter.writeEndElement();// Bucket
+            Iterator<Bucket> it = application.BucketDao.iteratorBucket();
+            while (it.hasNext()) {
+                Bucket next;
+                try {
+                    next = it.next();
+                } catch (NoSuchElementException e) {
+                    break;
+                }
+                xmlWriter.writeStartElement("Bucket");
+                xmlWriter.writeStartElement("Name");
+                xmlWriter.writeCharacters(next.getName());
+                xmlWriter.writeEndElement();// Name
+                xmlWriter.writeStartElement("CreationDate");
+                xmlWriter.writeCharacters(
+                        ISODateTimeFormat.dateTime().print(next.getCreationTime())
+                );
+                xmlWriter.writeEndElement();// CreationDate
+                xmlWriter.writeEndElement();// Bucket
+            }
             xmlWriter.writeEndElement();// Buckets
             xmlWriter.writeEndElement();// ListAllMyBucketsResult
             xmlWriter.writeEndDocument();

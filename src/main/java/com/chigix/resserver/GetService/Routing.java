@@ -2,7 +2,10 @@ package com.chigix.resserver.GetService;
 
 import com.chigix.resserver.GetBucket.LocationHandler;
 import com.chigix.resserver.ApplicationContext;
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
+import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.handler.codec.http.router.HttpRouted;
 import io.netty.handler.codec.http.router.RoutingConfig;
 import io.netty.handler.routing.DefaultExceptionForwarder;
 import io.netty.handler.stream.ChunkedWriteHandler;
@@ -32,7 +35,12 @@ public class Routing extends RoutingConfig.GET {
     @Override
     public void configurePipeline(ChannelPipeline pipeline) {
         pipeline.addLast(LocationHandler.getInstance(ctx)).addLast(new ChunkedWriteHandler())
-                .addLast(new RoutedHandler())
+                .addLast(new SimpleChannelInboundHandler<HttpRouted>() {
+                    @Override
+                    protected void messageReceived(ChannelHandlerContext ctx, HttpRouted msg) throws Exception {
+                        msg.allow();
+                    }
+                })
                 .addLast(new ResponseHandler(this.ctx))
                 .addLast(new DefaultExceptionForwarder());
     }
