@@ -1,6 +1,7 @@
 package com.chigix.resserver.HeadBucket;
 
 import com.chigix.resserver.ApplicationContext;
+import com.chigix.resserver.entity.Bucket;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -10,6 +11,7 @@ import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.handler.codec.http.router.HttpRouted;
 import io.netty.handler.codec.http.router.RoutingConfig;
+import io.netty.handler.routing.DefaultExceptionForwarder;
 import io.netty.util.AttributeKey;
 import java.util.UUID;
 
@@ -47,10 +49,12 @@ public class Routing extends RoutingConfig.HEAD {
         }).addLast(new SimpleChannelInboundHandler<LastHttpContent>() {
             @Override
             protected void messageReceived(ChannelHandlerContext ctx, LastHttpContent msg) throws Exception {
+                HttpRouted routed_info = ctx.channel().attr(ROUTED_INFO).get();
+                Bucket bucket = application.BucketDao.findBucketByName((String) routed_info.decodedParams().get("bucketName"));
                 ctx.writeAndFlush(new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK));
                 ctx.channel().attr(ROUTED_INFO).set(null);
             }
-        });
+        }).addLast(new DefaultExceptionForwarder());
     }
 
 }
