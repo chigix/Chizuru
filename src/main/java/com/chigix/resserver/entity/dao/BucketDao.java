@@ -61,8 +61,57 @@ public class BucketDao {
         if (datetime == null) {
             throw new NoSuchBucket(name);
         } else {
+            db.commit();
             return new Bucket(name, DateTime.parse(datetime));
         }
+    }
+
+    public Bucket newProxied(String bucketName) {
+        return new BucketProxy(bucketName);
+    }
+
+    private class BucketProxy extends Bucket implements ModelProxy<Bucket> {
+
+        private Bucket proxied;
+
+        public BucketProxy(String bucketName) {
+            super(bucketName);
+        }
+
+        @Override
+        public Bucket getProxiedModel() {
+            if (proxied == null) {
+                try {
+                    proxied = findBucketByName(super.getName());
+                } catch (Exception ex) {
+                    throw new ProxiedException(ex);
+                }
+            }
+            return proxied;
+        }
+
+        @Override
+        public String getName() {
+            return getProxiedModel().getName();
+        }
+
+        @Override
+        public DateTime getCreationTime() {
+            return getProxiedModel().getCreationTime();
+        }
+
+        @Override
+        public Bucket setProxy(Bucket model) {
+            proxied = model;
+            return this;
+        }
+
+        @Override
+        public Bucket resetProxy() {
+            proxied = null;
+            return this;
+        }
+
     }
 
 }
