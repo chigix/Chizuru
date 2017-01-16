@@ -1,7 +1,12 @@
 package com.chigix.resserver.entity;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.text.MessageFormat;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -13,12 +18,31 @@ public class Resource {
 
     private final String key;
 
+    private final ModelProxy<Bucket> bucket;
+
     private final Map<String, String> metaData;
 
-    public Resource(String key) {
+    private final String keyHash;
+
+    public Resource(final Bucket bucket, String key) {
+        this(() -> bucket, key);
+    }
+
+    public Resource(ModelProxy<Bucket> bucket, String key) {
+        this.bucket = bucket;
         this.key = key;
+        keyHash = hashKey(bucket.getProxiedModel().getName(), key);
         metaData = new HashMap<>();
         metaData.put("Content-Type", "application/octet-stream");
+    }
+
+    /**
+     * Primary Index for Resource object.
+     *
+     * @return
+     */
+    public String getKeyHash() {
+        return keyHash;
     }
 
     private DateTime lastModified = new DateTime(DateTimeZone.forID("GMT"));
@@ -64,6 +88,10 @@ public class Resource {
         return "STANDARD";
     }
 
+    public Bucket getBucket() {
+        return bucket.getProxiedModel();
+    }
+
     public void setMetaData(String key, String value) {
         metaData.put(key, value);
     }
@@ -78,6 +106,49 @@ public class Resource {
             result.put(entry.getKey(), entry.getValue());
         });
         return result;
+    }
+
+    public static final String hashKey(String bucketName, String resourceKey) {
+        String keytohash = MessageFormat.format("[bucket: {0}, key: {1}]", bucketName, resourceKey);
+        MessageDigest digest;
+        try {
+            digest = MessageDigest.getInstance("MD5");
+        } catch (NoSuchAlgorithmException ex) {
+            throw new RuntimeException(ex);
+        }
+        digest.update(keytohash.getBytes());
+        StringBuilder sb = new StringBuilder();
+        byte[] hashed = digest.digest();
+        for (byte cipher_byte : hashed) {
+            sb.append(String.format("%02x", cipher_byte & 0xff));
+        }
+        return sb.toString();
+    }
+
+    /**
+     * It depends on Dao implementation. Defaultly return empty chunks list for
+     * the manually created Resource object.
+     *
+     * @return
+     */
+    public Iterator<Chunk> getChunks() {
+        return new Iterator<Chunk>() {
+            @Override
+            public boolean hasNext() {
+                return false;
+            }
+
+            @Override
+            public Chunk next() {
+                throw new NoSuchElementException();
+            }
+        };
+    }
+
+    /**
+     * Empty the content in this resource.
+     */
+    public void empty() {
     }
 
 }
