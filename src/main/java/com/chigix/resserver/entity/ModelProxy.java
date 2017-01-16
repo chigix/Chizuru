@@ -1,4 +1,4 @@
-package com.chigix.resserver.entity.dao;
+package com.chigix.resserver.entity;
 
 /**
  *
@@ -8,10 +8,6 @@ package com.chigix.resserver.entity.dao;
 public interface ModelProxy<MODEL> {
 
     MODEL getProxiedModel() throws ProxiedException;
-
-    MODEL setProxy(MODEL model);
-
-    MODEL resetProxy();
 
     public static class ProxiedException extends RuntimeException {
 

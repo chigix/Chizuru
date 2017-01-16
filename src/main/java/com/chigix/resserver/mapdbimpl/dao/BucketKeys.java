@@ -1,4 +1,4 @@
-package com.chigix.resserver.entity.db;
+package com.chigix.resserver.mapdbimpl.dao;
 
 import org.mapdb.DB;
 import org.mapdb.Serializer;
@@ -8,7 +8,7 @@ import org.mapdb.Serializer;
  *
  * @author Richard Lea <chigix@zoho.com>
  */
-public abstract class BucketKeys {
+public class BucketKeys {
 
     public static final String CREATED_VALUE = "BUCKET_DB:VALUE:creation";
 

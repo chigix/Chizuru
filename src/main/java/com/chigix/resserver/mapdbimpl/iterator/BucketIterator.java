@@ -1,9 +1,8 @@
-package com.chigix.resserver.entity.iterator;
+package com.chigix.resserver.mapdbimpl.iterator;
 
 import com.chigix.resserver.entity.Bucket;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.function.Consumer;
 import org.joda.time.DateTime;
 
 /**
@@ -32,11 +31,6 @@ public class BucketIterator implements Iterator<Bucket> {
     @Override
     public void remove() {
         it.remove();
-    }
-
-    @Override
-    public void forEachRemaining(Consumer<? super Bucket> action) {
-        Iterator.super.forEachRemaining(action); //To change body of generated methods, choose Tools | Templates.
     }
 
 }

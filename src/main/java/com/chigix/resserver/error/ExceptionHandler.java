@@ -1,4 +1,4 @@
-package com.chigix.resserver.errorhandlers;
+package com.chigix.resserver.error;
 
 import com.chigix.resserver.ApplicationContext;
 import io.netty.channel.ChannelHandler;
