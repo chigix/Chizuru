@@ -96,4 +96,31 @@ public class SerializerTest {
         assertEquals(chunkNode.getParentResourceKeyHash(), result.getParentResourceKeyHash());
     }
 
+    /**
+     * Test of serializeResourceLinkNode method, of class Serializer.
+     */
+    @Test
+    public void testSerializeResourceLinkNode() {
+        System.out.println("serializeResourceLinkNode");
+        ResourceLinkNode node = new ResourceLinkNode();
+        System.out.println(Serializer.serializeResourceLinkNode(node));
+    }
+
+    /**
+     * Test of deserializeResourceLinkNode method, of class Serializer.
+     */
+    @Test
+    public void testDeserializeResourceLinkNode() {
+        System.out.println("deserializeResourceLinkNode");
+        String xml = Serializer.serializeResourceLinkNode(new ResourceLinkNode());
+        assertNull(Serializer.deserializeResourceLinkNode(xml).getNextResourceKeyHash());
+        assertNull(Serializer.deserializeResourceLinkNode(xml).getPreviousResourceKeyHash());
+        ResourceLinkNode node = new ResourceLinkNode();
+        node.setNextResourceKeyHash(UUID.randomUUID().toString());
+        node.setPreviousResourceKeyHash(UUID.randomUUID().toString());
+        xml = Serializer.serializeResourceLinkNode(node);
+        assertEquals(node.getNextResourceKeyHash(), Serializer.deserializeResourceLinkNode(xml).getNextResourceKeyHash());
+        assertEquals(node.getPreviousResourceKeyHash(), Serializer.deserializeResourceLinkNode(xml).getPreviousResourceKeyHash());
+    }
+
 }

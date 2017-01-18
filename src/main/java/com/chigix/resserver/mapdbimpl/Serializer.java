@@ -177,4 +177,63 @@ public class Serializer {
         return result;
     }
 
+    public static String serializeResourceLinkNode(ResourceLinkNode node) {
+        StringWriter result = new StringWriter();
+        XMLStreamWriter writer;
+        try {
+            writer = XMLOutputFactory.newFactory().createXMLStreamWriter(result);
+        } catch (XMLStreamException ex) {
+            LOG.error("Unexpected", ex);
+            throw new RuntimeException(ex);
+        }
+        try {
+            writer.writeStartDocument("UTF-8", "1.0");
+            writer.writeStartElement("ResourceLinkNode");
+            if (node.getPreviousResourceKeyHash() != null) {
+                writer.writeStartElement("PreviousResourceKeyHash");
+                writer.writeCharacters(node.getPreviousResourceKeyHash());
+                writer.writeEndElement();// ResourceLinkNode.PreviousResourceKeyHash
+            }
+            if (node.getNextResourceKeyHash() != null) {
+                writer.writeStartElement("NextResourceKeyHash");
+                writer.writeCharacters(node.getNextResourceKeyHash());
+                writer.writeEndElement();// ResourceLinkNode.NextResourceKeyHash
+            }
+            writer.writeEndElement();// ResourceLinkNode
+            writer.writeEndDocument();
+            writer.close();
+        } catch (XMLStreamException ex) {
+            LOG.error("Unexpected", ex);
+            throw new RuntimeException(ex);
+        }
+        return result.toString();
+    }
+
+    public static ResourceLinkNode deserializeResourceLinkNode(String xml) {
+        XPath xpath = XPathFactory.newInstance().newXPath();
+        Document doc;
+        try {
+            doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(xml.getBytes("UTF-8")));
+        } catch (ParserConfigurationException | SAXException | IOException ex) {
+            LOG.error("UNEXPECTED", ex);
+            throw new RuntimeException(ex);
+        }
+        final ResourceLinkNode result;
+        try {
+            result = new ResourceLinkNode();
+            Node next_resource_key_hash = ((Node) xpath.compile("//ResourceLinkNode/NextResourceKeyHash").evaluate(doc, XPathConstants.NODE));
+            if (next_resource_key_hash != null) {
+                result.setNextResourceKeyHash(next_resource_key_hash.getTextContent());
+            }
+            Node prev_resource_key_hash = ((Node) xpath.compile("//ResourceLinkNode/PreviousResourceKeyHash").evaluate(doc, XPathConstants.NODE));
+            if (prev_resource_key_hash != null) {
+                result.setPreviousResourceKeyHash(prev_resource_key_hash.getTextContent());
+            }
+        } catch (XPathExpressionException ex) {
+            LOG.error("UNEXPECTED", ex);
+            throw new RuntimeException(ex);
+        }
+        return result;
+    }
+
 }
