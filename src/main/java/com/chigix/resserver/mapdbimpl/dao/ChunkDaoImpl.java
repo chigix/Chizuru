@@ -3,7 +3,9 @@ package com.chigix.resserver.mapdbimpl.dao;
 import com.chigix.resserver.entity.Chunk;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicReference;
 import org.mapdb.DB;
 
 /**
@@ -34,8 +36,8 @@ public class ChunkDaoImpl {
         return target;
     }
 
-    public Chunk newChunk(String contentHash) {
-        return new Chunk(contentHash) {
+    public Chunk newChunk(String contentHash, int chunk_size) {
+        return new Chunk(contentHash, chunk_size) {
             @Override
             public InputStream getInputStream() throws IOException {
                 return new InputStream() {
@@ -48,4 +50,40 @@ public class ChunkDaoImpl {
 
         };
     }
+
+    public Chunk findChunk(String contentHash) {
+        ConcurrentMap<String, Chunk> map = (ConcurrentMap<String, Chunk>) db.hashMap(ChunkKeys.CHUNK_DB).open();
+        return map.get(contentHash);
+    }
+
+    public Chunk newChunkProxy(String contentHash) {
+        final AtomicReference<Chunk> chunk = new AtomicReference<>();
+        chunk.set(null);
+        Chunk r = new Chunk(contentHash, 0) {
+            @Override
+            public int getSize() {
+                if (chunk.get() == null) {
+                    chunk.set(findChunk(contentHash));
+                }
+                if (chunk.get() == null) {
+                    throw new NoSuchElementException();
+                }
+                return chunk.get().getSize();
+            }
+
+            @Override
+            public InputStream getInputStream() throws IOException {
+                if (chunk.get() == null) {
+                    chunk.set(findChunk(contentHash));
+                }
+                if (chunk.get() == null) {
+                    throw new NoSuchElementException();
+                }
+                return chunk.get().getInputStream();
+            }
+
+        };
+        return r;
+    }
+
 }

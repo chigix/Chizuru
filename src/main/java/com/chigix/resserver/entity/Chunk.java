@@ -11,10 +11,13 @@ import java.security.NoSuchAlgorithmException;
  */
 public class Chunk {
 
+    private final int size;
+
     private final String contentHash;
 
-    public Chunk(String contentHash) {
+    public Chunk(String contentHash, int size) {
         this.contentHash = contentHash;
+        this.size = size;
     }
 
     public InputStream getInputStream() throws IOException {
@@ -43,6 +46,10 @@ public class Chunk {
             throw new RuntimeException(ex);
         }
         return digest;
+    }
+
+    public int getSize() {
+        return size;
     }
 
 }
