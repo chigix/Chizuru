@@ -19,7 +19,7 @@ public class ResourceInStorage extends Resource {
 
     private ChunkDaoImpl chunkdao;
 
-    private BucketNameSearchProxy bucketProxy;
+    private final BucketNameSearchProxy bucketProxy;
 
     public ResourceInStorage(BucketNameSearchProxy bucket, String key) {
         super(bucket, key);
@@ -30,7 +30,7 @@ public class ResourceInStorage extends Resource {
         if (firstChunkHash == null) {
             return null;
         } else if (firstChunk == null) {
-            firstChunk = chunkdao.newChunk(firstChunkHash);
+            firstChunk = chunkdao.newChunkProxy(firstChunkHash);
         }
         return firstChunk;
     }
@@ -39,7 +39,7 @@ public class ResourceInStorage extends Resource {
         if (lastChunkHash == null) {
             return null;
         } else if (lastChunk == null) {
-            lastChunk = chunkdao.newChunk(lastChunkHash);
+            lastChunk = chunkdao.newChunkProxy(lastChunkHash);
         }
         return lastChunk;
     }
