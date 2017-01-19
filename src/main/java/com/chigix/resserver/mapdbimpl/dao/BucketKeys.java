@@ -10,7 +10,7 @@ import org.mapdb.Serializer;
  */
 public class BucketKeys {
 
-    public static final String CREATED_VALUE = "BUCKET_DB:VALUE:creation";
+    public static final String CREATED_VALUE = "BUCKET_DB:[String]bucket_name:[String]creation_time_ISO8601";
 
     public static void updateDBScheme(DB db) {
         if (!db.exists(CREATED_VALUE)) {
