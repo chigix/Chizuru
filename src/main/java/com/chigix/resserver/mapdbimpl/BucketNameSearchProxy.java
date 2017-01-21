@@ -4,6 +4,9 @@ import com.chigix.resserver.entity.Bucket;
 import com.chigix.resserver.entity.ModelProxy;
 import com.chigix.resserver.entity.dao.BucketDao;
 import com.chigix.resserver.entity.error.NoSuchBucket;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.Callable;
 
 /**
  *
@@ -17,11 +20,15 @@ public class BucketNameSearchProxy implements ModelProxy<Bucket> {
 
     private final String searchName;
 
+    private final List<Callable<Boolean>> checkers;
+
     public BucketNameSearchProxy(String name) {
+        this.checkers = new LinkedList<>();
         searchName = name;
     }
 
     public BucketNameSearchProxy(Bucket proxied) {
+        this.checkers = new LinkedList<>();
         searchName = proxied.getName();
         this.proxied = proxied;
     }
@@ -30,6 +37,12 @@ public class BucketNameSearchProxy implements ModelProxy<Bucket> {
         this.proxied = proxied;
     }
 
+    /**
+     * Just return the proxied object cached currently without querying any
+     * database.
+     *
+     * @return
+     */
     public Bucket getProxied() {
         return proxied;
     }
@@ -54,7 +67,20 @@ public class BucketNameSearchProxy implements ModelProxy<Bucket> {
                 throw new ProxiedException(ex);
             }
         }
+        checkers.forEach((checker) -> {
+            try {
+                if (checker.call() == false) {
+                    throw new ProxiedException(new NoSuchBucket(searchName));
+                }
+            } catch (Exception ex) {
+                throw new ProxiedException(ex);
+            }
+        });
         return proxied;
+    }
+
+    public void addCheckers(Callable<Boolean> checkerFunction) {
+        checkers.add(checkerFunction);
     }
 
 }

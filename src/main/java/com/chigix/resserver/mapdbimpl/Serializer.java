@@ -2,6 +2,7 @@ package com.chigix.resserver.mapdbimpl;
 
 import com.chigix.resserver.entity.Bucket;
 import com.chigix.resserver.entity.Resource;
+import com.chigix.resserver.mapdbimpl.dao.BucketNotPersistedException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -32,6 +33,9 @@ public class Serializer {
     private static final Logger LOG = LoggerFactory.getLogger(Serializer.class.getName());
 
     public static String serializeResource(Resource resource) {
+        if (!(resource.getBucket() instanceof BucketInStorage)) {
+            throw new BucketNotPersistedException(resource.getBucket().getName());
+        }
         StringWriter result = new StringWriter();
         XMLStreamWriter writer;
         try {
@@ -67,6 +71,9 @@ public class Serializer {
             writer.writeStartElement("LastModified");
             writer.writeCharacters(resource.getLastModified().toString());
             writer.writeEndElement();// Resource.LastModified
+            writer.writeStartElement("KeyHash");
+            writer.writeCharacters(ResourceInStorage.hashKey(((BucketInStorage) resource.getBucket()).getUUID(), resource.getKey()));
+            writer.writeEndElement();// Resource.KeyHash
             writer.writeStartElement("Size");
             writer.writeCharacters(resource.getSize());
             writer.writeEndElement();// Resource.Size
@@ -103,7 +110,9 @@ public class Serializer {
             String bucket_name = ((Node) xpath.compile("//Resource/Bucket").evaluate(doc, XPathConstants.NODE)).getTextContent();
             BucketNameSearchProxy bucket_proxy = new BucketNameSearchProxy(bucket_name);
             bucket_proxy.setProxied(new Bucket(bucket_name));
-            result = new ResourceInStorage(bucket_proxy, ((Node) xpath.compile("//Resource/Key").evaluate(doc, XPathConstants.NODE)).getTextContent());
+            result = new ResourceInStorage(bucket_proxy,
+                    ((Node) xpath.compile("//Resource/Key").evaluate(doc, XPathConstants.NODE)).getTextContent(),
+                    ((Node) xpath.compile("//Resource/KeyHash").evaluate(doc, XPathConstants.NODE)).getTextContent());
             result.setETag(((Node) xpath.compile("//Resource/Etag").evaluate(doc, XPathConstants.NODE)).getTextContent());
             result.setLastModified(DateTime.parse(((Node) xpath.compile("//Resource/LastModified").evaluate(doc, XPathConstants.NODE)).getTextContent()));
             result.setSize(((Node) xpath.compile("//Resource/Size").evaluate(doc, XPathConstants.NODE)).getTextContent());

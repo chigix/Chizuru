@@ -3,6 +3,9 @@ package com.chigix.resserver.mapdbimpl;
 import com.chigix.resserver.entity.Chunk;
 import com.chigix.resserver.entity.Resource;
 import com.chigix.resserver.mapdbimpl.dao.ChunkDaoImpl;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.text.MessageFormat;
 import java.util.Iterator;
 
 /**
@@ -21,9 +24,18 @@ public class ResourceInStorage extends Resource {
 
     private final BucketNameSearchProxy bucketProxy;
 
-    public ResourceInStorage(BucketNameSearchProxy bucket, String key) {
+    private final String keyHash;
+
+    public ResourceInStorage(BucketNameSearchProxy bucket, String key, String keyHash) {
         super(bucket, key);
+        this.keyHash = keyHash;
         bucketProxy = bucket;
+        bucket.addCheckers(() -> {
+            if (!(bucket.getProxied() instanceof BucketInStorage)) {
+                return false;
+            }
+            return hashKey(((BucketInStorage) bucket.getProxied()).getUUID(), key).equals(keyHash);
+        });
     }
 
     public Chunk getFirstChunk() {
@@ -81,6 +93,27 @@ public class ResourceInStorage extends Resource {
 
     public BucketNameSearchProxy getBucketProxy() {
         return bucketProxy;
+    }
+
+    public String getKeyHash() {
+        return keyHash;
+    }
+
+    public static String hashKey(String bucket_uuid, String resource_key) {
+        String keytohash = MessageFormat.format("[bucket: {0}, key: {1}]", bucket_uuid, resource_key);
+        MessageDigest digest;
+        try {
+            digest = MessageDigest.getInstance("MD5");
+        } catch (NoSuchAlgorithmException ex) {
+            throw new RuntimeException(ex);
+        }
+        digest.update(keytohash.getBytes());
+        StringBuilder sb = new StringBuilder();
+        byte[] hashed = digest.digest();
+        for (byte cipher_byte : hashed) {
+            sb.append(String.format("%02x", cipher_byte & 0xff));
+        }
+        return sb.toString();
     }
 
 }
