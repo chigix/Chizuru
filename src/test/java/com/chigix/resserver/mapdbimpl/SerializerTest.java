@@ -42,12 +42,14 @@ public class SerializerTest {
     @Test
     public void testSerializeResource() {
         System.out.println("serializeResource");
-        Resource r = new Resource(new Bucket("TARGET_BUCKET"), "BANKAI");
+        BucketInStorage b = new BucketInStorage("TARGET_BUCKET");
+        b.setUUID("JJJJJJ");
+        Resource r = new Resource(b, "BANKAI");
         r.setETag(UUID.randomUUID().toString());
         r.setLastModified(DateTime.parse("2017-01-12T09:06:00.863Z"));
         r.removeMetaData("Content-Type");
         assertEquals(
-                "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Resource><Bucket>TARGET_BUCKET</Bucket><Key>BANKAI</Key><Etag>" + r.getETag() + "</Etag><LastModified>2017-01-12T09:06:00.863Z</LastModified><Size>0</Size><StorageClass>STANDARD</StorageClass></Resource>",
+                "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Resource><Bucket>TARGET_BUCKET</Bucket><Key>BANKAI</Key><Etag>" + r.getETag() + "</Etag><LastModified>2017-01-12T09:06:00.863Z</LastModified><KeyHash>fad83f6fd4131cbd6a3341bcba0c41ff</KeyHash><Size>0</Size><StorageClass>STANDARD</StorageClass></Resource>",
                 Serializer.serializeResource(r));
     }
 
@@ -57,14 +59,18 @@ public class SerializerTest {
     @Test
     public void testDeserializeResource() {
         System.out.println("deserializeResource");
-        Resource r = new Resource(new Bucket("TARGET_BUCKET"), "BANKAI");
+        BucketInStorage b = new BucketInStorage("TARGET_BUCKET");
+        b.setUUID(UUID.randomUUID().toString());
+        Resource r = new Resource(b, "BANKAI");
         r.setETag(UUID.randomUUID().toString());
         r.setLastModified(DateTime.parse("2017-01-12T09:06:00.863Z"));
         r.removeMetaData("Content-Type");
         String random_key = UUID.randomUUID().toString();
         r.setMetaData("x-key", random_key);
         ResourceInStorage result = Serializer.deserializeResource(Serializer.serializeResource(r));
+        assertEquals(ResourceInStorage.hashKey(b.getUUID(), result.getKey()), result.getKeyHash());
         assertEquals(random_key, result.snapshotMetaData().get("x-key"));
+        assertNull(result.getBucketProxy().getProxied());
         try {
             result.getBucket();
             fail("ProxiedException should be thrown.");
