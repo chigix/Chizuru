@@ -1,12 +1,13 @@
 package com.chigix.resserver.PutResource;
 
-import com.chigix.resserver.AmzHeaderNames;
 import com.chigix.resserver.ApplicationContext;
 import com.chigix.resserver.entity.Bucket;
 import com.chigix.resserver.entity.Chunk;
 import com.chigix.resserver.entity.Resource;
 import com.chigix.resserver.entity.error.NoSuchKey;
 import com.chigix.resserver.util.Authorization;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -27,7 +28,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.security.MessageDigest;
-import java.text.MessageFormat;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,26 +73,50 @@ public class Routing extends RoutingConfig.PUT {
                             (String) msg.decodedParams().get("resource_key")
                     );
                 } catch (NoSuchKey noSuchKey) {
-                    r = new Resource(b, (String) msg.decodedParams().get("resource_key"));
+                    r = application.ResourceDao.saveResource(new Resource(b, (String) msg.decodedParams().get("resource_key")));
+                } catch (Exception ex) {
+                    msg.deny();
+                    throw ex;
                 }
                 r.empty();
                 Context routing_ctx = new Context(msg, r);
                 ctx.channel().attr(CONTEXT).set(routing_ctx);
-                LOG.info(MessageFormat.format("PUT FILE: [{0}/{1}]", routing_ctx.getResource().getBucket().getName(), routing_ctx.getResource().getKey()));
-                LOG.info(MessageFormat.format("TYPE: [{0}]", routing_ctx.getResource().snapshotMetaData().get(HttpHeaderNames.CONTENT_TYPE.toString())));
-                LOG.info(MessageFormat.format("SHA-256: [{0}]", routing_ctx.getRoutedInfo().getRequestMsg().headers().get(AmzHeaderNames.CONTENT_SHA256)));
                 msg.allow();
             }
         }, new SimpleChannelInboundHandler<HttpContent>() {
             @Override
             protected void messageReceived(ChannelHandlerContext ctx, HttpContent msg) throws Exception {
                 Context routing_ctx = ctx.channel().attr(CONTEXT).get();
-                MessageDigest digest = Chunk.contentHashDigest();
-                byte[] chunk_content = new byte[msg.content().writerIndex()];
-                msg.content().readBytes(chunk_content);
-                if (msg.content().isReadable()) {
-                    throw new Exception("ByteBuf is still readable however bytes length has reached writerIndex.");
+                ByteBuf caching = routing_ctx.getCachingChunkBuf();
+                if (caching == null) {
+                    caching = Unpooled.buffer(8192, 8192);
+                    routing_ctx.setCachingChunkBuf(caching);
                 }
+                ByteBuf content = msg.content();
+                while (content.isReadable()) {
+                    int i = content.readInt();
+                    try {
+                        caching.writeInt(i);
+                    } catch (IndexOutOfBoundsException e) {
+                        ctx.fireChannelRead(caching);
+                        caching = Unpooled.buffer(8192, 8192);
+                        caching.writeInt(i);
+                        routing_ctx.setCachingChunkBuf(caching);
+                    }
+                }
+                if (msg instanceof LastHttpContent) {
+                    ctx.fireChannelRead(caching);
+                    msg.retain();
+                    ctx.fireChannelRead(msg);
+                }
+            }
+        }, new SimpleChannelInboundHandler<ByteBuf>() {
+            @Override
+            protected void messageReceived(ChannelHandlerContext ctx, ByteBuf msg) throws Exception {
+                Context routing_ctx = ctx.channel().attr(CONTEXT).get();
+                MessageDigest digest = Chunk.contentHashDigest();
+                byte[] chunk_content = new byte[msg.writerIndex()];
+                msg.readBytes(chunk_content);
                 digest.update(chunk_content);
                 routing_ctx.getEtagDigest().update(chunk_content);
                 routing_ctx.getSha256Digest().update(chunk_content);
@@ -117,20 +141,15 @@ public class Routing extends RoutingConfig.PUT {
                         };
                     }
                 }
-                final Chunk chunk = application.ChunkDao.newChunk(chunk_hash);
+                final Chunk chunk = application.ChunkDao.newChunk(chunk_hash, chunk_content.length);
                 application.ResourceDao.appendChunk(routing_ctx.getResource(), chunk);
-                LOG.info(msg.content().writerIndex() + "");
-                if (msg instanceof LastHttpContent) {
-                    msg.retain();
-                    ctx.fireChannelRead(msg);
-                }
             }
         }, new SimpleChannelInboundHandler<LastHttpContent>() {
             @Override
             protected void messageReceived(ChannelHandlerContext ctx, LastHttpContent msg) throws Exception {
                 Context routing_ctx = ctx.channel().attr(CONTEXT).getAndRemove();
                 routing_ctx.getResource().setETag(Authorization.HexEncode(routing_ctx.getEtagDigest().digest()));
-                LOG.info("CALCULATED SHA256: " + Authorization.HexEncode(routing_ctx.getSha256Digest().digest()));
+                application.ResourceDao.saveResource(routing_ctx.getResource());
                 DefaultFullHttpResponse resp = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
                 resp.headers().add(HttpHeaderNames.ETAG, routing_ctx.getResource().getETag());
                 ctx.writeAndFlush(resp);

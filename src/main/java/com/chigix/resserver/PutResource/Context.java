@@ -1,6 +1,7 @@
 package com.chigix.resserver.PutResource;
 
 import com.chigix.resserver.entity.Resource;
+import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.router.HttpRouted;
 import java.security.MessageDigest;
@@ -19,6 +20,8 @@ public class Context {
     private final MessageDigest etagDigest;
 
     private final MessageDigest sha256Digest;
+
+    private ByteBuf cachingChunkBuf;
 
     public Context(HttpRouted routedInfo, Resource resource) {
         try {
@@ -53,6 +56,14 @@ public class Context {
 
     public MessageDigest getSha256Digest() {
         return sha256Digest;
+    }
+
+    public ByteBuf getCachingChunkBuf() {
+        return cachingChunkBuf;
+    }
+
+    public void setCachingChunkBuf(ByteBuf cachingChunkBuf) {
+        this.cachingChunkBuf = cachingChunkBuf;
     }
 
 }
