@@ -245,4 +245,51 @@ public class Serializer {
         return result;
     }
 
+    public static String serializeBucket(BucketInStorage b) {
+        StringWriter string = new StringWriter();
+        XMLStreamWriter writer;
+        try {
+            writer = XMLOutputFactory.newFactory().createXMLStreamWriter(string);
+            writer.writeStartDocument("UTF-8", "1.0");
+            writer.writeStartElement("Bucket");
+            writer.writeStartElement("Name");
+            writer.writeCharacters(b.getName());
+            writer.writeEndElement(); // Bucket.Name
+            writer.writeStartElement("CreationTime");
+            writer.writeCharacters(b.getCreationTime().toString());
+            writer.writeEndElement(); // Bucket.CreationTime
+            writer.writeStartElement("ChizuruUUID");
+            writer.writeCharacters(b.getUUID());
+            writer.writeEndElement(); // Bucket.ChizuruUUID
+            writer.writeEndElement();// Bucket
+            writer.writeEndDocument();
+        } catch (XMLStreamException ex) {
+            LOG.error("Unexpected", ex);
+            throw new RuntimeException(ex);
+        }
+        return string.toString();
+    }
+
+    public static BucketInStorage deserializeBucket(String xml) {
+        XPath xpath = XPathFactory.newInstance().newXPath();
+        Document doc;
+        try {
+            doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(xml.getBytes("UTF-8")));
+        } catch (ParserConfigurationException | SAXException | IOException ex) {
+            LOG.error("UNEXPECTED", ex);
+            throw new RuntimeException(ex);
+        }
+        final BucketInStorage result;
+        try {
+            result = new BucketInStorage(
+                    ((Node) xpath.compile("//Bucket/Name").evaluate(doc, XPathConstants.NODE)).getTextContent(),
+                    DateTime.parse(((Node) xpath.compile("//Bucket/CreationTime").evaluate(doc, XPathConstants.NODE)).getTextContent()));
+            result.setUUID(((Node) xpath.compile("//Bucket/ChizuruUUID").evaluate(doc, XPathConstants.NODE)).getTextContent());
+        } catch (XPathExpressionException ex) {
+            LOG.error("UNEXPECTED", ex);
+            throw new RuntimeException(ex);
+        }
+        return result;
+    }
+
 }

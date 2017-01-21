@@ -1,6 +1,5 @@
 package com.chigix.resserver.mapdbimpl;
 
-import com.chigix.resserver.entity.Bucket;
 import com.chigix.resserver.entity.ModelProxy;
 import com.chigix.resserver.entity.Resource;
 import java.util.UUID;
@@ -121,6 +120,33 @@ public class SerializerTest {
         xml = Serializer.serializeResourceLinkNode(node);
         assertEquals(node.getNextResourceKeyHash(), Serializer.deserializeResourceLinkNode(xml).getNextResourceKeyHash());
         assertEquals(node.getPreviousResourceKeyHash(), Serializer.deserializeResourceLinkNode(xml).getPreviousResourceKeyHash());
+    }
+
+    /**
+     * Test of serializeBucket method, of class Serializer.
+     */
+    @Test
+    public void testSerializeBucket() {
+        System.out.println("serializeBucket");
+        BucketInStorage b = new BucketInStorage("TESTING_BUCKET", DateTime.parse("2017-01-20T02:19:36.037Z"));
+        b.setUUID(UUID.randomUUID().toString());
+        String result = Serializer.serializeBucket(b);
+        assertEquals(
+                "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Bucket><Name>TESTING_BUCKET</Name>"
+                + "<CreationTime>2017-01-20T02:19:36.037Z</CreationTime><ChizuruUUID>"
+                + b.getUUID()
+                + "</ChizuruUUID></Bucket>", Serializer.serializeBucket(b));
+    }
+
+    /**
+     * Test of deserializeBucket method, of class Serializer.
+     */
+    @Test
+    public void testDeserializeBucket() {
+        System.out.println("deserializeBucket");
+        BucketInStorage b = new BucketInStorage("TARGET");
+        b.setUUID(UUID.randomUUID().toString());
+        assertEquals(b.getCreationTime().toString(), Serializer.deserializeBucket(Serializer.serializeBucket(b)).getCreationTime().toString());
     }
 
 }
