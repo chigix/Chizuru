@@ -1,10 +1,9 @@
 package com.chigix.resserver.PutResource;
 
+import com.chigix.resserver.sharablehandlers.Context;
 import com.chigix.resserver.ApplicationContext;
-import com.chigix.resserver.entity.Bucket;
 import com.chigix.resserver.entity.Chunk;
-import com.chigix.resserver.entity.Resource;
-import com.chigix.resserver.entity.error.NoSuchKey;
+import com.chigix.resserver.sharablehandlers.ResourceInfoHandler;
 import com.chigix.resserver.util.Authorization;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -62,26 +61,11 @@ public class Routing extends RoutingConfig.PUT {
 
     @Override
     public void configurePipeline(ChannelPipeline pipeline) {
-        pipeline.addLast(new SimpleChannelInboundHandler<HttpRouted>() {
+        pipeline.addLast(ResourceInfoHandler.getInstance(application),
+                new SimpleChannelInboundHandler<Context>() {
             @Override
-            protected void messageReceived(ChannelHandlerContext ctx, HttpRouted msg) throws Exception {
-                Bucket b = application.BucketDao.findBucketByName((String) msg.decodedParams().get("bucketName"));
-                Resource r;
-                try {
-                    r = application.ResourceDao.findResource(
-                            b.getName(),
-                            (String) msg.decodedParams().get("resource_key")
-                    );
-                } catch (NoSuchKey noSuchKey) {
-                    r = application.ResourceDao.saveResource(new Resource(b, (String) msg.decodedParams().get("resource_key")));
-                } catch (Exception ex) {
-                    msg.deny();
-                    throw ex;
-                }
-                r.empty();
-                Context routing_ctx = new Context(msg, r);
-                ctx.channel().attr(CONTEXT).set(routing_ctx);
-                msg.allow();
+            protected void messageReceived(ChannelHandlerContext ctx, Context msg) throws Exception {
+                ctx.channel().attr(CONTEXT).set(msg);
             }
         }, new SimpleChannelInboundHandler<HttpContent>() {
             @Override
@@ -89,7 +73,7 @@ public class Routing extends RoutingConfig.PUT {
                 Context routing_ctx = ctx.channel().attr(CONTEXT).get();
                 ByteBuf caching = routing_ctx.getCachingChunkBuf();
                 if (caching == null) {
-                    caching = Unpooled.buffer(8192, 8192);
+                    caching = Unpooled.buffer(application.getMaxChunkSize(), application.getMaxChunkSize());
                     routing_ctx.setCachingChunkBuf(caching);
                 }
                 ByteBuf content = msg.content();
@@ -99,7 +83,7 @@ public class Routing extends RoutingConfig.PUT {
                         caching.writeInt(i);
                     } catch (IndexOutOfBoundsException e) {
                         ctx.fireChannelRead(caching);
-                        caching = Unpooled.buffer(8192, 8192);
+                        caching = Unpooled.buffer(application.getMaxChunkSize(), application.getMaxChunkSize());
                         caching.writeInt(i);
                         routing_ctx.setCachingChunkBuf(caching);
                     }

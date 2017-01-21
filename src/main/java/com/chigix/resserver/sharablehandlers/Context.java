@@ -1,4 +1,4 @@
-package com.chigix.resserver.PutResource;
+package com.chigix.resserver.sharablehandlers;
 
 import com.chigix.resserver.entity.Resource;
 import io.netty.buffer.ByteBuf;
