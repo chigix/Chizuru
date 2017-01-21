@@ -3,6 +3,7 @@ package com.chigix.resserver.entity.dao;
 import com.chigix.resserver.entity.Bucket;
 import com.chigix.resserver.entity.Chunk;
 import com.chigix.resserver.entity.Resource;
+import com.chigix.resserver.entity.error.NoSuchBucket;
 import com.chigix.resserver.entity.error.NoSuchKey;
 import java.util.Iterator;
 
@@ -12,9 +13,11 @@ import java.util.Iterator;
  */
 public interface ResourceDao {
 
-    Resource findResource(String bucketName, String resourceKey) throws NoSuchKey;
+    Resource findResource(String bucketName, String resourceKey) throws NoSuchKey, NoSuchBucket;
 
-    void saveResource(Resource resource);
+    Resource findResource(Bucket bucket, String resourceKey) throws NoSuchKey, NoSuchBucket;
+
+    Resource saveResource(Resource resource) throws NoSuchBucket;
 
     /**
      *
@@ -23,10 +26,10 @@ public interface ResourceDao {
      */
     void appendChunk(Resource resource, Chunk chunk);
 
-    Iterator<Resource> listResources(Bucket bucket);
+    Iterator<Resource> listResources(Bucket bucket) throws NoSuchBucket;
 
     Iterator<Resource> listResources(Bucket bucket, String continuation);
 
-    void removeResource(Resource resource);
+    void removeResource(Resource resource) throws NoSuchKey, NoSuchBucket;
 
 }
