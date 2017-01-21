@@ -49,11 +49,10 @@ public class LocationHandler extends ChannelHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         ctx.channel().attr(LOCATION_CHECK_STATUS).compareAndSet(null, Status.PASS);
-        if (msg instanceof HttpRouted) {
-            HttpRouted routed = (HttpRouted) msg;
-        }
-        if (this.isLocationRequest(ctx, msg)) {
+        if (msg instanceof HttpRouted && isLocationRequest(ctx, (HttpRouted) msg)) {
             ctx.channel().attr(LOCATION_CHECK_STATUS).set(Status.OCCUPIED);
+            HttpRouted routed = (HttpRouted) msg;
+            routed.allow();
             return;
         }
         if (ctx.channel().attr(LOCATION_CHECK_STATUS).get() == Status.PASS) {
@@ -78,11 +77,7 @@ public class LocationHandler extends ChannelHandlerAdapter {
         ReferenceCountUtil.release(msg);
     }
 
-    private boolean isLocationRequest(ChannelHandlerContext ctx, Object msg) {
-        if (!(msg instanceof HttpRouted)) {
-            return false;
-        }
-        HttpRouted routed = (HttpRouted) msg;
+    private boolean isLocationRequest(ChannelHandlerContext ctx, HttpRouted routed) {
         QueryStringDecoder decoder = new QueryStringDecoder(routed.getRequestMsg().uri());
         return decoder.parameters().get("location") != null;
     }

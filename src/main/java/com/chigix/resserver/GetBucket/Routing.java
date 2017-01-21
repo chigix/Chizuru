@@ -7,6 +7,7 @@ import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.handler.codec.http.router.HttpRouted;
 import io.netty.handler.codec.http.router.RoutingConfig;
+import io.netty.handler.routing.DefaultExceptionForwarder;
 import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.util.AttributeKey;
 import io.netty.util.ReferenceCountUtil;
@@ -44,6 +45,7 @@ public class Routing extends RoutingConfig.GET {
                     @Override
                     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
                         if (msg instanceof HttpRouted) {
+                            ((HttpRouted) msg).allow();
                             ctx.channel().attr(ROUTED_INFO).set((HttpRouted) msg);
                         } else if (msg instanceof LastHttpContent) {
                             HttpRouted routed_info = ctx.channel().attr(ROUTED_INFO).get();
@@ -57,7 +59,8 @@ public class Routing extends RoutingConfig.GET {
                     }
 
                 })
-                .addLast(ResourceListHandler.getInstance(application));
+                .addLast(ResourceListHandler.getInstance(application))
+                .addLast(new DefaultExceptionForwarder());
     }
 
 }

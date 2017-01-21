@@ -1,6 +1,7 @@
 package com.chigix.resserver.GetBucket;
 
 import com.chigix.resserver.ApplicationContext;
+import com.chigix.resserver.entity.Bucket;
 import com.chigix.resserver.entity.Resource;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -19,6 +20,7 @@ import java.io.OutputStreamWriter;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.nio.charset.Charset;
+import java.util.Iterator;
 import java.util.List;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -60,6 +62,7 @@ public class ResourceListHandler extends SimpleChannelInboundHandler<HttpRouted>
      */
     @Override
     protected void messageReceived(ChannelHandlerContext ctx, HttpRouted msg) throws Exception {
+        Bucket target_bucket = application.BucketDao.findBucketByName((String) msg.decodedParams().get("bucketName"));
         QueryStringDecoder decoder = new QueryStringDecoder(msg.getRequestMsg().uri());
         String delimiter = decodeQueryParamString(decoder, "delimiter");
         String encoding_type = decodeQueryParamString(decoder, "encoding-type");
@@ -78,7 +81,7 @@ public class ResourceListHandler extends SimpleChannelInboundHandler<HttpRouted>
             XMLStreamWriter xml_writer = XML_FACTORY.createXMLStreamWriter(writer);
             xml_writer.writeStartDocument("UTF-8", "1.0");
             xml_writer.writeStartElement("ListBucketResult");
-            xmlWriteBucketName(xml_writer); //ListBucketResult.Name
+            xmlWriteBucketName(xml_writer, application.BucketDao.findBucketByName((String) msg.decodedParams().get("bucketName")));
             xmlWriteStartAfter(xml_writer, start_after); //ListBucketResult.StartAfter
             Charset encodingType;
             if (encoding_type == null) {
@@ -100,8 +103,11 @@ public class ResourceListHandler extends SimpleChannelInboundHandler<HttpRouted>
                 xml_writer.writeCharacters(delimiter);
                 xml_writer.writeEndElement();//ListBucketResult.Delimiter
             }
-            xmlWriteResourceContent(xml_writer, new Resource("BANKAI"));//ListBucketResult.Contents
-            xmlWriteResourceContent(xml_writer, new Resource("BANKAI/asdfadf.pdf"));//ListBucketResult.Contents
+            Iterator<Resource> resources = application.ResourceDao.listResources(target_bucket);
+            while (resources.hasNext()) {
+                Resource next = resources.next();
+                xmlWriteResourceContent(xml_writer, next);//ListBucketResult.Contents
+            }
             xml_writer.writeStartElement("IsTruncated");
             xml_writer.writeCharacters("false");
             xml_writer.writeEndElement();//ListBucketResult.IsTruncated
@@ -141,7 +147,7 @@ public class ResourceListHandler extends SimpleChannelInboundHandler<HttpRouted>
         writer.writeCharacters(res.getLastModified().toString());
         writer.writeEndElement();//LastModified
         writer.writeStartElement("ETag");
-        writer.writeCharacters(res.getETag());
+        writer.writeCharacters(String.format("\"%s\"", res.getETag()));
         writer.writeEndElement();//ETag
         writer.writeStartElement("Size");
         writer.writeCharacters(res.getSize());
@@ -161,9 +167,9 @@ public class ResourceListHandler extends SimpleChannelInboundHandler<HttpRouted>
         writer.writeEndElement();
     }
 
-    private void xmlWriteBucketName(XMLStreamWriter writer) throws XMLStreamException {
+    private void xmlWriteBucketName(XMLStreamWriter writer, Bucket bucket) throws XMLStreamException {
         writer.writeStartElement("Name");
-        writer.writeCharacters(application.getBucketName());
+        writer.writeCharacters(bucket.getName());
         writer.writeEndElement();
     }
 
