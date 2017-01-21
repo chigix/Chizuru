@@ -1,9 +1,10 @@
 package com.chigix.resserver.mapdbimpl.iterator;
 
 import com.chigix.resserver.entity.Bucket;
+import com.chigix.resserver.mapdbimpl.Serializer;
 import java.util.Iterator;
 import java.util.Map;
-import org.joda.time.DateTime;
+import java.util.NoSuchElementException;
 
 /**
  *
@@ -25,7 +26,10 @@ public class BucketIterator implements Iterator<Bucket> {
     @Override
     public Bucket next() {
         Map.Entry<String, String> next = it.next();
-        return new Bucket(next.getKey(), DateTime.parse(next.getValue()));
+        if (next.getValue() == null) {
+            throw new NoSuchElementException();
+        }
+        return Serializer.deserializeBucket(next.getValue());
     }
 
     @Override
