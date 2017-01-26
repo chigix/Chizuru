@@ -1,0 +1,7 @@
+GET /chizuru/?delimiter=%2F&max-keys=1000 HTTP/1.1
+Host: seven.chigix:9000
+User-Agent: Minio (windows; amd64) minio-go/2.0.2 mc/2016-12-09T18:23:19Z
+Expect: 100-continue
+X-Amz-Content-Sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+X-Amz-Date: 20161230T174224Z
+Accept-Encoding: gzip

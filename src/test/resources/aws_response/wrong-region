@@ -1,0 +1,19 @@
+GET / HTTP/1.1
+Host: s3.amazonaws.com
+User-Agent: Minio (windows; amd64) minio-go/2.0.2 mc/2016-12-09T18:23:19Z
+Authorization: AWS4-HMAC-SHA256 Credential=**REDACTED**/20161228/ap-northeast-1/s3/aws4_request, SignedHeaders=expect;host;x-amz-content-sha256;x-amz-date, Signature=**REDACTED**
+Expect: 100-continue
+X-Amz-Content-Sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+X-Amz-Date: 20161228T111449Z
+
+HTTP/1.1 400 Bad Request
+x-amz-request-id: 68A53C398B182636
+x-amz-id-2: 53sjlrmSE4G5D7MgiYSMNl8o7zu0OvMLdQRX6YOM4/cLOQyHoOq2LSQ4Qtmf+fRU/xm3fD/M8J8=
+Content-Type: application/xml
+Transfer-Encoding: chunked
+Date: Wed, 28 Dec 2016 11:15:05 GMT
+Connection: close
+Server: AmazonS3
+
+<?xml version="1.0" encoding="UTF-8"?>
+<Error><Code>AuthorizationHeaderMalformed</Code><Message>The authorization header is malformed; the region 'ap-northeast-1' is wrong; expecting 'us-east-1'</Message><Region>us-east-1</Region><RequestId>68A53C398B182636</RequestId><HostId>53sjlrmSE4G5D7MgiYSMNl8o7zu0OvMLdQRX6YOM4/cLOQyHoOq2LSQ4Qtmf+fRU/xm3fD/M8J8=</HostId></Error>

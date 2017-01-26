@@ -1,0 +1,31 @@
+GET / HTTP/1.1
+Host: s3.amazonaws.com
+User-Agent: Minio (windows; amd64) minio-go/2.0.2 mc/2016-12-09T18:23:19Z
+Authorization: AWS4-HMAC-SHA256 Credential=**REDACTED**/20161228/us-east-1/s3/aws4_request, SignedHeaders=expect;host;x-amz-content-sha256;x-amz-date, Signature=**REDACTED**
+Expect: 100-continue
+X-Amz-Content-Sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+X-Amz-Date: 20161228T112046Z
+
+HTTP/1.1 403 Forbidden
+x-amz-request-id: 819A0AC4FC638B55
+x-amz-id-2: LUeaoewqY0DB1dHWo9DRmuPmGtE+IERKjF9KB1Y5KdzQmWYfs6mamQHemZykvFq9agpAnxw3E+o=
+Content-Type: application/xml
+Transfer-Encoding: chunked
+Date: Wed, 28 Dec 2016 11:21:02 GMT
+Connection: close
+Server: AmazonS3
+
+<?xml version="1.0" encoding="UTF-8"?>
+<Error><Code>SignatureDoesNotMatch</Code><Message>The request signature we calculated does not match the signature you provided. Check your key and signing method.</Message><AWSAccessKeyId>AKIAI3A3SBQ4G7GWS25A</AWSAccessKeyId><StringToSign>AWS4-HMAC-SHA256
+20161228T112046Z
+20161228/us-east-1/s3/aws4_request
+**REDACTED**</StringToSign><SignatureProvided>**REDACTED**</SignatureProvided><StringToSignBytes>41 57 53 34 2d 48 4d 41 43 2d 53 48 41 32 35 36 0a 32 30</StringToSignBytes><CanonicalRequest>GET
+/
+
+expect:100-continue
+host:s3.amazonaws.com
+x-amz-content-sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+x-amz-date:20161228T112046Z
+
+expect;host;x-amz-content-sha256;x-amz-date
+**REDACTED**</CanonicalRequest><CanonicalRequestBytes>47 45 54 0a 2f 0a</CanonicalRequestBytes><RequestId>819A0AC4FC638B55</RequestId><HostId>LUeaoewqY0DB1dHWo9DRmuPmGtE+IERKjF9KB1Y5KdzQmWYfs6mamQHemZykvFq9agpAnxw3E+o=</HostId></Error>

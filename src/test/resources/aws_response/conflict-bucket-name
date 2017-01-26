@@ -1,0 +1,22 @@
+PUT /oos-for-learning/ HTTP/1.1
+Host: s3.amazonaws.com
+User-Agent: Minio (windows; amd64) minio-go/2.0.2 mc/2016-12-09T18:23:19Z
+Content-Length: 0
+Authorization: AWS4-HMAC-SHA256 Credential=**REDACTED**/20170102/us-east-1/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=**REDACTED**
+X-Amz-Content-Sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+X-Amz-Date: 20170102T183113Z
+Accept-Encoding: gzip
+
+HTTP/1.1 409 Conflict
+Transfer-Encoding: chunked
+Content-Type: application/xml
+Date: Mon, 02 Jan 2017 18:31:13 GMT
+Server: AmazonS3
+X-Amz-Bucket-Region: ap-northeast-1
+X-Amz-Id-2: 40o1U9Rl4IrtqNcc3JsA1ouR9AMWo9rn+45dTg0u9RJg3xyDOJIvv417Ok2PZTile/62O7q7ZdM=
+X-Amz-Request-Id: 214A5C1129DD6BC8
+
+16c
+<?xml version="1.0" encoding="UTF-8"?>
+<Error><Code>BucketAlreadyOwnedByYou</Code><Message>Your previous request to create the named bucket succeeded and you already own it.</Message><BucketName>oos-for-learning</BucketName><RequestId>214A5C1129DD6BC8</RequestId><HostId>40o1U9Rl4IrtqNcc3JsA1ouR9AMWo9rn+45dTg0u9RJg3xyDOJIvv417Ok2PZTile/62O7q7ZdM=</HostId></Error>
+0

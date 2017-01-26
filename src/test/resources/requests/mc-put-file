@@ -1,0 +1,10 @@
+PUT /chizuru/bankai.log HTTP/1.1
+Host: localhost:9000
+User-Agent: Minio (windows; amd64) minio-go/2.0.2 mc/2016-12-09T18:23:19Z
+Content-Length: 62312
+Content-Md5: vunNcVVKE3UCrSBU2QxeEw==
+Content-Type: application/octet-stream
+Expect: 100-continue
+X-Amz-Content-Sha256: 1974f8aca5f121627c8412c8f5ed054fd2c6e60756fe36d8ee110470ffef677f
+X-Amz-Date: 20170101T152322Z
+Accept-Encoding: gzip

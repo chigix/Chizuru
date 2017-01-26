@@ -1,0 +1,16 @@
+HEAD / HTTP/1.1
+Host: oos-for-learning-notexists.s3-ap-northeast-1.amazonaws.com
+User-Agent: Minio (windows; amd64) minio-go/2.0.2 mc/2016-12-09T18:23:19Z
+Authorization: AWS4-HMAC-SHA256 Credential=**REDACTED**/20170105/ap-northeast-1/s3/aws4_request, SignedHeaders=expect;host;x-amz-content-sha256;x-amz-date, Signature=**REDACTED**
+Expect: 100-continue
+X-Amz-Content-Sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+X-Amz-Date: 20170105T051608Z
+
+HTTP/1.1 404 Not Found
+x-amz-request-id: 88DA792D02A0219B
+x-amz-id-2: 1j5Cd0lwVzuQbVyIhPym+E37jwWFczBY5u5tyWe2LVxWd/wNNN7JtW5u3vLXb8MtWptH8vwJWkY=
+Content-Type: application/xml
+Transfer-Encoding: chunked
+Date: Thu, 05 Jan 2017 05:16:27 GMT
+Connection: close
+Server: AmazonS3

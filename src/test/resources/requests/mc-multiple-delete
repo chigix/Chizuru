@@ -1,0 +1,11 @@
+POST /bankai/?delete= HTTP/1.1
+Host: localhost:9000
+User-Agent: Minio (windows; amd64) minio-go/2.0.2 mc/2016-12-09T18:23:19Z
+Content-Length: 70
+Content-Md5: r8P1XsOIqnbVs0AvdEqIqA==
+Expect: 100-continue
+X-Amz-Content-Sha256: 460c2571c97ba9a8870543e2d78a45c29073fbbddb86bb46247b311f55952cda
+X-Amz-Date: 20170121T171036Z
+Accept-Encoding: gzip
+
+<Delete><Quiet>true</Quiet><Object><Key>qq.log</Key></Object></Delete>

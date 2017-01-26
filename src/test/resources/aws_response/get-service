@@ -1,0 +1,19 @@
+GET / HTTP/1.1
+Host: s3.amazonaws.com
+User-Agent: Minio (windows; amd64) minio-go/2.0.2 mc/2016-12-09T18:23:19Z
+Authorization: AWS4-HMAC-SHA256 Credential=**REDACTED**/20161228/us-east-1/s3/aws4_request, SignedHeaders=expect;host;x-amz-content-sha256;x-amz-date, Signature=**REDACTED**
+Expect: 100-continue
+X-Amz-Content-Sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+X-Amz-Date: 20161228T160311Z
+
+HTTP/1.1 200 OK
+x-amz-id-2: m+UQFnmKBHC0F4Ak/NC4IKsYnrCaAuNwGt67HfoqF4j+a3ohHjAiRsEe/zL4w6AiqqCMuQ8aPmU=
+x-amz-request-id: 28FD1B852D4FB499
+Date: Wed, 28 Dec 2016 16:03:26 GMT
+Content-Type: application/xml
+Transfer-Encoding: chunked
+Connection: close
+Server: AmazonS3
+
+<?xml version="1.0" encoding="UTF-8"?>
+<ListAllMyBucketsResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><Owner><ID>e0455b7089090a533ff84adf12e4d26b1bec51a6e1b203301749b1e640895b59</ID><DisplayName>bankai</DisplayName></Owner><Buckets><Bucket><Name>oos-for-learning</Name><CreationDate>2016-12-20T16:40:48.000Z</CreationDate></Bucket></Buckets></ListAllMyBucketsResult>

@@ -1,0 +1,20 @@
+GET /?delimiter=%2F&fetch-owner=true&list-type=2&max-keys=1000 HTTP/1.1
+Host: oos-for-learning.s3-ap-northeast-1.amazonaws.com
+User-Agent: Minio (windows; amd64) minio-go/2.0.2 mc/2016-12-09T18:23:19Z
+Authorization: AWS4-HMAC-SHA256 Credential=**REDACTED**/20170101/ap-northeast-1/s3/aws4_request, SignedHeaders=expect;host;x-amz-content-sha256;x-amz-date, Signature=**REDACTED**
+Expect: 100-continue
+X-Amz-Content-Sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+X-Amz-Date: 20170101T143907Z
+
+HTTP/1.1 200 OK
+x-amz-id-2: s4TmhV/uMCFot44t22AsM0zYtdKNQPDiC/f2m2VLsSUxSYjqj6C6E9HcfdZnEKsvc7fSEh2Lfvg=
+x-amz-request-id: B21785241430F5BB
+Date: Sun, 01 Jan 2017 14:39:24 GMT
+x-amz-bucket-region: ap-northeast-1
+Content-Type: application/xml
+Transfer-Encoding: chunked
+Connection: close
+Server: AmazonS3
+
+<?xml version="1.0" encoding="UTF-8"?>
+<ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><Name>oos-for-learning</Name><Prefix></Prefix><KeyCount>3</KeyCount><MaxKeys>1000</MaxKeys><Delimiter>/</Delimiter><IsTruncated>false</IsTruncated><Contents><Key>p086-090.pdf</Key><LastModified>2016-12-20T16:44:41.000Z</LastModified><ETag>&quot;994f096f47480a2fd8e3d066536951f8&quot;</ETag><Size>6583194</Size><Owner><ID>e0455b7089090a533ff84adf12e4d26b1bec51a6e1b203301749b1e640895b59</ID><DisplayName>chigix</DisplayName></Owner><StorageClass>STANDARD</StorageClass></Contents><Contents><Key>p086-090.pdf.json</Key><LastModified>2016-12-30T04:36:14.000Z</LastModified><ETag>&quot;b8bf8ae2500da047f05ebf70fb37d3c0&quot;</ETag><Size>201</Size><Owner><ID>e0455b7089090a533ff84adf12e4d26b1bec51a6e1b203301749b1e640895b59</ID><DisplayName>chigix</DisplayName></Owner><StorageClass>STANDARD</StorageClass></Contents><CommonPrefixes><Prefix>bankai/</Prefix></CommonPrefixes></ListBucketResult>
