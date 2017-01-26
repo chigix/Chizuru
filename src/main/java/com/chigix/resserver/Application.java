@@ -1,6 +1,8 @@
 package com.chigix.resserver;
 
-import com.chigix.resserver.errorhandlers.ExceptionHandler;
+import com.chigix.resserver.error.DaoExceptionHandler;
+import com.chigix.resserver.error.ExceptionHandler;
+import com.chigix.resserver.error.UnwrappedExceptionHandler;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -13,6 +15,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpRequestDecoder;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseEncoder;
@@ -42,7 +45,9 @@ public class Application {
 
     public static void main(String[] args) throws InterruptedException {
         AtomicReference<ApplicationContext> ctxInited = new AtomicReference<>();
-        initNode(ctxInited);
+        AtomicReference<DB> dbCreated = new AtomicReference<>();
+        initNode(ctxInited, dbCreated);
+        ctxInited.get().updateDBScheme();
         LOG.info("NODE ID: " + ctxInited.get().getCurrentNodeId());
         LOG.info("Created At: " + ctxInited.get().getCreationDate());
         EventLoopGroup bossGroup = new NioEventLoopGroup();
@@ -60,10 +65,10 @@ public class Application {
                                 super.channelRead(ctx, msg);
                             }
 
-                        }).addLast(new HttpRequestDecoder())
+                        }).addLast(new HttpRequestDecoder(4096, 8192, 8192))
                                 .addLast(new HttpResponseEncoder())
                                 .addLast(new FullResponseLengthFixer())
-                                .addLast(headerFixer(), configRouter(ctxInited.get()));
+                                .addLast(headerFixer(ctxInited.get()), configRouter(ctxInited.get()));
                     }
                 });
         try {
@@ -73,28 +78,32 @@ public class Application {
         } finally {
             bossGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();
-            ctxInited.get().getDb().close();
+            dbCreated.get().close();
         }
     }
 
-    public static void initNode(AtomicReference<ApplicationContext> ctxInited) {
+    public static void initNode(AtomicReference<ApplicationContext> ctx, AtomicReference<DB> db) {
         File db_file = new File("./data/chizuru.db");
         String node_id = null;
         if (!db_file.exists()) {
             node_id = UUID.randomUUID().toString();
         }
-        DB db = DBMaker.fileDB("./data/chizuru.db").transactionEnable().closeOnJvmShutdown().make();
-        HTreeMap<String, String> CONFIG = (HTreeMap<String, String>) db.hashMap("CHIZURU", Serializer.STRING, Serializer.STRING).createOrOpen();
+        db.set(DBMaker.fileDB("./data/chizuru.db").transactionEnable().closeOnJvmShutdown().make());
+        HTreeMap<String, String> CONFIG = (HTreeMap<String, String>) db.get().hashMap("CHIZURU", Serializer.STRING, Serializer.STRING).createOrOpen();
         if (CONFIG.get("NODE_ID") == null) {
             if (node_id == null) {
                 throw new RuntimeException("Existing DB File without node inited.");
             }
             CONFIG.put("NODE_ID", node_id);
-            db.commit();
+            db.get().commit();
         }
         if (CONFIG.get("CREATION_DATE") == null) {
             CONFIG.put("CREATION_DATE", new DateTime(DateTimeZone.forID("GMT")).toString());
-            db.commit();
+            db.get().commit();
+        }
+        if (CONFIG.get("MAX_CHUNKSIZE") == null) {
+            CONFIG.put("MAX_CHUNKSIZE", 8192 + "");
+            db.get().commit();
         }
         File chunks_dir = new File("./data/chunks");
         if (!chunks_dir.exists()) {
@@ -103,10 +112,14 @@ public class Application {
         if (!chunks_dir.isDirectory()) {
             throw new RuntimeException("Unable to have chunks directory.");
         }
-        ctxInited.set(new ApplicationContext(CONFIG.get("NODE_ID"), "chizuru", DateTime.parse(CONFIG.get("CREATION_DATE")), new File("./data/chunks"), db));
+        ctx.set(new ApplicationContext(CONFIG.get("NODE_ID"),
+                DateTime.parse(CONFIG.get("CREATION_DATE")),
+                Integer.valueOf(CONFIG.get("MAX_CHUNKSIZE")),
+                new File("./data/chunks"),
+                db.get()));
     }
 
-    public static ChannelHandlerAdapter headerFixer() {
+    public static ChannelHandlerAdapter headerFixer(ApplicationContext application) {
         return new ChannelHandlerAdapter() {
 
             @Override
@@ -116,13 +129,15 @@ public class Application {
                     resp.headers().set(HttpHeaderNames.CONNECTION, ctx.channel().isOpen() ? "open" : "close");
                     resp.headers().set(HttpHeaderNames.DATE, new DateTime(DateTimeZone.forID("GMT")).toString("E, dd MMM yyyy HH:mm:ss z", Locale.US));
                     resp.headers().set(HttpHeaderNames.SERVER, "Chizuru");
-                    // @TODO add request-id support, channelread might could be used in this case.
                 }
                 super.write(ctx, msg, promise);
             }
 
             @Override
             public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+                if (msg instanceof HttpRequest) {
+                    ((HttpRequest) msg).headers().add(application.getRequestIdHeaderName(), UUID.randomUUID().toString());
+                }
                 super.channelRead(ctx, msg);
             }
 
@@ -145,7 +160,9 @@ public class Application {
         return new HttpRouter() {
             @Override
             protected void initExceptionRouting(ChannelPipeline pipeline) {
-                pipeline.addLast(ExceptionHandler.getInstance(application));
+                pipeline.addLast(DaoExceptionHandler.getInstance(application))
+                        .addLast(new UnwrappedExceptionHandler())
+                        .addLast(ExceptionHandler.getInstance(application));
             }
 
             @Override
@@ -153,6 +170,10 @@ public class Application {
                 this.newRouting(ctx, new com.chigix.resserver.GetService.Routing(application));
                 this.newRouting(ctx, new com.chigix.resserver.GetBucket.Routing(application));
                 this.newRouting(ctx, new com.chigix.resserver.HeadBucket.Routing(application));
+                this.newRouting(ctx, new com.chigix.resserver.PutBucket.Routing(application));
+                this.newRouting(ctx, new com.chigix.resserver.PostBucket.Routing(application));
+                this.newRouting(ctx, new com.chigix.resserver.DeleteBucket.Routing(application));
+                this.newRouting(ctx, new com.chigix.resserver.PutResource.Routing(application));
             }
 
         };
