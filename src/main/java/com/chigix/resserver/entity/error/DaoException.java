@@ -7,7 +7,12 @@ package com.chigix.resserver.entity.error;
 public class DaoException extends Exception {
 
     public String getCode() {
-        return this.getClass().getSimpleName();
+        return "InternalError";
+    }
+
+    @Override
+    public String getMessage() {
+        return "We encountered an internal error. Please try again.";
     }
 
 }

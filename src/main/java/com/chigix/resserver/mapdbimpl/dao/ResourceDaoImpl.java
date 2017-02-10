@@ -4,14 +4,16 @@ import com.chigix.resserver.entity.Bucket;
 import com.chigix.resserver.entity.Chunk;
 import com.chigix.resserver.entity.Resource;
 import com.chigix.resserver.entity.dao.ResourceDao;
+import com.chigix.resserver.entity.error.DaoException;
 import com.chigix.resserver.entity.error.NoSuchBucket;
 import com.chigix.resserver.entity.error.NoSuchKey;
 import com.chigix.resserver.error.DBError;
 import com.chigix.resserver.mapdbimpl.BucketInStorage;
-import com.chigix.resserver.mapdbimpl.ChunkNode;
 import com.chigix.resserver.mapdbimpl.ResourceInStorage;
 import com.chigix.resserver.mapdbimpl.ResourceLinkNode;
 import com.chigix.resserver.mapdbimpl.Serializer;
+import java.math.BigInteger;
+import java.text.MessageFormat;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.UUID;
@@ -68,13 +70,14 @@ public class ResourceDaoImpl implements ResourceDao {
         }
         ResourceInStorage result = Serializer.deserializeResource(xml);
         result.setChunkdao(chunkdao);
+        result.setResourcedao(this);
         result.getBucketProxy().setBucketDao(bucketdao);
         result.getBucketProxy().resetProxy();
         return result;
     }
 
     @Override
-    public Resource saveResource(Resource resource) throws NoSuchBucket {
+    public Resource saveResource(Resource resource) throws NoSuchBucket, DaoException {
         final String key_hash;
         Bucket belonged_bucket;
         try {
@@ -98,12 +101,24 @@ public class ResourceDaoImpl implements ResourceDao {
         }
         String resource_xml = Serializer.serializeResource(resource);
         ((ConcurrentMap<String, String>) db.hashMap(ResourceKeys.RESOURCE_DB).open()).put(key_hash, resource_xml);
+        if (resource instanceof ResourceInStorage && ((ResourceInStorage) resource).isEmptied() == false) {
+        } else {
+            db.hashMap(ResourceKeys.CHUNK_LIST_DB).open().remove(key_hash + "_0");
+            db.hashMap(ResourceKeys.CHUNK_LIST_DB).open().remove(key_hash + "__count");
+        }
         db.commit();
         int count = 0;
         while (!appendBucketResourceLink((BucketInStorage) belonged_bucket, resource, key_hash)) {
             count++;
             if (count > 10) {
-                LOG.warn("Resource [{}] is trying to be added into bucket times: {}", resource.getKey(), count);
+                throw new DaoException() {
+                    @Override
+                    public String getMessage() {
+                        return MessageFormat.format("Resource [{0}] is trying to be added into bucket: {1}",
+                                resource.getKey(), key_hash);
+                    }
+
+                };
             }
             try {
                 Thread.sleep(1000);
@@ -112,6 +127,7 @@ public class ResourceDaoImpl implements ResourceDao {
         }
         ResourceInStorage resource_to_return = Serializer.deserializeResource(resource_xml);
         resource_to_return.setChunkdao(chunkdao);
+        resource_to_return.setResourcedao(this);
         resource_to_return.getBucketProxy().setBucketDao(bucketdao);
         return resource_to_return;
     }
@@ -189,7 +205,7 @@ public class ResourceDaoImpl implements ResourceDao {
         return true;
     }
 
-    private boolean removeFromBucketResourceLink(String bucket_uuid, Resource resource, String key_hash) {
+    private boolean removeFromBucketResourceLink(String bucket_uuid, final String key_hash) {
         final ConcurrentMap<String, String> RESOURCE_LINK_LOCK = (ConcurrentMap<String, String>) db.hashMap(ResourceKeys.RESOURCE_LINK_LOCK_DB).open();
         final ConcurrentMap<String, String> RESOURCE_LINKs = (ConcurrentMap<String, String>) db.hashMap(ResourceKeys.RESOURCE_LINK_DB).open();
         final ConcurrentMap<String, String> RESOURCE_LINK_START = (ConcurrentMap<String, String>) db.hashMap(ResourceKeys.RESOURCE_LINK_START_DB).open();
@@ -263,10 +279,13 @@ public class ResourceDaoImpl implements ResourceDao {
         }
         if (prev_node == null && next_node != null) {
             RESOURCE_LINK_START.put(bucket_uuid, link_node.getNextResourceKeyHash());
-        }
-        if (prev_node != null && next_node == null) {
+        } else if (prev_node != null && next_node == null) {
             RESOURCE_LINK_END.put(bucket_uuid, link_node.getPreviousResourceKeyHash());
+        } else if (prev_node == null && next_node == null) {
+            RESOURCE_LINK_START.remove(bucket_uuid);
+            RESOURCE_LINK_END.remove(bucket_uuid);
         }
+        RESOURCE_LINKs.remove(key_hash);
         db.commit();
         RESOURCE_LINK_LOCK.remove(key_hash, lock_uuid);
         if (prev_node != null) {
@@ -280,38 +299,39 @@ public class ResourceDaoImpl implements ResourceDao {
 
     @Override
     public void appendChunk(final Resource resource, Chunk chunk) {
-        if (!(resource instanceof ResourceInStorage)) {
-            throw new ResourceNotPersistedException(resource.getKey());
-        }
         ResourceInStorage real_resource = (ResourceInStorage) resource;
-        ChunkNode chunkToAppend = new ChunkNode(real_resource.getKeyHash(), chunk.getContentHash());
-        chunkToAppend.setNext(null);
-        saveChunkNode(chunkToAppend);
-        if (real_resource.getLastChunk() != null) {
-            ChunkNode lastChunk = findChunkNode(new ChunkNode(real_resource.getKeyHash(), real_resource.getLastChunk().getContentHash()).getNodeKey());
-            lastChunk.setNext(chunkToAppend);
-            saveChunkNode(lastChunk);
-            db.commit();
-        } else {
-            real_resource.setSize("0");
-            real_resource.setFirstChunk(chunk);
+        ConcurrentMap<String, String> chunk_list = (ConcurrentMap<String, String>) db.hashMap(ResourceKeys.CHUNK_LIST_DB).open();
+        String key_count = real_resource.getKeyHash() + "__count";
+        BigInteger chunk_number = BigInteger.ZERO;
+        String prev_count = chunk_list.putIfAbsent(key_count, chunk_number.toString(32));
+        if (prev_count != null) {
+            chunk_number = new BigInteger(prev_count, 32);
+            while (true) {
+                chunk_number = chunk_number.add(BigInteger.ONE);
+                if (chunk_list.replace(key_count, prev_count, chunk_number.toString(32))) {
+                    break;
+                }
+                prev_count = chunk_list.get(key_count);
+            }
         }
-        real_resource.setSize((Integer.valueOf(real_resource.getSize())) + chunk.getSize() + "");
-        real_resource.setLastChunk(chunk);
+        chunk_list.put(real_resource.getKeyHash() + "_" + chunk_number.toString(32), chunk.getContentHash());
+        chunk_list.remove(real_resource.getKeyHash() + "_" + chunk_number.add(BigInteger.ONE).toString(32));
+        resource.setSize(new BigInteger(resource.getSize()).add(new BigInteger(chunk.getSize() + "")).toString());
         db.commit();
     }
 
-    public ChunkNode findChunkNode(String resource_chunk_hash) {
-        String xml = ((ConcurrentMap<String, String>) db.hashMap(ResourceKeys.CHUNK_LIST_DB).open()).get(resource_chunk_hash);
-        if (xml == null) {
-            return null;
-        }
-        return Serializer.deserializeChunkNode(xml);
+    public String findChunkNode(final ResourceInStorage resource, String number) {
+        return (String) db.hashMap(ResourceKeys.CHUNK_LIST_DB).open().get(resource.getKeyHash() + "_" + number);
     }
 
-    public void saveChunkNode(ChunkNode chunkNode) {
-        ((ConcurrentMap<String, String>) db.hashMap(ResourceKeys.CHUNK_LIST_DB).open()).put(chunkNode.getNodeKey(), Serializer.serializeChunkNode(chunkNode));
+    private void emptyResourceChunkNode(final String resource_key_hash) {
+        db.hashMap(ResourceKeys.CHUNK_LIST_DB).open().remove(resource_key_hash + "_0");
+        db.hashMap(ResourceKeys.CHUNK_LIST_DB).open().remove(resource_key_hash + "__count");
         db.commit();
+    }
+
+    public void emptyResourceChunkNode(final ResourceInStorage resource) {
+        emptyResourceChunkNode(resource.getKeyHash());
     }
 
     public void setBucketFirstResource(ResourceInStorage resource) {
@@ -365,7 +385,10 @@ public class ResourceDaoImpl implements ResourceDao {
         try {
             return new ResourceLinkIterator(head);
         } catch (ResourceKeys.ResourceNotIndexed ex) {
-            LOG.error(ex.getMessage(), ex);
+            LOG.error(MessageFormat.format(""
+                    + "There is Problem about the start Resource in the linked list storage. "
+                    + "START RESOURCE: [{0}#{1}]",
+                    head.getKey(), head.getKeyHash()), ex);
             return new Iterator<Resource>() {
                 @Override
                 public boolean hasNext() {
@@ -408,10 +431,13 @@ public class ResourceDaoImpl implements ResourceDao {
         } else {
             throw new NoSuchBucket(belonged_bucket.getName());
         }
+        if (key_hash instanceof String) {
+            emptyResourceChunkNode(key_hash);
+        }
         ((ConcurrentMap<String, String>) db.hashMap(ResourceKeys.RESOURCE_DB).open()).remove(key_hash);
         db.commit();
         int count = 0;
-        while (!removeFromBucketResourceLink(((BucketInStorage) belonged_bucket).getUUID(), resource, key_hash)) {
+        while (!removeFromBucketResourceLink(((BucketInStorage) belonged_bucket).getUUID(), key_hash)) {
             count++;
             if (count > 10) {
                 LOG.warn("Resource [{}] is trying to be removed times: {}", resource.getKey(), count);

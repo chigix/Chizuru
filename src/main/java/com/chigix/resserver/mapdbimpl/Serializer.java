@@ -1,6 +1,7 @@
 package com.chigix.resserver.mapdbimpl;
 
 import com.chigix.resserver.entity.Bucket;
+import com.chigix.resserver.entity.Chunk;
 import com.chigix.resserver.entity.Resource;
 import com.chigix.resserver.mapdbimpl.dao.BucketNotPersistedException;
 import java.io.ByteArrayInputStream;
@@ -53,18 +54,6 @@ public class Serializer {
             writer.writeStartElement("Key");
             writer.writeCharacters(resource.getKey());
             writer.writeEndElement();// Resource.key
-            if (resource instanceof ResourceInStorage) {
-                if (((ResourceInStorage) resource).getFirstChunk() != null) {
-                    writer.writeStartElement("FirstChunk");
-                    writer.writeCharacters(((ResourceInStorage) resource).getFirstChunk().getContentHash());
-                    writer.writeEndElement();// Resource.FirstChunk
-                }
-                if (((ResourceInStorage) resource).getLastChunk() != null) {
-                    writer.writeStartElement("LastChunk");
-                    writer.writeCharacters(((ResourceInStorage) resource).getLastChunk().getContentHash());
-                    writer.writeEndElement();// Resource.LastChunk
-                }
-            }
             writer.writeStartElement("Etag");
             writer.writeCharacters(resource.getETag());
             writer.writeEndElement();// Resource.Etag
@@ -122,63 +111,7 @@ public class Serializer {
                 Node meta = meta_nodes.item(i);
                 result.setMetaData(meta.getAttributes().getNamedItem("name").getTextContent(), meta.getAttributes().getNamedItem("content").getTextContent());
             }
-            Node first_chunk_node = (Node) xpath.compile("//Resource/FirstChunk").evaluate(doc, XPathConstants.NODE);
-            Node last_chunk_node = (Node) xpath.compile("//Resource/LastChunk").evaluate(doc, XPathConstants.NODE);
-            if (first_chunk_node != null) {
-                result.setFirstChunk(first_chunk_node.getTextContent());
-            }
-            if (last_chunk_node != null) {
-                result.setFirstChunk(last_chunk_node.getTextContent());
-            }
             bucket_proxy.resetProxy();
-        } catch (XPathExpressionException ex) {
-            LOG.error("UNEXPECTED", ex);
-            throw new RuntimeException(ex);
-        }
-        return result;
-    }
-
-    public static String serializeChunkNode(ChunkNode chunkNode) {
-        StringWriter result = new StringWriter();
-        XMLStreamWriter writer;
-        try {
-            writer = XMLOutputFactory.newFactory().createXMLStreamWriter(result);
-        } catch (XMLStreamException ex) {
-            LOG.error("Unexpected", ex);
-            throw new RuntimeException(ex);
-        }
-        try {
-            writer.writeStartDocument("UTF-8", "1.0");
-            writer.writeStartElement("ChunkNode");
-            writer.writeStartElement("ContentHash");
-            writer.writeCharacters(chunkNode.getContentHash());
-            writer.writeEndElement();// ChunkNode.ContentHash
-            writer.writeStartElement("ParentResourceKeyHash");
-            writer.writeCharacters(chunkNode.getParentResourceKeyHash());
-            writer.writeEndElement();// ChunkNode.ParentResourceKeyHash
-            writer.writeEndElement();// ChunkNode
-            writer.writeEndDocument();
-            writer.close();
-        } catch (XMLStreamException ex) {
-            LOG.error("Unexpected", ex);
-            throw new RuntimeException(ex);
-        }
-        return result.toString();
-    }
-
-    public static ChunkNode deserializeChunkNode(String xml) {
-        XPath xpath = XPathFactory.newInstance().newXPath();
-        Document doc;
-        try {
-            doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(xml.getBytes("UTF-8")));
-        } catch (ParserConfigurationException | SAXException | IOException ex) {
-            LOG.error("UNEXPECTED", ex);
-            throw new RuntimeException(ex);
-        }
-        final ChunkNode result;
-        try {
-            result = new ChunkNode(((Node) xpath.compile("//ChunkNode/ParentResourceKeyHash").evaluate(doc, XPathConstants.NODE)).getTextContent(),
-                    ((Node) xpath.compile("//ChunkNode/ContentHash").evaluate(doc, XPathConstants.NODE)).getTextContent());
         } catch (XPathExpressionException ex) {
             LOG.error("UNEXPECTED", ex);
             throw new RuntimeException(ex);
@@ -285,6 +218,48 @@ public class Serializer {
                     ((Node) xpath.compile("//Bucket/Name").evaluate(doc, XPathConstants.NODE)).getTextContent(),
                     DateTime.parse(((Node) xpath.compile("//Bucket/CreationTime").evaluate(doc, XPathConstants.NODE)).getTextContent()));
             result.setUUID(((Node) xpath.compile("//Bucket/ChizuruUUID").evaluate(doc, XPathConstants.NODE)).getTextContent());
+        } catch (XPathExpressionException ex) {
+            LOG.error("UNEXPECTED", ex);
+            throw new RuntimeException(ex);
+        }
+        return result;
+    }
+
+    public static String serializeChunk(Chunk c) {
+        StringWriter string = new StringWriter();
+        XMLStreamWriter writer;
+        try {
+            writer = XMLOutputFactory.newFactory().createXMLStreamWriter(string);
+            writer.writeStartDocument("UTF-8", "1.0");
+            writer.writeStartElement("Chunk");
+            writer.writeStartElement("ContentHash");
+            writer.writeCharacters(c.getContentHash());
+            writer.writeEndElement(); // Chunk.ContentHash
+            writer.writeStartElement("Size");
+            writer.writeCharacters(c.getSize() + "");
+            writer.writeEndElement(); // Chunk.Size
+            writer.writeEndElement();// Chunk
+            writer.writeEndDocument();
+        } catch (XMLStreamException ex) {
+            LOG.error("Unexpected", ex);
+            throw new RuntimeException(ex);
+        }
+        return string.toString();
+    }
+
+    public static Chunk deserializeChunk(String xml) {
+        XPath xpath = XPathFactory.newInstance().newXPath();
+        Document doc;
+        try {
+            doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(xml.getBytes("UTF-8")));
+        } catch (ParserConfigurationException | SAXException | IOException ex) {
+            LOG.error("UNEXPECTED", ex);
+            throw new RuntimeException(ex);
+        }
+        final Chunk result;
+        try {
+            result = new Chunk(((Node) xpath.compile("//Chunk/ContentHash").evaluate(doc, XPathConstants.NODE)).getTextContent(),
+                    Integer.valueOf(((Node) xpath.compile("//Chunk/Size").evaluate(doc, XPathConstants.NODE)).getTextContent()));
         } catch (XPathExpressionException ex) {
             LOG.error("UNEXPECTED", ex);
             throw new RuntimeException(ex);

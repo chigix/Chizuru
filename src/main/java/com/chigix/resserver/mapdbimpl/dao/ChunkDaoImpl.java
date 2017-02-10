@@ -1,6 +1,7 @@
 package com.chigix.resserver.mapdbimpl.dao;
 
 import com.chigix.resserver.entity.Chunk;
+import com.chigix.resserver.mapdbimpl.Serializer;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.NoSuchElementException;
@@ -52,10 +53,30 @@ public class ChunkDaoImpl {
     }
 
     public Chunk findChunk(String contentHash) {
-        ConcurrentMap<String, Chunk> map = (ConcurrentMap<String, Chunk>) db.hashMap(ChunkKeys.CHUNK_DB).open();
-        return map.get(contentHash);
+        ConcurrentMap<String, String> map = (ConcurrentMap<String, String>) db.hashMap(ChunkKeys.CHUNK_DB).open();
+        String xml = map.get(contentHash);
+        if (xml == null) {
+            return null;
+        }
+        Chunk data = Serializer.deserializeChunk(xml);
+        Chunk readerInputImpl = newChunk(data.getContentHash(), data.getSize());
+        return readerInputImpl;
     }
 
+    public void saveChunk(Chunk c) {
+        ConcurrentMap<String, String> map = (ConcurrentMap<String, String>) db.hashMap(ChunkKeys.CHUNK_DB).open();
+        map.put(c.getContentHash(), Serializer.serializeChunk(c));
+        db.commit();
+    }
+
+    /**
+     * Create a simple Chunk object with contentHash only. If other features is
+     * needed later, then database search and inputstream built is support
+     * through this proxy.
+     *
+     * @param contentHash
+     * @return
+     */
     public Chunk newChunkProxy(String contentHash) {
         final AtomicReference<Chunk> chunk = new AtomicReference<>();
         chunk.set(null);

@@ -1,5 +1,6 @@
 package com.chigix.resserver.mapdbimpl;
 
+import com.chigix.resserver.entity.Chunk;
 import com.chigix.resserver.entity.ModelProxy;
 import com.chigix.resserver.entity.Resource;
 import java.util.UUID;
@@ -79,29 +80,6 @@ public class SerializerTest {
     }
 
     /**
-     * Test of serializeChunkNode method, of class Serializer.
-     */
-    @Test
-    public void testSerializeChunkNode() {
-        System.out.println("serializeChunkNode");
-        ChunkNode chunkNode = new ChunkNode("RESOURCE_KEY_HASH", "CONTENT_HASH");
-        assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?><ChunkNode><ContentHash>CONTENT_HASH</ContentHash><ParentResourceKeyHash>RESOURCE_KEY_HASH</ParentResourceKeyHash></ChunkNode>",
-                Serializer.serializeChunkNode(chunkNode));
-    }
-
-    /**
-     * Test of deserializeChunkNode method, of class Serializer.
-     */
-    @Test
-    public void testDeserializeChunkNode() {
-        System.out.println("deserializeChunkNode");
-        ChunkNode chunkNode = new ChunkNode("RESOURCE_KEY_HASH", "CONTENT_HASH");
-        ChunkNode result = Serializer.deserializeChunkNode(Serializer.serializeChunkNode(chunkNode));
-        assertEquals(chunkNode.getContentHash(), result.getContentHash());
-        assertEquals(chunkNode.getParentResourceKeyHash(), result.getParentResourceKeyHash());
-    }
-
-    /**
      * Test of serializeResourceLinkNode method, of class Serializer.
      */
     @Test
@@ -136,7 +114,6 @@ public class SerializerTest {
         System.out.println("serializeBucket");
         BucketInStorage b = new BucketInStorage("TESTING_BUCKET", DateTime.parse("2017-01-20T02:19:36.037Z"));
         b.setUUID(UUID.randomUUID().toString());
-        String result = Serializer.serializeBucket(b);
         assertEquals(
                 "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Bucket><Name>TESTING_BUCKET</Name>"
                 + "<CreationTime>2017-01-20T02:19:36.037Z</CreationTime><ChizuruUUID>"
@@ -153,6 +130,32 @@ public class SerializerTest {
         BucketInStorage b = new BucketInStorage("TARGET");
         b.setUUID(UUID.randomUUID().toString());
         assertEquals(b.getCreationTime().toString(), Serializer.deserializeBucket(Serializer.serializeBucket(b)).getCreationTime().toString());
+    }
+
+    /**
+     * Test of serializeChunk method, of class Serializer.
+     */
+    @Test
+    public void testSerializeChunk() {
+        System.out.println("serializeChunk");
+        assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+                + "<Chunk><ContentHash>c4ca4238a0b923820dcc509a6f75849b</ContentHash>"
+                + "<Size>1</Size></Chunk>",
+                Serializer.serializeChunk(new Chunk("c4ca4238a0b923820dcc509a6f75849b", 1))
+        );// md5("1")
+    }
+
+    /**
+     * Test of deserializeChunk method, of class Serializer.
+     */
+    @Test
+    public void testDeserializeChunk() {
+        System.out.println("deserializeChunk");
+        Chunk c = new Chunk("c4ca4238a0b923820dcc509a6f75849b", 1);// md5("1")
+        assertEquals(c.getContentHash(),
+                Serializer.deserializeChunk(Serializer.serializeChunk(c)).getContentHash());
+        assertEquals(c.getSize(),
+                Serializer.deserializeChunk(Serializer.serializeChunk(c)).getSize());
     }
 
 }

@@ -3,10 +3,13 @@ package com.chigix.resserver.mapdbimpl;
 import com.chigix.resserver.entity.Chunk;
 import com.chigix.resserver.entity.Resource;
 import com.chigix.resserver.mapdbimpl.dao.ChunkDaoImpl;
+import com.chigix.resserver.mapdbimpl.dao.ResourceDaoImpl;
+import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.MessageFormat;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 /**
  *
@@ -14,13 +17,9 @@ import java.util.Iterator;
  */
 public class ResourceInStorage extends Resource {
 
-    private Chunk firstChunk;
-    private String firstChunkHash = null;
-
-    private Chunk lastChunk;
-    private String lastChunkHash = null;
-
     private ChunkDaoImpl chunkdao;
+
+    private ResourceDaoImpl resourcedao;
 
     private final BucketNameSearchProxy bucketProxy;
 
@@ -38,57 +37,33 @@ public class ResourceInStorage extends Resource {
         });
     }
 
-    public Chunk getFirstChunk() {
-        if (firstChunkHash == null) {
-            return null;
-        } else if (firstChunk == null) {
-            firstChunk = chunkdao.newChunkProxy(firstChunkHash);
-        }
-        return firstChunk;
-    }
-
-    public Chunk getLastChunk() {
-        if (lastChunkHash == null) {
-            return null;
-        } else if (lastChunk == null) {
-            lastChunk = chunkdao.newChunkProxy(lastChunkHash);
-        }
-        return lastChunk;
+    public boolean isEmptied() {
+        return resourcedao.findChunkNode(this, "0") == null;
     }
 
     @Override
     public Iterator<Chunk> getChunks() {
-        return super.getChunks();
-    }
+        final ResourceInStorage self = this;
+        return new ChunksIterator() {
+            @Override
+            protected ResourceInStorage getBelongedResource() {
+                return self;
+            }
 
-    public void setFirstChunk(Chunk firstChunk) {
-        this.firstChunk = firstChunk;
-        this.firstChunkHash = firstChunk.getContentHash();
-    }
-
-    public void setFirstChunk(String firstChunkHash) {
-        this.firstChunkHash = firstChunkHash;
-    }
-
-    public void setLastChunk(Chunk lastChunk) {
-        this.lastChunk = lastChunk;
-        this.lastChunkHash = lastChunk.getContentHash();
-    }
-
-    public void setLastChunk(String lastChunkHash) {
-        this.lastChunkHash = lastChunkHash;
+        };
     }
 
     @Override
     public void empty() {
-        firstChunk = null;
-        firstChunkHash = null;
-        lastChunk = null;
-        lastChunkHash = null;
+        resourcedao.emptyResourceChunkNode(this);
     }
 
     public void setChunkdao(ChunkDaoImpl chunkdao) {
         this.chunkdao = chunkdao;
+    }
+
+    public void setResourcedao(ResourceDaoImpl resourcedao) {
+        this.resourcedao = resourcedao;
     }
 
     public BucketNameSearchProxy getBucketProxy() {
@@ -114,6 +89,41 @@ public class ResourceInStorage extends Resource {
             sb.append(String.format("%02x", cipher_byte & 0xff));
         }
         return sb.toString();
+    }
+
+    private class ChunksIterator implements Iterator<Chunk> {
+
+        private BigInteger nextChunkCount = BigInteger.ZERO;
+
+        protected ResourceInStorage getBelongedResource() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        @Override
+        public boolean hasNext() {
+            if (nextChunkCount == null) {
+                return false;
+            }
+            return resourcedao.findChunkNode(getBelongedResource(), nextChunkCount.toString(32)) != null;
+        }
+
+        @Override
+        public Chunk next() {
+            String content_hash = resourcedao.findChunkNode(getBelongedResource(), nextChunkCount.toString(32));
+            if (content_hash == null) {
+                nextChunkCount = null;
+                throw new NoSuchElementException();
+            }
+            nextChunkCount = nextChunkCount.add(BigInteger.ONE);
+            return chunkdao.findChunk(content_hash);
+        }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException("Resource Chunk is not "
+                    + "allowed to be deleted individually, please use Resource#empty method.");
+        }
+
     }
 
 }
