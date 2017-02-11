@@ -28,6 +28,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.security.MessageDigest;
 import java.util.UUID;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,6 +67,7 @@ public class Routing extends RoutingConfig.PUT {
                 new SimpleChannelInboundHandler<Context>() {
             @Override
             protected void messageReceived(ChannelHandlerContext ctx, Context msg) throws Exception {
+                msg.getResource().empty();
                 ctx.channel().attr(CONTEXT).set(msg);
             }
         }, new SimpleChannelInboundHandler<HttpContent>() {
@@ -106,8 +109,9 @@ public class Routing extends RoutingConfig.PUT {
                 routing_ctx.getSha256Digest().update(chunk_content);
                 final String chunk_hash = Authorization.HexEncode(digest.digest());
                 File chunk_file = new File(application.getChunksDir(), "./" + chunk_hash);
-                if (application.ChunkDao.increaseChunkRef(chunk_hash) > 1) {
-                } else if (chunk_file.createNewFile()) {
+                final Chunk chunk = application.ChunkDao.newChunk(chunk_hash, chunk_content.length);
+                application.ChunkDao.increaseChunkRef(chunk_hash);
+                if (application.ChunkDao.saveChunkIfAbsent(chunk) == null) {
                     try (OutputStream out = new FileOutputStream(chunk_file)) {
                         out.write(chunk_content);
                     } catch (IOException iOException) {
@@ -125,7 +129,6 @@ public class Routing extends RoutingConfig.PUT {
                         };
                     }
                 }
-                final Chunk chunk = application.ChunkDao.newChunk(chunk_hash, chunk_content.length);
                 application.ResourceDao.appendChunk(routing_ctx.getResource(), chunk);
             }
         }, new SimpleChannelInboundHandler<LastHttpContent>() {

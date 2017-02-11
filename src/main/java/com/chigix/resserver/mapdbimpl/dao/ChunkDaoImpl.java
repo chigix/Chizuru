@@ -63,10 +63,15 @@ public class ChunkDaoImpl {
         return readerInputImpl;
     }
 
-    public void saveChunk(Chunk c) {
+    public Chunk saveChunkIfAbsent(Chunk c) {
         ConcurrentMap<String, String> map = (ConcurrentMap<String, String>) db.hashMap(ChunkKeys.CHUNK_DB).open();
-        map.put(c.getContentHash(), Serializer.serializeChunk(c));
+        String result = map.putIfAbsent(c.getContentHash(), Serializer.serializeChunk(c));
         db.commit();
+        if (result == null) {
+            return null;
+        } else {
+            return Serializer.deserializeChunk(result);
+        }
     }
 
     /**
