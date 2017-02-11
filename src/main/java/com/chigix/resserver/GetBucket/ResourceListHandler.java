@@ -10,18 +10,20 @@ import io.netty.handler.codec.http.DefaultHttpResponse;
 import io.netty.handler.codec.http.HttpChunkedInput;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
+import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.QueryStringDecoder;
-import io.netty.handler.codec.http.router.HttpRouted;
 import io.netty.handler.stream.ChunkedStream;
 import io.netty.util.CharsetUtil;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.nio.charset.Charset;
 import java.util.Iterator;
 import java.util.List;
+import java.util.zip.GZIPOutputStream;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
@@ -31,7 +33,7 @@ import javax.xml.stream.XMLStreamWriter;
  * @author Richard Lea <chigix@zoho.com>
  */
 @ChannelHandler.Sharable
-public class ResourceListHandler extends SimpleChannelInboundHandler<HttpRouted> {
+public class ResourceListHandler extends SimpleChannelInboundHandler<Context> {
 
     private static ResourceListHandler INSTANCE = null;
 
@@ -57,13 +59,13 @@ public class ResourceListHandler extends SimpleChannelInboundHandler<HttpRouted>
      * @TODO ONLY SUPPORT standard storage class.
      *
      * @param ctx
-     * @param msg
+     * @param route_ctx
      * @throws Exception
      */
     @Override
-    protected void messageReceived(ChannelHandlerContext ctx, HttpRouted msg) throws Exception {
-        Bucket target_bucket = application.BucketDao.findBucketByName((String) msg.decodedParams().get("bucketName"));
-        QueryStringDecoder decoder = new QueryStringDecoder(msg.getRequestMsg().uri());
+    protected void messageReceived(ChannelHandlerContext ctx, final Context route_ctx) throws Exception {
+        final boolean isGzip = checkIsGzip(route_ctx.getRoutedInfo().getRequestMsg());
+        QueryStringDecoder decoder = new QueryStringDecoder(route_ctx.getRoutedInfo().getRequestMsg().uri());
         String delimiter = decodeQueryParamString(decoder, "delimiter");
         String encoding_type = decodeQueryParamString(decoder, "encoding-type");
         String max_keys = decodeQueryParamString(decoder, "max-keys");
@@ -75,13 +77,18 @@ public class ResourceListHandler extends SimpleChannelInboundHandler<HttpRouted>
         resp.headers().set(HttpHeaderNames.CONTENT_TYPE, "application/xml");
         resp.headers().set(HttpHeaderNames.TRANSFER_ENCODING, HttpHeaderValues.CHUNKED);
         ctx.write(resp);
-        PipedInputStream inputstream = new PipedInputStream();
+        final PipedInputStream inputstream = new PipedInputStream();
         ctx.write(new HttpChunkedInput(new ChunkedStream(inputstream)));
-        try (OutputStreamWriter writer = new OutputStreamWriter(new PipedOutputStream(inputstream), CharsetUtil.UTF_8)) {
+        OutputStream encoding_stream = new PipedOutputStream(inputstream);
+        if (isGzip) {
+            encoding_stream = new GZIPOutputStream(encoding_stream);
+            resp.headers().set(HttpHeaderNames.CONTENT_ENCODING, HttpHeaderValues.GZIP);
+        }
+        try (OutputStreamWriter writer = new OutputStreamWriter(encoding_stream, CharsetUtil.UTF_8)) {
             XMLStreamWriter xml_writer = XML_FACTORY.createXMLStreamWriter(writer);
             xml_writer.writeStartDocument("UTF-8", "1.0");
             xml_writer.writeStartElement("ListBucketResult");
-            xmlWriteBucketName(xml_writer, application.BucketDao.findBucketByName((String) msg.decodedParams().get("bucketName")));
+            xmlWriteBucketName(xml_writer, route_ctx.getTargetBucket());
             xmlWriteStartAfter(xml_writer, start_after); //ListBucketResult.StartAfter
             Charset encodingType;
             if (encoding_type == null) {
@@ -103,7 +110,7 @@ public class ResourceListHandler extends SimpleChannelInboundHandler<HttpRouted>
                 xml_writer.writeCharacters(delimiter);
                 xml_writer.writeEndElement();//ListBucketResult.Delimiter
             }
-            Iterator<Resource> resources = application.ResourceDao.listResources(target_bucket);
+            Iterator<Resource> resources = application.ResourceDao.listResources(route_ctx.getTargetBucket());
             while (resources.hasNext()) {
                 Resource next = resources.next();
                 xmlWriteResourceContent(xml_writer, next);//ListBucketResult.Contents
@@ -181,6 +188,21 @@ public class ResourceListHandler extends SimpleChannelInboundHandler<HttpRouted>
             writer.writeCharacters("100");
         }
         writer.writeEndElement();//ListBucketResult.MaxKeys
+    }
+
+    private boolean checkIsGzip(HttpRequest req) {
+        String[] accepting_encodings;
+        try {
+            accepting_encodings = req.headers().get(HttpHeaderNames.ACCEPT_ENCODING).toString().split(",");
+        } catch (NullPointerException e) {
+            accepting_encodings = new String[]{};
+        }
+        for (String accepting_encoding : accepting_encodings) {
+            if (accepting_encoding.trim().equalsIgnoreCase("gzip")) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }

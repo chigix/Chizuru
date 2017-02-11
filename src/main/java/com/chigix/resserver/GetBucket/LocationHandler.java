@@ -1,6 +1,7 @@
 package com.chigix.resserver.GetBucket;
 
 import com.chigix.resserver.ApplicationContext;
+import com.chigix.resserver.entity.Bucket;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerAdapter;
@@ -49,10 +50,8 @@ public class LocationHandler extends ChannelHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         ctx.channel().attr(LOCATION_CHECK_STATUS).compareAndSet(null, Status.PASS);
-        if (msg instanceof HttpRouted && isLocationRequest(ctx, (HttpRouted) msg)) {
+        if (msg instanceof Context && isLocationRequest(ctx, ((Context) msg).getRoutedInfo())) {
             ctx.channel().attr(LOCATION_CHECK_STATUS).set(Status.OCCUPIED);
-            HttpRouted routed = (HttpRouted) msg;
-            routed.allow();
             return;
         }
         if (ctx.channel().attr(LOCATION_CHECK_STATUS).get() == Status.PASS) {

@@ -1,9 +1,11 @@
 package com.chigix.resserver.GetBucket;
 
 import com.chigix.resserver.ApplicationContext;
+import com.chigix.resserver.entity.Bucket;
 import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
+import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.handler.codec.http.router.HttpRouted;
 import io.netty.handler.codec.http.router.RoutingConfig;
@@ -21,7 +23,7 @@ public class Routing extends RoutingConfig.GET {
 
     private final ApplicationContext application;
 
-    private static final AttributeKey<HttpRouted> ROUTED_INFO = AttributeKey.newInstance(UUID.randomUUID().toString());
+    private static final AttributeKey<Context> ROUTING_CONTEXT = AttributeKey.newInstance(UUID.randomUUID().toString());
 
     public Routing(ApplicationContext ctx) {
         application = ctx;
@@ -39,28 +41,31 @@ public class Routing extends RoutingConfig.GET {
 
     @Override
     public void configurePipeline(ChannelPipeline pipeline) {
-        pipeline.addLast(new LocationHandler(application))
-                .addLast(new ChunkedWriteHandler())
-                .addLast(new ChannelHandlerAdapter() {
-                    @Override
-                    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-                        if (msg instanceof HttpRouted) {
-                            ((HttpRouted) msg).allow();
-                            ctx.channel().attr(ROUTED_INFO).set((HttpRouted) msg);
-                        } else if (msg instanceof LastHttpContent) {
-                            HttpRouted routed_info = ctx.channel().attr(ROUTED_INFO).get();
-                            if (routed_info == null) {
-                                throw new Exception("NO http routed info recorded previously.");
-                            }
-                            super.channelRead(ctx, routed_info);
-                            ctx.channel().attr(ROUTED_INFO).set(null);
-                        }
-                        ReferenceCountUtil.release(msg);
+        pipeline.addLast(new SimpleChannelInboundHandler<HttpRouted>() {
+            @Override
+            protected void messageReceived(ChannelHandlerContext ctx, HttpRouted msg) throws Exception {
+                Bucket target_bucket = application.BucketDao.findBucketByName((String) msg.decodedParams().get("bucketName"));
+                Context routing_ctx = new Context(target_bucket, msg);
+                ctx.attr(ROUTING_CONTEXT).set(routing_ctx);
+                ctx.fireChannelRead(routing_ctx);
+            }
+        },
+                new LocationHandler(application),
+                new ChunkedWriteHandler(),
+                new ChannelHandlerAdapter() {
+            @Override
+            public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+                if (msg instanceof LastHttpContent) {
+                    Context routing_ctx = ctx.channel().attr(ROUTING_CONTEXT).get();
+                    if (routing_ctx != null) {
+                        super.channelRead(ctx, routing_ctx);
+                        ctx.channel().attr(ROUTING_CONTEXT).set(null);
                     }
+                }
+                ReferenceCountUtil.release(msg);
+            }
 
-                })
-                .addLast(ResourceListHandler.getInstance(application))
-                .addLast(new DefaultExceptionForwarder());
+        }, ResourceListHandler.getInstance(application), new DefaultExceptionForwarder());
     }
 
 }
