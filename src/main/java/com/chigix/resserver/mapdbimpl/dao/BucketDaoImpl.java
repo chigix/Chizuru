@@ -9,6 +9,7 @@ import com.chigix.resserver.mapdbimpl.BucketInStorage;
 import com.chigix.resserver.mapdbimpl.Serializer;
 import com.chigix.resserver.mapdbimpl.iterator.BucketIterator;
 import java.util.Iterator;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentMap;
 import org.mapdb.DB;
 
@@ -51,6 +52,7 @@ public class BucketDaoImpl implements BucketDao {
     public Bucket createBucket(String name) throws BucketAlreadyExists {
         ConcurrentMap<String, String> map = (ConcurrentMap<String, String>) db.hashMap(BucketKeys.BUCKET_DB).open();
         BucketInStorage b = new BucketInStorage(name);
+        b.setUUID(UUID.randomUUID().toString());
         String xml = Serializer.serializeBucket(b);
         if (map.putIfAbsent(name, xml) == null) {
             db.commit();
