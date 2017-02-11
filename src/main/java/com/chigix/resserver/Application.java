@@ -173,6 +173,7 @@ public class Application {
                 this.newRouting(ctx, new com.chigix.resserver.PutBucket.Routing(application));
                 this.newRouting(ctx, new com.chigix.resserver.PostBucket.Routing(application));
                 this.newRouting(ctx, new com.chigix.resserver.DeleteBucket.Routing(application));
+                this.newRouting(ctx, new com.chigix.resserver.GetResource.Routing(application));
                 this.newRouting(ctx, new com.chigix.resserver.PutResource.Routing(application));
             }
 
