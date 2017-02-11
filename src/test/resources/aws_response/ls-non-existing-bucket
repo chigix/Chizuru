@@ -1,0 +1,20 @@
+GET /bankaijj/?location= HTTP/1.1
+Host: s3.amazonaws.com
+User-Agent: Minio (windows; amd64) minio-go/2.0.2 mc/2016-12-09T18:23:19Z
+Authorization: AWS4-HMAC-SHA256 Credential=**REDACTED**/20170210/us-east-1/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=**REDACTED**
+X-Amz-Content-Sha256: UNSIGNED-PAYLOAD
+X-Amz-Date: 20170210T162357Z
+Accept-Encoding: gzip
+
+mc: <DEBUG> HTTP/1.1 404 Not Found
+Transfer-Encoding: chunked
+Content-Type: application/xml
+Date: Fri, 10 Feb 2017 16:23:58 GMT
+Server: AmazonS3
+X-Amz-Id-2: LjhFyi553waoY9o3vfgXDAgNxm2Y8tYNyvudkJcdbrl6qUpQOt0OrK9rciGgeE+cvi872uFyiXo=
+X-Amz-Request-Id: 44B5C48AC29A8753
+
+12a
+<?xml version="1.0" encoding="UTF-8"?>
+<Error><Code>NoSuchBucket</Code><Message>The specified bucket does not exist</Message><BucketName>bankaijj</BucketName><RequestId>44B5C48AC29A8753</RequestId><HostId>LjhFyi553waoY9o3vfgXDAgNxm2Y8tYNyvudkJcdbrl6qUpQOt0OrK9rciGgeE+cvi872uFyiXo=</HostId></Error>
+0
