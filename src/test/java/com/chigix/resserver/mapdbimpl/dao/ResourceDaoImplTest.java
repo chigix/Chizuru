@@ -6,14 +6,11 @@ import com.chigix.resserver.entity.Resource;
 import com.chigix.resserver.entity.dao.BucketDao;
 import com.chigix.resserver.entity.error.NoSuchKey;
 import com.chigix.resserver.mapdbimpl.BucketInStorage;
-import com.chigix.resserver.mapdbimpl.ChunkNode;
 import com.chigix.resserver.mapdbimpl.ResourceInStorage;
 import com.chigix.resserver.mapdbimpl.Serializer;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -77,8 +74,8 @@ public class ResourceDaoImplTest {
      * @throws java.lang.Exception
      */
     @Test
-    public void testSaveResource() throws Exception {
-        System.out.println("saveResource");
+    public void testSaveResource_1() throws Exception {
+        System.out.println("saveResource_1");
         BucketDao bucket_dao = new BucketDaoImpl(db);
         BucketInStorage b = (BucketInStorage) bucket_dao.findBucketByName("TESTING");
         Resource r1 = new Resource(b, "key1.file");
@@ -114,26 +111,42 @@ public class ResourceDaoImplTest {
         ).getNextResourceKeyHash());
     }
 
-    /**
-     * Test of saveChunkNode method, of class ResourceDaoImpl.
-     */
     @Test
-    public void testSaveChunkNode() {
-        System.out.println("saveChunkNode");
-        ResourceDaoImpl dao = new ResourceDaoImpl(db);
-        final AtomicInteger ato = new AtomicInteger();
-        for (int i = 0; i < 100; i++) {
-            ato.set(i);
-            new Thread() {
-                @Override
-                public void run() {
-                    System.out.println("#" + ato.get());
-                    ((ConcurrentMap<String, ChunkNode>) db.hashMap(ResourceKeys.CHUNK_LIST_DB).open()).put("JIJIJI", new ChunkNode("JJJJ", "KKKKKK"));
-                }
-
-            }.start();
-        }
-//        dao.saveChunkNode(new ChunkNode("JaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaIJI", "JAAAfffffffffffffffffffffffffffffffffffA"));
+    public void testSaveResource_2() throws Exception {
+        System.out.println("saveResource_2");
+        BucketDao bucket_dao = new BucketDaoImpl(db);
+        BucketInStorage b = (BucketInStorage) bucket_dao.findBucketByName("TESTING");
+        Resource r1 = new Resource(b, "key1.file");
+        Resource r2 = new Resource(b, "key2.file");
+        Resource r3 = new Resource(b, "key3.file");
+        dao.saveResource(r1);
+        dao.saveResource(r2);
+        dao.saveResource(r3);
+        dao.removeResource(r2);
+        dao.saveResource(r2);
+        assertEquals(3, ((Map<String, String>) db.hashMap(ResourceKeys.RESOURCE_DB).open()).keySet().size());
+        assertEquals(ResourceInStorage.hashKey(b.getUUID(), r1.getKey()), ((Map<String, String>) db.hashMap(ResourceKeys.RESOURCE_LINK_START_DB).open()).get(b.getUUID()));
+        assertEquals(ResourceInStorage.hashKey(b.getUUID(), r2.getKey()), ((Map<String, String>) db.hashMap(ResourceKeys.RESOURCE_LINK_END_DB).open()).get(b.getUUID()));
+        assertNull(Serializer.deserializeResourceLinkNode(
+                ((Map<String, String>) db.hashMap(ResourceKeys.RESOURCE_LINK_DB).open())
+                        .get(ResourceInStorage.hashKey(b.getUUID(), r1.getKey()))
+        ).getPreviousResourceKeyHash());
+        assertEquals(ResourceInStorage.hashKey(b.getUUID(), r3.getKey()),
+                Serializer.deserializeResourceLinkNode(((Map<String, String>) db.hashMap(ResourceKeys.RESOURCE_LINK_DB).open())
+                        .get(ResourceInStorage.hashKey(b.getUUID(), r1.getKey()))).getNextResourceKeyHash());
+        assertEquals(ResourceInStorage.hashKey(b.getUUID(), r1.getKey()),
+                Serializer.deserializeResourceLinkNode(((Map<String, String>) db.hashMap(ResourceKeys.RESOURCE_LINK_DB).open())
+                        .get(ResourceInStorage.hashKey(b.getUUID(), r3.getKey()))).getPreviousResourceKeyHash());
+        assertEquals(ResourceInStorage.hashKey(b.getUUID(), r2.getKey()),
+                Serializer.deserializeResourceLinkNode(((Map<String, String>) db.hashMap(ResourceKeys.RESOURCE_LINK_DB).open())
+                        .get(ResourceInStorage.hashKey(b.getUUID(), r3.getKey()))).getNextResourceKeyHash());
+        assertEquals(ResourceInStorage.hashKey(b.getUUID(), r3.getKey()),
+                Serializer.deserializeResourceLinkNode(((Map<String, String>) db.hashMap(ResourceKeys.RESOURCE_LINK_DB).open())
+                        .get(ResourceInStorage.hashKey(b.getUUID(), r2.getKey()))).getPreviousResourceKeyHash());
+        assertNull(Serializer.deserializeResourceLinkNode(
+                ((Map<String, String>) db.hashMap(ResourceKeys.RESOURCE_LINK_DB).open())
+                        .get(ResourceInStorage.hashKey(b.getUUID(), r2.getKey()))
+        ).getNextResourceKeyHash());
     }
 
     /**
@@ -183,31 +196,31 @@ public class ResourceDaoImplTest {
 
     /**
      * Test of appendChunk method, of class ResourceDaoImpl.
+     *
+     * @throws java.lang.Exception
      */
     @Test
-    public void testAppendChunk() {
+    public void testAppendChunk() throws Exception {
         System.out.println("appendChunk");
-        Resource resource = null;
-        Chunk chunk = null;
-        ResourceDaoImpl instance = null;
-        instance.appendChunk(resource, chunk);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
-    }
-
-    /**
-     * Test of findChunkNode method, of class ResourceDaoImpl.
-     */
-    @Test
-    public void testFindChunkNode() {
-        System.out.println("findChunkNode");
-        String resource_chunk_hash = "";
-        ResourceDaoImpl instance = null;
-        ChunkNode expResult = null;
-        ChunkNode result = instance.findChunkNode(resource_chunk_hash);
-        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+        BucketDao bucket_dao = new BucketDaoImpl(db);
+        BucketInStorage b = (BucketInStorage) bucket_dao.findBucketByName("TESTING");
+        dao.saveResource(new Resource(b, "testing_file"));
+        ResourceInStorage r = (ResourceInStorage) dao.findResource(b, "testing_file");
+        dao.appendChunk(r, new Chunk("c4ca4238a0b923820dcc509a6f75849b", 1));// md5("1")
+        dao.appendChunk(r, new Chunk("c81e728d9d4c2f636f067f89cc14862c", 1));// md5("2")
+        dao.appendChunk(r, new Chunk("eccbc87e4b5ce2fe28308fd9f2a7baf3", 1));// md5("3")
+        dao.appendChunk(r, new Chunk("a87ff679a2f3e71d9181a67b7542122c", 1));// md5("4")
+        dao.appendChunk(r, new Chunk("e4da3b7fbbce2345d7772b0674a318d5", 1));// md5("5")
+        db.commit();
+        Map<String, String> chunks = (Map<String, String>) db.hashMap(ResourceKeys.CHUNK_LIST_DB).open();
+        assertEquals(6, chunks.size());
+        assertEquals("c4ca4238a0b923820dcc509a6f75849b", chunks.get(r.getKeyHash() + "_0"));
+        assertEquals("c81e728d9d4c2f636f067f89cc14862c", chunks.get(r.getKeyHash() + "_1"));
+        assertEquals("eccbc87e4b5ce2fe28308fd9f2a7baf3", chunks.get(r.getKeyHash() + "_2"));
+        assertEquals("a87ff679a2f3e71d9181a67b7542122c", chunks.get(r.getKeyHash() + "_3"));
+        assertEquals("e4da3b7fbbce2345d7772b0674a318d5", chunks.get(r.getKeyHash() + "_4"));
+        assertEquals("4", chunks.get(r.getKeyHash() + "__count"));
+        assertNull(chunks.get(r.getKeyHash() + "_5"));
     }
 
     /**
@@ -275,8 +288,8 @@ public class ResourceDaoImplTest {
      * @throws java.lang.Exception
      */
     @Test
-    public void testRemoveResource() throws Exception {
-        System.out.println("removeResource");
+    public void testRemoveResource_1() throws Exception {
+        System.out.println("removeResource_1");
         BucketDao bucket_dao = new BucketDaoImpl(db);
         BucketInStorage b = (BucketInStorage) bucket_dao.findBucketByName("TESTING");
         Resource r1 = new Resource(b, "key1.file");
@@ -284,11 +297,10 @@ public class ResourceDaoImplTest {
         Resource r3 = new Resource(b, "key3.file");
         dao.saveResource(r1);
         dao.saveResource(r2);
-        dao.saveResource(r1);
         dao.saveResource(r3);
-        dao.saveResource(r2);
         dao.removeResource(r2);
-        assertEquals(2, ((Map<String, String>) db.hashMap(ResourceKeys.RESOURCE_DB).open()).keySet().size());
+        assertEquals(2, db.hashMap(ResourceKeys.RESOURCE_LINK_DB).open().keySet().size());
+        assertEquals(2, db.hashMap(ResourceKeys.RESOURCE_DB).open().keySet().size());
         assertEquals(ResourceInStorage.hashKey(b.getUUID(), r1.getKey()), ((Map<String, String>) db.hashMap(ResourceKeys.RESOURCE_LINK_START_DB).open()).get(b.getUUID()));
         assertEquals(ResourceInStorage.hashKey(b.getUUID(), r3.getKey()), ((Map<String, String>) db.hashMap(ResourceKeys.RESOURCE_LINK_END_DB).open()).get(b.getUUID()));
         assertEquals(ResourceInStorage.hashKey(b.getUUID(), r1.getKey()),
@@ -301,18 +313,55 @@ public class ResourceDaoImplTest {
                         ((Map<String, String>) db.hashMap(ResourceKeys.RESOURCE_LINK_DB).open())
                                 .get(ResourceInStorage.hashKey(b.getUUID(), r1.getKey())))
                         .getNextResourceKeyHash());
+    }
+
+    @Test
+    public void testRemoveResource_2() throws Exception {
+        System.out.println("removeResource_3");
+        BucketDao bucket_dao = new BucketDaoImpl(db);
+        BucketInStorage b = (BucketInStorage) bucket_dao.findBucketByName("TESTING");
+        Resource r1 = new Resource(b, "key1.file");
+        Resource r2 = new Resource(b, "key2.file");
+        Resource r3 = new Resource(b, "key3.file");
+        dao.saveResource(r1);
+        dao.saveResource(r2);
+        dao.saveResource(r3);
+        dao.removeResource(r2);
+        dao.removeResource(r3);
+        assertEquals(1, db.hashMap(ResourceKeys.RESOURCE_LINK_DB).open().keySet().size());
+        assertEquals(1, db.hashMap(ResourceKeys.RESOURCE_DB).open().keySet().size());
+        assertEquals(ResourceInStorage.hashKey(b.getUUID(), r1.getKey()), ((Map<String, String>) db.hashMap(ResourceKeys.RESOURCE_LINK_START_DB).open()).get(b.getUUID()));
+        assertEquals(ResourceInStorage.hashKey(b.getUUID(), r1.getKey()), ((Map<String, String>) db.hashMap(ResourceKeys.RESOURCE_LINK_END_DB).open()).get(b.getUUID()));
+        assertEquals(null,
+                Serializer.deserializeResourceLinkNode(
+                        ((Map<String, String>) db.hashMap(ResourceKeys.RESOURCE_LINK_DB).open())
+                                .get(ResourceInStorage.hashKey(b.getUUID(), r1.getKey())))
+                        .getPreviousResourceKeyHash());
+        assertEquals(null,
+                Serializer.deserializeResourceLinkNode(
+                        ((Map<String, String>) db.hashMap(ResourceKeys.RESOURCE_LINK_DB).open())
+                                .get(ResourceInStorage.hashKey(b.getUUID(), r1.getKey())))
+                        .getNextResourceKeyHash());
+    }
+
+    @Test
+    public void testRemoveResource_3() throws Exception {
+        System.out.println("removeResource_3");
+        BucketDao bucket_dao = new BucketDaoImpl(db);
+        BucketInStorage b = (BucketInStorage) bucket_dao.findBucketByName("TESTING");
+        Resource r1 = new Resource(b, "key1.file");
+        Resource r2 = new Resource(b, "key2.file");
+        Resource r3 = new Resource(b, "key3.file");
+        dao.saveResource(r1);
+        dao.saveResource(r2);
+        dao.saveResource(r3);
+        dao.removeResource(r3);
+        dao.removeResource(r2);
         dao.removeResource(r1);
-        assertEquals(1, ((Map<String, String>) db.hashMap(ResourceKeys.RESOURCE_DB).open()).keySet().size());
-        assertEquals(ResourceInStorage.hashKey(b.getUUID(), r3.getKey()), ((Map<String, String>) db.hashMap(ResourceKeys.RESOURCE_LINK_START_DB).open()).get(b.getUUID()));
-        assertEquals(ResourceInStorage.hashKey(b.getUUID(), r3.getKey()), ((Map<String, String>) db.hashMap(ResourceKeys.RESOURCE_LINK_END_DB).open()).get(b.getUUID()));
-        assertNull(Serializer.deserializeResourceLinkNode(
-                ((Map<String, String>) db.hashMap(ResourceKeys.RESOURCE_LINK_DB).open())
-                        .get(ResourceInStorage.hashKey(b.getUUID(), r3.getKey())))
-                .getNextResourceKeyHash());
-        assertNull(Serializer.deserializeResourceLinkNode(
-                ((Map<String, String>) db.hashMap(ResourceKeys.RESOURCE_LINK_DB).open())
-                        .get(ResourceInStorage.hashKey(b.getUUID(), r3.getKey())))
-                .getPreviousResourceKeyHash());
+        assertEquals(0, db.hashMap(ResourceKeys.RESOURCE_LINK_DB).open().keySet().size());
+        assertEquals(0, db.hashMap(ResourceKeys.RESOURCE_DB).open().keySet().size());
+        assertEquals(null, ((Map<String, String>) db.hashMap(ResourceKeys.RESOURCE_LINK_START_DB).open()).get(b.getUUID()));
+        assertEquals(null, ((Map<String, String>) db.hashMap(ResourceKeys.RESOURCE_LINK_END_DB).open()).get(b.getUUID()));
     }
 
     /**
@@ -327,6 +376,35 @@ public class ResourceDaoImplTest {
         Resource expResult = null;
         Resource result = instance.findResource(bucketName, resourceKey);
         assertEquals(expResult, result);
+        // TODO review the generated test code and remove the default call to fail.
+        fail("The test case is a prototype.");
+    }
+
+    /**
+     * Test of findChunkNode method, of class ResourceDaoImpl.
+     */
+    @Test
+    public void testFindChunkNode() {
+        System.out.println("findChunkNode");
+        ResourceInStorage resource = null;
+        String number = "";
+        ResourceDaoImpl instance = null;
+        String expResult = "";
+        String result = instance.findChunkNode(resource, number);
+        assertEquals(expResult, result);
+        // TODO review the generated test code and remove the default call to fail.
+        fail("The test case is a prototype.");
+    }
+
+    /**
+     * Test of emptyResourceChunkNode method, of class ResourceDaoImpl.
+     */
+    @Test
+    public void testEmptyResourceChunkNode() {
+        System.out.println("emptyResourceChunkNode");
+        ResourceInStorage resource = null;
+        ResourceDaoImpl instance = null;
+        instance.emptyResourceChunkNode(resource);
         // TODO review the generated test code and remove the default call to fail.
         fail("The test case is a prototype.");
     }
