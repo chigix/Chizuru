@@ -1,0 +1,19 @@
+HEAD /video.mp4 HTTP/1.1
+Host: oos-for-learning.s3-ap-northeast-1.amazonaws.com
+User-Agent: Minio (windows; amd64) minio-go/2.0.2 mc/2016-12-09T18:23:19Z
+Authorization: AWS4-HMAC-SHA256 Credential=**REDACTED**/20170212/ap-northeast-1/s3/aws4_request, SignedHeaders=expect;host;x-amz-content-sha256;x-amz-date, Signature=**REDACTED**
+Expect: 100-continue
+X-Amz-Content-Sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+X-Amz-Date: 20170212T071742Z
+
+HTTP/1.1 200 OK
+x-amz-id-2: BXQVZWY+qhdmkHV/HW3p58OYIwuxzj9DNeF+Os2HGASioow4Qozfm7hV1gPmnpUs19/glDXwN18=
+x-amz-request-id: B7A79F86349A7C94
+Date: Sun, 12 Feb 2017 07:18:15 GMT
+Last-Modified: Sat, 11 Feb 2017 14:58:01 GMT
+ETag: "92a4a34286e2cec4091bdbcbb7a5c2c4"
+Accept-Ranges: bytes
+Content-Type: video/mp4
+Content-Length: 3885299
+Connection: close
+Server: AmazonS3

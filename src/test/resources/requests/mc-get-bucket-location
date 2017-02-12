@@ -1,0 +1,7 @@
+GET /bankai/?location= HTTP/1.1
+Host: localhost:9000
+User-Agent: Minio (windows; amd64) minio-go/2.0.2 mc/2016-12-09T18:23:19Z
+Authorization: AWS4-HMAC-SHA256 Credential=AKIAI3A3SBQ4G7GWS25A/20170212/us-east-1/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=280a9939e3f3f16d4a715dcd5a6215516f754c804930d6912e167631ef80fad7
+X-Amz-Content-Sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+X-Amz-Date: 20170212T095727Z
+Accept-Encoding: gzip

@@ -1,0 +1,8 @@
+GET /bankai/?max-uploads=1000&prefix=ff.mp4&uploads= HTTP/1.1
+Host: localhost:9000
+User-Agent: Minio (windows; amd64) minio-go/2.0.2 mc/2016-12-09T18:23:19Z
+Authorization: AWS4-HMAC-SHA256 Credential=AKIAI3A3SBQ4G7GWS25A/20170212/33f27f67-0a98-4150-95f1-71c4cbc8ce81/s3/aws4_request, SignedHeaders=expect;host;x-amz-content-sha256;x-amz-date, Signature=a10465d06b8201967b1bcebad2036e3e52dbd740db536c98c7bf6d74c74c38fa
+Expect: 100-continue
+X-Amz-Content-Sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+X-Amz-Date: 20170212T095728Z
+Accept-Encoding: gzip

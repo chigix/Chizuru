@@ -1,0 +1,10 @@
+POST /bankai/c.mp4?uploads= HTTP/1.1
+Host: localhost:9000
+User-Agent: Minio (windows; amd64) minio-go/2.0.2 mc/2016-12-09T18:23:19Z
+Content-Length: 0
+Authorization: AWS4-HMAC-SHA256 Credential=AKIAI3A3SBQ4G7GWS25A/20170211/33f27f67-0a98-4150-95f1-71c4cbc8ce81/s3/aws4_request, SignedHeaders=expect;host;x-amz-content-sha256;x-amz-date, Signature=16c4958ec7a231e6a87af75036487d8eeefbe1418bb5b2787469c787efce12fc
+Content-Type: video/mp4
+Expect: 100-continue
+X-Amz-Content-Sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+X-Amz-Date: 20170211T145249Z
+Accept-Encoding: gzip
