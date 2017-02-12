@@ -28,8 +28,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.security.MessageDigest;
 import java.util.UUID;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,17 +78,27 @@ public class Routing extends RoutingConfig.PUT {
                     routing_ctx.setCachingChunkBuf(caching);
                 }
                 ByteBuf content = msg.content();
-                while (content.isReadable()) {
-                    int i = content.readInt();
-                    try {
-                        caching.writeInt(i);
-                    } catch (IndexOutOfBoundsException e) {
+                do {
+                    int readable_bytes = content.readableBytes();
+                    byte[] reading_buffer;
+                    if (readable_bytes > 8192) {
+                        reading_buffer = new byte[8192];
+                    } else if (readable_bytes > 0) {
+                        reading_buffer = new byte[readable_bytes];
+                    } else {
+                        break;
+                    }
+                    if (caching.writableBytes() < reading_buffer.length) {
+                        reading_buffer = new byte[caching.writableBytes()];
+                    }
+                    content.readBytes(reading_buffer);
+                    caching.writeBytes(reading_buffer);
+                    if (caching.writableBytes() < 1) {
                         ctx.fireChannelRead(caching);
                         caching = Unpooled.buffer(application.getMaxChunkSize(), application.getMaxChunkSize());
-                        caching.writeInt(i);
                         routing_ctx.setCachingChunkBuf(caching);
                     }
-                }
+                } while (true);
                 if (msg instanceof LastHttpContent) {
                     ctx.fireChannelRead(caching);
                     msg.retain();
