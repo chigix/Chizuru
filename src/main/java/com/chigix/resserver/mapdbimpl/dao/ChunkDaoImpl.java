@@ -4,9 +4,7 @@ import com.chigix.resserver.entity.Chunk;
 import com.chigix.resserver.mapdbimpl.Serializer;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicReference;
 import org.mapdb.DB;
 
 /**
@@ -38,7 +36,7 @@ public class ChunkDaoImpl {
     }
 
     public Chunk newChunk(String contentHash, int chunk_size) {
-        return new Chunk(contentHash, chunk_size) {
+        return new Chunk(contentHash, chunk_size, null) {
             @Override
             public InputStream getInputStream() throws IOException {
                 return new InputStream() {
@@ -72,44 +70,6 @@ public class ChunkDaoImpl {
         } else {
             return Serializer.deserializeChunk(result);
         }
-    }
-
-    /**
-     * Create a simple Chunk object with contentHash only. If other features is
-     * needed later, then database search and inputstream built is support
-     * through this proxy.
-     *
-     * @param contentHash
-     * @return
-     */
-    public Chunk newChunkProxy(String contentHash) {
-        final AtomicReference<Chunk> chunk = new AtomicReference<>();
-        chunk.set(null);
-        Chunk r = new Chunk(contentHash, 0) {
-            @Override
-            public int getSize() {
-                if (chunk.get() == null) {
-                    chunk.set(findChunk(contentHash));
-                }
-                if (chunk.get() == null) {
-                    throw new NoSuchElementException();
-                }
-                return chunk.get().getSize();
-            }
-
-            @Override
-            public InputStream getInputStream() throws IOException {
-                if (chunk.get() == null) {
-                    chunk.set(findChunk(contentHash));
-                }
-                if (chunk.get() == null) {
-                    throw new NoSuchElementException();
-                }
-                return chunk.get().getInputStream();
-            }
-
-        };
-        return r;
     }
 
 }

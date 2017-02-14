@@ -62,7 +62,7 @@ public class SerializerChunkTest {
             }
 
         }).createOrOpen();
-        map.put("BANKAI", new Chunk("JJJJ", 123));
+        map.put("BANKAI", new Chunk("JJJJ", 123, null));
         assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?><Chunk><ContentHash>JJJJ</ContentHash><Size>123</Size></Chunk>", sb.toString());
     }
 
@@ -74,7 +74,7 @@ public class SerializerChunkTest {
     @Test
     public void testDeserialize() throws Exception {
         System.out.println("deserialize");
-        Chunk c = new Chunk(UUID.randomUUID().toString(), 4511);
+        Chunk c = new Chunk(UUID.randomUUID().toString(), 4511, "LocationId");
         ConcurrentMap<String, Chunk> map = testingDb.hashMap("TestingDB", Serializer.STRING_ASCII, new SerializerChunk()).createOrOpen();
         map.put("EXISTED", c);
         Chunk r = map.get("NOT_EXISTED");

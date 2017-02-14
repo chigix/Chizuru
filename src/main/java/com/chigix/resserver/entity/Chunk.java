@@ -15,9 +15,12 @@ public class Chunk {
 
     private final String contentHash;
 
-    public Chunk(String contentHash, int size) {
+    private final String locationId;
+
+    public Chunk(String contentHash, int size, String location_id) {
         this.contentHash = contentHash;
         this.size = size;
+        locationId = location_id;
     }
 
     public InputStream getInputStream() throws IOException {
@@ -50,6 +53,10 @@ public class Chunk {
 
     public int getSize() {
         return size;
+    }
+
+    public String getLocationId() {
+        return locationId;
     }
 
 }

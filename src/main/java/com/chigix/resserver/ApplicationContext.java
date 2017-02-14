@@ -57,7 +57,7 @@ public class ApplicationContext {
         ChunkDao = new ChunkDaoImpl(db) {
             @Override
             public Chunk newChunk(String contentHash, int chunk_size) {
-                return new Chunk(contentHash, chunk_size) {
+                return new Chunk(contentHash, chunk_size, currentNodeId) {
                     @Override
                     public InputStream getInputStream() throws IOException {
                         return new FileInputStream(new File(chunksDir, this.getContentHash()));

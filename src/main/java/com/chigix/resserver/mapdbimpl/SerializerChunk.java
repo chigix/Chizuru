@@ -71,7 +71,7 @@ public class SerializerChunk extends GroupSerializerObjectArray<Chunk> {
                         }
                         node = node.getParent();
                         if (node == null) {
-                            return new Chunk(ctx.getContentHash(), ctx.getChunkSize());
+                            return new Chunk(ctx.getContentHash(), ctx.getChunkSize(), ctx.getLocationId());
                         }
                         break;
                 }
@@ -97,6 +97,9 @@ public class SerializerChunk extends GroupSerializerObjectArray<Chunk> {
             case "/Chunk/Size":
                 ctx.setChunkSize(Integer.valueOf(reader.getText()));
                 break;
+            case "/Chunk/LocationId":
+                ctx.setLocationId(reader.getText());
+                break;
         }
     }
 
@@ -104,6 +107,8 @@ public class SerializerChunk extends GroupSerializerObjectArray<Chunk> {
 
         private String contentHash;
         private int chunkSize;
+
+        private String locationId;
 
         public String getContentHash() {
             return contentHash;
@@ -119,6 +124,14 @@ public class SerializerChunk extends GroupSerializerObjectArray<Chunk> {
 
         public void setChunkSize(int chunkSize) {
             this.chunkSize = chunkSize;
+        }
+
+        public String getLocationId() {
+            return locationId;
+        }
+
+        public void setLocationId(String locationId) {
+            this.locationId = locationId;
         }
 
     }

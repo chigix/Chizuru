@@ -150,7 +150,7 @@ public class SerializerTest {
         assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
                 + "<Chunk><ContentHash>c4ca4238a0b923820dcc509a6f75849b</ContentHash>"
                 + "<Size>1</Size></Chunk>",
-                Serializer.serializeChunk(new Chunk("c4ca4238a0b923820dcc509a6f75849b", 1))
+                Serializer.serializeChunk(new Chunk("c4ca4238a0b923820dcc509a6f75849b", 1, null))
         );// md5("1")
     }
 
@@ -160,11 +160,13 @@ public class SerializerTest {
     @Test
     public void testDeserializeChunk() {
         System.out.println("deserializeChunk");
-        Chunk c = new Chunk("c4ca4238a0b923820dcc509a6f75849b", 1);// md5("1")
+        Chunk c = new Chunk("c4ca4238a0b923820dcc509a6f75849b", 1, "Location_Id");// md5("1")
         assertEquals(c.getContentHash(),
                 Serializer.deserializeChunk(Serializer.serializeChunk(c)).getContentHash());
         assertEquals(c.getSize(),
                 Serializer.deserializeChunk(Serializer.serializeChunk(c)).getSize());
+        assertEquals(c.getLocationId(),
+                Serializer.deserializeChunk(Serializer.serializeChunk(c)).getLocationId());
     }
 
 }

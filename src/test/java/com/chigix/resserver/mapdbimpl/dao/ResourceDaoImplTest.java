@@ -203,11 +203,11 @@ public class ResourceDaoImplTest {
     public void testAppendChunk() throws Exception {
         System.out.println("appendChunk");
         Resource r = new Resource(new Bucket("TMP"), "testing_file");
-        dao.appendChunk(r, new Chunk("c4ca4238a0b923820dcc509a6f75849b", 1));// md5("1")
-        dao.appendChunk(r, new Chunk("c81e728d9d4c2f636f067f89cc14862c", 1));// md5("2")
-        dao.appendChunk(r, new Chunk("eccbc87e4b5ce2fe28308fd9f2a7baf3", 1));// md5("3")
-        dao.appendChunk(r, new Chunk("a87ff679a2f3e71d9181a67b7542122c", 1));// md5("4")
-        dao.appendChunk(r, new Chunk("e4da3b7fbbce2345d7772b0674a318d5", 1));// md5("5")
+        dao.appendChunk(r, new Chunk("c4ca4238a0b923820dcc509a6f75849b", 1, null));// md5("1")
+        dao.appendChunk(r, new Chunk("c81e728d9d4c2f636f067f89cc14862c", 1, null));// md5("2")
+        dao.appendChunk(r, new Chunk("eccbc87e4b5ce2fe28308fd9f2a7baf3", 1, null));// md5("3")
+        dao.appendChunk(r, new Chunk("a87ff679a2f3e71d9181a67b7542122c", 1, null));// md5("4")
+        dao.appendChunk(r, new Chunk("e4da3b7fbbce2345d7772b0674a318d5", 1, null));// md5("5")
         db.commit();
         Map<String, String> chunks = (Map<String, String>) db.hashMap(ResourceKeys.CHUNK_LIST_DB).open();
         assertEquals(6, chunks.size());
@@ -384,11 +384,11 @@ public class ResourceDaoImplTest {
     public void testFindChunkNode() {
         System.out.println("findChunkNode");
         Resource r = new Resource(new Bucket("TMP"), "testing_file");
-        dao.appendChunk(r, new Chunk("c4ca4238a0b923820dcc509a6f75849b", 1));// md5("1")
-        dao.appendChunk(r, new Chunk("c81e728d9d4c2f636f067f89cc14862c", 1));// md5("2")
-        dao.appendChunk(r, new Chunk("eccbc87e4b5ce2fe28308fd9f2a7baf3", 1));// md5("3")
-        dao.appendChunk(r, new Chunk("a87ff679a2f3e71d9181a67b7542122c", 1));// md5("4")
-        dao.appendChunk(r, new Chunk("e4da3b7fbbce2345d7772b0674a318d5", 1));// md5("5")
+        dao.appendChunk(r, new Chunk("c4ca4238a0b923820dcc509a6f75849b", 1, null));// md5("1")
+        dao.appendChunk(r, new Chunk("c81e728d9d4c2f636f067f89cc14862c", 1, null));// md5("2")
+        dao.appendChunk(r, new Chunk("eccbc87e4b5ce2fe28308fd9f2a7baf3", 1, null));// md5("3")
+        dao.appendChunk(r, new Chunk("a87ff679a2f3e71d9181a67b7542122c", 1, null));// md5("4")
+        dao.appendChunk(r, new Chunk("e4da3b7fbbce2345d7772b0674a318d5", 1, null));// md5("5")
         db.commit();
         Map<String, String> chunks = (Map<String, String>) db.hashMap(ResourceKeys.CHUNK_LIST_DB).open();
         chunks.put(r.getVersionId() + "_5", "BANKAI");
@@ -408,11 +408,11 @@ public class ResourceDaoImplTest {
     public void testEmptyResourceChunkNode() {
         System.out.println("emptyResourceChunkNode");
         Resource r = new Resource(new Bucket("TMP"), "testing_file");
-        dao.appendChunk(r, new Chunk("c4ca4238a0b923820dcc509a6f75849b", 1));// md5("1")
-        dao.appendChunk(r, new Chunk("c81e728d9d4c2f636f067f89cc14862c", 1));// md5("2")
-        dao.appendChunk(r, new Chunk("eccbc87e4b5ce2fe28308fd9f2a7baf3", 1));// md5("3")
-        dao.appendChunk(r, new Chunk("a87ff679a2f3e71d9181a67b7542122c", 1));// md5("4")
-        dao.appendChunk(r, new Chunk("e4da3b7fbbce2345d7772b0674a318d5", 1));// md5("5")
+        dao.appendChunk(r, new Chunk("c4ca4238a0b923820dcc509a6f75849b", 1, null));// md5("1")
+        dao.appendChunk(r, new Chunk("c81e728d9d4c2f636f067f89cc14862c", 1, null));// md5("2")
+        dao.appendChunk(r, new Chunk("eccbc87e4b5ce2fe28308fd9f2a7baf3", 1, null));// md5("3")
+        dao.appendChunk(r, new Chunk("a87ff679a2f3e71d9181a67b7542122c", 1, null));// md5("4")
+        dao.appendChunk(r, new Chunk("e4da3b7fbbce2345d7772b0674a318d5", 1, null));// md5("5")
         dao.emptyResourceChunkNode(r);
         db.commit();
         Map<String, String> chunks = (Map<String, String>) db.hashMap(ResourceKeys.CHUNK_LIST_DB).open();

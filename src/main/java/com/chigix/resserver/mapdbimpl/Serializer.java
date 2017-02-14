@@ -242,6 +242,11 @@ public class Serializer {
             writer.writeStartElement("Size");
             writer.writeCharacters(c.getSize() + "");
             writer.writeEndElement(); // Chunk.Size
+            if (c.getLocationId() != null) {
+                writer.writeStartElement("LocationId");
+                writer.writeCharacters(c.getLocationId());
+                writer.writeEndElement(); // Chunk.LocationId
+            }
             writer.writeEndElement();// Chunk
             writer.writeEndDocument();
         } catch (XMLStreamException ex) {
@@ -262,8 +267,16 @@ public class Serializer {
         }
         final Chunk result;
         try {
-            result = new Chunk(((Node) xpath.compile("//Chunk/ContentHash").evaluate(doc, XPathConstants.NODE)).getTextContent(),
-                    Integer.valueOf(((Node) xpath.compile("//Chunk/Size").evaluate(doc, XPathConstants.NODE)).getTextContent()));
+            Node node_location_id = (Node) xpath.compile("//Chunk/LocationId").evaluate(doc, XPathConstants.NODE);
+            if (node_location_id == null) {
+                result = new Chunk(((Node) xpath.compile("//Chunk/ContentHash").evaluate(doc, XPathConstants.NODE)).getTextContent(),
+                        Integer.valueOf(((Node) xpath.compile("//Chunk/Size").evaluate(doc, XPathConstants.NODE)).getTextContent()),
+                        null);
+            } else {
+                result = new Chunk(((Node) xpath.compile("//Chunk/ContentHash").evaluate(doc, XPathConstants.NODE)).getTextContent(),
+                        Integer.valueOf(((Node) xpath.compile("//Chunk/Size").evaluate(doc, XPathConstants.NODE)).getTextContent()),
+                        node_location_id.getTextContent());
+            }
         } catch (XPathExpressionException ex) {
             LOG.error("UNEXPECTED", ex);
             throw new RuntimeException(ex);
