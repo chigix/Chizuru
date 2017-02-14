@@ -202,10 +202,7 @@ public class ResourceDaoImplTest {
     @Test
     public void testAppendChunk() throws Exception {
         System.out.println("appendChunk");
-        BucketDao bucket_dao = new BucketDaoImpl(db);
-        BucketInStorage b = (BucketInStorage) bucket_dao.findBucketByName("TESTING");
-        dao.saveResource(new Resource(b, "testing_file"));
-        ResourceInStorage r = (ResourceInStorage) dao.findResource(b, "testing_file");
+        Resource r = new Resource(new Bucket("TMP"), "testing_file");
         dao.appendChunk(r, new Chunk("c4ca4238a0b923820dcc509a6f75849b", 1));// md5("1")
         dao.appendChunk(r, new Chunk("c81e728d9d4c2f636f067f89cc14862c", 1));// md5("2")
         dao.appendChunk(r, new Chunk("eccbc87e4b5ce2fe28308fd9f2a7baf3", 1));// md5("3")
@@ -214,13 +211,13 @@ public class ResourceDaoImplTest {
         db.commit();
         Map<String, String> chunks = (Map<String, String>) db.hashMap(ResourceKeys.CHUNK_LIST_DB).open();
         assertEquals(6, chunks.size());
-        assertEquals("c4ca4238a0b923820dcc509a6f75849b", chunks.get(r.getKeyHash() + "_0"));
-        assertEquals("c81e728d9d4c2f636f067f89cc14862c", chunks.get(r.getKeyHash() + "_1"));
-        assertEquals("eccbc87e4b5ce2fe28308fd9f2a7baf3", chunks.get(r.getKeyHash() + "_2"));
-        assertEquals("a87ff679a2f3e71d9181a67b7542122c", chunks.get(r.getKeyHash() + "_3"));
-        assertEquals("e4da3b7fbbce2345d7772b0674a318d5", chunks.get(r.getKeyHash() + "_4"));
-        assertEquals("4", chunks.get(r.getKeyHash() + "__count"));
-        assertNull(chunks.get(r.getKeyHash() + "_5"));
+        assertEquals("c4ca4238a0b923820dcc509a6f75849b", chunks.get(r.getVersionId() + "_0"));
+        assertEquals("c81e728d9d4c2f636f067f89cc14862c", chunks.get(r.getVersionId() + "_1"));
+        assertEquals("eccbc87e4b5ce2fe28308fd9f2a7baf3", chunks.get(r.getVersionId() + "_2"));
+        assertEquals("a87ff679a2f3e71d9181a67b7542122c", chunks.get(r.getVersionId() + "_3"));
+        assertEquals("e4da3b7fbbce2345d7772b0674a318d5", chunks.get(r.getVersionId() + "_4"));
+        assertEquals("4", chunks.get(r.getVersionId() + "__count"));
+        assertNull(chunks.get(r.getVersionId() + "_5"));
     }
 
     /**
@@ -386,14 +383,22 @@ public class ResourceDaoImplTest {
     @Test
     public void testFindChunkNode() {
         System.out.println("findChunkNode");
-        ResourceInStorage resource = null;
-        String number = "";
-        ResourceDaoImpl instance = null;
-        String expResult = "";
-        String result = instance.findChunkNode(resource, number);
-        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+        Resource r = new Resource(new Bucket("TMP"), "testing_file");
+        dao.appendChunk(r, new Chunk("c4ca4238a0b923820dcc509a6f75849b", 1));// md5("1")
+        dao.appendChunk(r, new Chunk("c81e728d9d4c2f636f067f89cc14862c", 1));// md5("2")
+        dao.appendChunk(r, new Chunk("eccbc87e4b5ce2fe28308fd9f2a7baf3", 1));// md5("3")
+        dao.appendChunk(r, new Chunk("a87ff679a2f3e71d9181a67b7542122c", 1));// md5("4")
+        dao.appendChunk(r, new Chunk("e4da3b7fbbce2345d7772b0674a318d5", 1));// md5("5")
+        db.commit();
+        Map<String, String> chunks = (Map<String, String>) db.hashMap(ResourceKeys.CHUNK_LIST_DB).open();
+        chunks.put(r.getVersionId() + "_5", "BANKAI");
+        db.commit();
+        assertEquals("c4ca4238a0b923820dcc509a6f75849b", dao.findChunkNode(r, "0"));
+        assertEquals("c81e728d9d4c2f636f067f89cc14862c", dao.findChunkNode(r, "1"));
+        assertEquals("eccbc87e4b5ce2fe28308fd9f2a7baf3", dao.findChunkNode(r, "2"));
+        assertEquals("a87ff679a2f3e71d9181a67b7542122c", dao.findChunkNode(r, "3"));
+        assertEquals("e4da3b7fbbce2345d7772b0674a318d5", dao.findChunkNode(r, "4"));
+        assertNull(dao.findChunkNode(r, "5"));
     }
 
     /**
@@ -402,11 +407,17 @@ public class ResourceDaoImplTest {
     @Test
     public void testEmptyResourceChunkNode() {
         System.out.println("emptyResourceChunkNode");
-        ResourceInStorage resource = null;
-        ResourceDaoImpl instance = null;
-        instance.emptyResourceChunkNode(resource);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+        Resource r = new Resource(new Bucket("TMP"), "testing_file");
+        dao.appendChunk(r, new Chunk("c4ca4238a0b923820dcc509a6f75849b", 1));// md5("1")
+        dao.appendChunk(r, new Chunk("c81e728d9d4c2f636f067f89cc14862c", 1));// md5("2")
+        dao.appendChunk(r, new Chunk("eccbc87e4b5ce2fe28308fd9f2a7baf3", 1));// md5("3")
+        dao.appendChunk(r, new Chunk("a87ff679a2f3e71d9181a67b7542122c", 1));// md5("4")
+        dao.appendChunk(r, new Chunk("e4da3b7fbbce2345d7772b0674a318d5", 1));// md5("5")
+        dao.emptyResourceChunkNode(r);
+        db.commit();
+        Map<String, String> chunks = (Map<String, String>) db.hashMap(ResourceKeys.CHUNK_LIST_DB).open();
+        assertNull(chunks.get(r.getVersionId() + "__count"));
+        assertNull(chunks.get(r.getVersionId() + "_0"));
     }
 
 }

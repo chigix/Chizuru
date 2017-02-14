@@ -25,8 +25,8 @@ public class ResourceInStorage extends Resource {
 
     private final String keyHash;
 
-    public ResourceInStorage(BucketNameSearchProxy bucket, String key, String keyHash) {
-        super(bucket, key);
+    public ResourceInStorage(BucketNameSearchProxy bucket, String key, String keyHash, String versionId) {
+        super(bucket, key, versionId);
         this.keyHash = keyHash;
         bucketProxy = bucket;
         bucket.addCheckers(() -> {

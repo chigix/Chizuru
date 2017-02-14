@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.UUID;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -19,13 +20,16 @@ public class Resource {
 
     private final Map<String, String> metaData;
 
+    private final String versionId;
+
     public Resource(final Bucket bucket, String key) {
-        this(() -> bucket, key);
+        this(() -> bucket, key, UUID.randomUUID().toString());
     }
 
-    public Resource(ModelProxy<Bucket> bucket, String key) {
+    public Resource(ModelProxy<Bucket> bucket, String key, String versionId) {
         this.bucket = bucket;
         this.key = key;
+        this.versionId = versionId;
         metaData = new HashMap<>();
         metaData.put("Content-Type", "application/octet-stream");
     }
@@ -43,6 +47,10 @@ public class Resource {
 
     public String getKey() {
         return key;
+    }
+
+    public String getVersionId() {
+        return versionId;
     }
 
     public String getSize() {
@@ -117,6 +125,7 @@ public class Resource {
      * Empty the content in this resource.
      */
     public void empty() {
+        throw new UnsupportedOperationException("Current Implement doesn't support this method.");
     }
 
 }

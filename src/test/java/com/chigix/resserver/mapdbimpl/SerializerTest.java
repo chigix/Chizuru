@@ -43,14 +43,22 @@ public class SerializerTest {
     @Test
     public void testSerializeResource() {
         System.out.println("serializeResource");
-        BucketInStorage b = new BucketInStorage("TARGET_BUCKET");
+        final BucketInStorage b = new BucketInStorage("TARGET_BUCKET");
         b.setUUID("JJJJJJ");
-        Resource r = new Resource(b, "BANKAI");
+        Resource r = new Resource(() -> {
+            return b;
+        }, "BANKAI", "457002e0-f4cd-49e8-b46b-22409589a09c");
         r.setETag(UUID.randomUUID().toString());
         r.setLastModified(DateTime.parse("2017-01-12T09:06:00.863Z"));
         r.removeMetaData("Content-Type");
         assertEquals(
-                "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Resource><Bucket>TARGET_BUCKET</Bucket><Key>BANKAI</Key><Etag>" + r.getETag() + "</Etag><LastModified>2017-01-12T09:06:00.863Z</LastModified><KeyHash>fad83f6fd4131cbd6a3341bcba0c41ff</KeyHash><Size>0</Size><StorageClass>STANDARD</StorageClass></Resource>",
+                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+                + "<Resource><Bucket>TARGET_BUCKET</Bucket>"
+                + "<Key>BANKAI</Key><Etag>" + r.getETag() + "</Etag>"
+                + "<LastModified>2017-01-12T09:06:00.863Z</LastModified>"
+                + "<KeyHash>fad83f6fd4131cbd6a3341bcba0c41ff</KeyHash>"
+                + "<Size>0</Size><VersionId>457002e0-f4cd-49e8-b46b-22409589a09c</VersionId>"
+                + "<StorageClass>STANDARD</StorageClass></Resource>",
                 Serializer.serializeResource(r));
     }
 
@@ -70,6 +78,7 @@ public class SerializerTest {
         r.setMetaData("x-key", random_key);
         ResourceInStorage result = Serializer.deserializeResource(Serializer.serializeResource(r));
         assertEquals(ResourceInStorage.hashKey(b.getUUID(), result.getKey()), result.getKeyHash());
+        assertEquals(r.getVersionId(), result.getVersionId());
         assertEquals(random_key, result.snapshotMetaData().get("x-key"));
         assertNull(result.getBucketProxy().getProxied());
         try {

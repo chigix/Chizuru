@@ -101,11 +101,6 @@ public class ResourceDaoImpl implements ResourceDao {
         }
         String resource_xml = Serializer.serializeResource(resource);
         ((ConcurrentMap<String, String>) db.hashMap(ResourceKeys.RESOURCE_DB).open()).put(key_hash, resource_xml);
-        if (resource instanceof ResourceInStorage && ((ResourceInStorage) resource).isEmptied() == false) {
-        } else {
-            db.hashMap(ResourceKeys.CHUNK_LIST_DB).open().remove(key_hash + "_0");
-            db.hashMap(ResourceKeys.CHUNK_LIST_DB).open().remove(key_hash + "__count");
-        }
         db.commit();
         int count = 0;
         while (!appendBucketResourceLink((BucketInStorage) belonged_bucket, resource, key_hash)) {
@@ -299,9 +294,8 @@ public class ResourceDaoImpl implements ResourceDao {
 
     @Override
     public void appendChunk(final Resource resource, Chunk chunk) {
-        ResourceInStorage real_resource = (ResourceInStorage) resource;
         ConcurrentMap<String, String> chunk_list = (ConcurrentMap<String, String>) db.hashMap(ResourceKeys.CHUNK_LIST_DB).open();
-        String key_count = real_resource.getKeyHash() + "__count";
+        String key_count = resource.getVersionId() + "__count";
         BigInteger chunk_number = BigInteger.ZERO;
         String prev_count = chunk_list.putIfAbsent(key_count, chunk_number.toString(32));
         if (prev_count != null) {
@@ -314,24 +308,23 @@ public class ResourceDaoImpl implements ResourceDao {
                 prev_count = chunk_list.get(key_count);
             }
         }
-        chunk_list.put(real_resource.getKeyHash() + "_" + chunk_number.toString(32), chunk.getContentHash());
-        chunk_list.remove(real_resource.getKeyHash() + "_" + chunk_number.add(BigInteger.ONE).toString(32));
+        chunk_list.put(resource.getVersionId() + "_" + chunk_number.toString(32), chunk.getContentHash());
         resource.setSize(new BigInteger(resource.getSize()).add(new BigInteger(chunk.getSize() + "")).toString());
         db.commit();
     }
 
-    public String findChunkNode(final ResourceInStorage resource, String number) {
-        return (String) db.hashMap(ResourceKeys.CHUNK_LIST_DB).open().get(resource.getKeyHash() + "_" + number);
+    public String findChunkNode(final Resource resource, String number) {
+        BigInteger chunk_number = new BigInteger((String) db.hashMap(ResourceKeys.CHUNK_LIST_DB).open().get(resource.getVersionId() + "__count"), 32);
+        if (new BigInteger(number).compareTo(chunk_number) > 0) {
+            return null;
+        }
+        return (String) db.hashMap(ResourceKeys.CHUNK_LIST_DB).open().get(resource.getVersionId() + "_" + number);
     }
 
-    private void emptyResourceChunkNode(final String resource_key_hash) {
-        db.hashMap(ResourceKeys.CHUNK_LIST_DB).open().remove(resource_key_hash + "_0");
-        db.hashMap(ResourceKeys.CHUNK_LIST_DB).open().remove(resource_key_hash + "__count");
+    public void emptyResourceChunkNode(final Resource resource) {
+        db.hashMap(ResourceKeys.CHUNK_LIST_DB).open().remove(resource.getVersionId() + "_0");
+        db.hashMap(ResourceKeys.CHUNK_LIST_DB).open().remove(resource.getVersionId() + "__count");
         db.commit();
-    }
-
-    public void emptyResourceChunkNode(final ResourceInStorage resource) {
-        emptyResourceChunkNode(resource.getKeyHash());
     }
 
     public void setBucketFirstResource(ResourceInStorage resource) {
@@ -431,9 +424,7 @@ public class ResourceDaoImpl implements ResourceDao {
         } else {
             throw new NoSuchBucket(belonged_bucket.getName());
         }
-        if (key_hash instanceof String) {
-            emptyResourceChunkNode(key_hash);
-        }
+        emptyResourceChunkNode(resource);
         ((ConcurrentMap<String, String>) db.hashMap(ResourceKeys.RESOURCE_DB).open()).remove(key_hash);
         db.commit();
         int count = 0;

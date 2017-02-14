@@ -66,6 +66,9 @@ public class Serializer {
             writer.writeStartElement("Size");
             writer.writeCharacters(resource.getSize());
             writer.writeEndElement();// Resource.Size
+            writer.writeStartElement("VersionId");
+            writer.writeCharacters(resource.getVersionId());
+            writer.writeEndElement();// Resource.VersionId
             writer.writeStartElement("StorageClass");
             writer.writeCharacters(resource.getStorageClass());
             writer.writeEndElement();// Resource.StorageClass
@@ -101,7 +104,8 @@ public class Serializer {
             bucket_proxy.setProxied(new Bucket(bucket_name));
             result = new ResourceInStorage(bucket_proxy,
                     ((Node) xpath.compile("//Resource/Key").evaluate(doc, XPathConstants.NODE)).getTextContent(),
-                    ((Node) xpath.compile("//Resource/KeyHash").evaluate(doc, XPathConstants.NODE)).getTextContent());
+                    ((Node) xpath.compile("//Resource/KeyHash").evaluate(doc, XPathConstants.NODE)).getTextContent(),
+                    ((Node) xpath.compile("//Resource/VersionId").evaluate(doc, XPathConstants.NODE)).getTextContent());
             result.setETag(((Node) xpath.compile("//Resource/Etag").evaluate(doc, XPathConstants.NODE)).getTextContent());
             result.setLastModified(DateTime.parse(((Node) xpath.compile("//Resource/LastModified").evaluate(doc, XPathConstants.NODE)).getTextContent()));
             result.setSize(((Node) xpath.compile("//Resource/Size").evaluate(doc, XPathConstants.NODE)).getTextContent());

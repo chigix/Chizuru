@@ -12,11 +12,18 @@ import org.mapdb.Serializer;
 public class ResourceKeys {
 
     public static final String RESOURCE_DB = "RESOURCE_DB:[String]resource_key_hash:[Xml]ResourceInStorage";
-    public static final String CHUNK_LIST_DB = "RESOURCE_CHUNK_DB:[String]resource_chunk_no:[String]chunk_content_hash";
     public static final String RESOURCE_LINK_LOCK_DB = "RESOURCE_LINK_LOCK_DB:[String]resource_key_hash:[String]lock_uuid";
     public static final String RESOURCE_LINK_DB = "RESOURCE_LINK_DB:[String]resource_key_hash:[Xml]ResourceLinkNode";
     public static final String RESOURCE_LINK_START_DB = "RESOURCE_LINK_START_DB:[String]bucket_UUID:[String]resource_key_hash";
     public static final String RESOURCE_LINK_END_DB = "RESOURCE_LINK_END_DB:[String]bucket_UUID:[String]resource_key_hash";
+
+    /**
+     * versionId__count : usage --> get current largest chunk number in
+     * appendChunk.
+     *
+     * versionId_chunkNo : usage --> get chunk content hash.
+     */
+    public static final String CHUNK_LIST_DB = "RESOURCE_CHUNK_DB:[String]versionId_chunkNo:[String]chunk_content_hash";
 
     public static void updateDBScheme(DB db) {
         if (!db.exists(RESOURCE_DB)) {
