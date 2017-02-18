@@ -3,6 +3,8 @@ package com.chigix.resserver;
 import com.chigix.resserver.entity.Chunk;
 import com.chigix.resserver.entity.dao.BucketDao;
 import com.chigix.resserver.entity.dao.ResourceDao;
+import com.chigix.resserver.entity.factory.ResourceFactory;
+import com.chigix.resserver.mapdbimpl.DefaultResourceFactory;
 import com.chigix.resserver.mapdbimpl.dao.BucketKeys;
 import com.chigix.resserver.mapdbimpl.dao.ResourceKeys;
 import com.chigix.resserver.mapdbimpl.dao.BucketDaoImpl;
@@ -42,6 +44,8 @@ public class ApplicationContext {
 
     public final ResourceDao ResourceDao;
 
+    public final ResourceFactory ResourceFactory;
+
     public final ChunkDaoImpl ChunkDao;
 
     public ApplicationContext(String currentNodeId, DateTime creationDate, int maxChunkSize, File dataDir, DB db) {
@@ -66,6 +70,7 @@ public class ApplicationContext {
                 };
             }
         };
+        ResourceFactory = new DefaultResourceFactory((ResourceDaoImpl) ResourceDao, ChunkDao);
         ((ResourceDaoImpl) ResourceDao).assembleDaos((BucketDaoImpl) BucketDao, ChunkDao);
     }
 

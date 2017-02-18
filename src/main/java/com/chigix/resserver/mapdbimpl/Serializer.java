@@ -1,12 +1,15 @@
 package com.chigix.resserver.mapdbimpl;
 
-import com.chigix.resserver.entity.Bucket;
+import com.chigix.resserver.entity.AmassedResource;
 import com.chigix.resserver.entity.Chunk;
+import com.chigix.resserver.entity.ChunkedResource;
 import com.chigix.resserver.entity.Resource;
 import com.chigix.resserver.mapdbimpl.dao.BucketNotPersistedException;
+import com.chigix.resserver.mapdbimpl.entity.ResourceExtension;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.security.InvalidParameterException;
 import java.util.Map;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -48,9 +51,21 @@ public class Serializer {
         try {
             writer.writeStartDocument("UTF-8", "1.0");
             writer.writeStartElement("Resource");
-            writer.writeStartElement("Bucket");
+            writer.writeStartElement("Type");
+            if (resource instanceof AmassedResource) {
+                writer.writeCharacters("AmassedResource");
+            } else if (resource instanceof ChunkedResource) {
+                writer.writeCharacters("ChunkedResource");
+            } else {
+                throw new InvalidParameterException("Resource is not derived from AmassedResource or ChunkedResource.");
+            }
+            writer.writeEndElement();// Resource.Type
+            writer.writeStartElement("BucketName");
             writer.writeCharacters(resource.getBucket().getName());
-            writer.writeEndElement();// Resource.Bucket
+            writer.writeEndElement();// Resource.BucketName
+            writer.writeStartElement("BucketUUID");
+            writer.writeCharacters(((BucketInStorage) resource.getBucket()).getUUID());
+            writer.writeEndElement();// Resource.BucketUUID
             writer.writeStartElement("Key");
             writer.writeCharacters(resource.getKey());
             writer.writeEndElement();// Resource.key
@@ -61,7 +76,11 @@ public class Serializer {
             writer.writeCharacters(resource.getLastModified().toString());
             writer.writeEndElement();// Resource.LastModified
             writer.writeStartElement("KeyHash");
-            writer.writeCharacters(ResourceInStorage.hashKey(((BucketInStorage) resource.getBucket()).getUUID(), resource.getKey()));
+            if (resource instanceof ResourceExtension) {
+                writer.writeCharacters(((ResourceExtension) resource).getKeyHash());
+            } else {
+                writer.writeCharacters(ResourceExtension.hashKey(((BucketInStorage) resource.getBucket()).getUUID(), resource.getKey()));
+            }
             writer.writeEndElement();// Resource.KeyHash
             writer.writeStartElement("Size");
             writer.writeCharacters(resource.getSize());
@@ -88,7 +107,7 @@ public class Serializer {
         return result.toString();
     }
 
-    public static ResourceInStorage deserializeResource(String xml) {
+    public static Resource deserializeResource(String xml) {
         XPath xpath = XPathFactory.newInstance().newXPath();
         Document doc;
         try {
@@ -97,15 +116,22 @@ public class Serializer {
             LOG.error("UNEXPECTED", ex);
             throw new RuntimeException(ex);
         }
-        final ResourceInStorage result;
+        final Resource result;
         try {
-            String bucket_name = ((Node) xpath.compile("//Resource/Bucket").evaluate(doc, XPathConstants.NODE)).getTextContent();
-            BucketNameSearchProxy bucket_proxy = new BucketNameSearchProxy(bucket_name);
-            bucket_proxy.setProxied(new Bucket(bucket_name));
-            result = new ResourceInStorage(bucket_proxy,
-                    ((Node) xpath.compile("//Resource/Key").evaluate(doc, XPathConstants.NODE)).getTextContent(),
-                    ((Node) xpath.compile("//Resource/KeyHash").evaluate(doc, XPathConstants.NODE)).getTextContent(),
-                    ((Node) xpath.compile("//Resource/VersionId").evaluate(doc, XPathConstants.NODE)).getTextContent());
+            String key = ((Node) xpath.compile("//Resource/Key").evaluate(doc, XPathConstants.NODE)).getTextContent();
+            String version_id = ((Node) xpath.compile("//Resource/VersionId").evaluate(doc, XPathConstants.NODE)).getTextContent();
+            String bucket_uuid = ((Node) xpath.compile("//Resource/BucketUUID").evaluate(doc, XPathConstants.NODE)).getTextContent();
+            String bucket_name = ((Node) xpath.compile("//Resource/BucketName").evaluate(doc, XPathConstants.NODE)).getTextContent();
+            String keyhash = ((Node) xpath.compile("//Resource/KeyHash").evaluate(doc, XPathConstants.NODE)).getTextContent();
+            switch (((Node) xpath.compile("//Resource/Type").evaluate(doc, XPathConstants.NODE)).getTextContent()) {
+                case "ChunkedResource":
+                    result = new com.chigix.resserver.mapdbimpl.entity.ChunkedResource(
+                            key, keyhash, version_id, bucket_uuid, bucket_name);
+                    break;
+                default:
+                    throw new RuntimeException("Unexpected: Unknown resource type has been saved in db: "
+                            + ((Node) xpath.compile("//Resource/Type").evaluate(doc, XPathConstants.NODE)).getTextContent());
+            }
             result.setETag(((Node) xpath.compile("//Resource/Etag").evaluate(doc, XPathConstants.NODE)).getTextContent());
             result.setLastModified(DateTime.parse(((Node) xpath.compile("//Resource/LastModified").evaluate(doc, XPathConstants.NODE)).getTextContent()));
             result.setSize(((Node) xpath.compile("//Resource/Size").evaluate(doc, XPathConstants.NODE)).getTextContent());
@@ -115,7 +141,6 @@ public class Serializer {
                 Node meta = meta_nodes.item(i);
                 result.setMetaData(meta.getAttributes().getNamedItem("name").getTextContent(), meta.getAttributes().getNamedItem("content").getTextContent());
             }
-            bucket_proxy.resetProxy();
         } catch (XPathExpressionException ex) {
             LOG.error("UNEXPECTED", ex);
             throw new RuntimeException(ex);

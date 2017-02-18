@@ -1,16 +1,18 @@
 package com.chigix.resserver.mapdbimpl;
 
+import com.chigix.resserver.entity.Resource;
+
 /**
  *
  * @author Richard Lea <chigix@zoho.com>
  */
 public class ResourceLinkNode {
 
-    private ResourceInStorage resource;
+    private Resource resource;
     private String nextResourceKeyHash;
     private String previousResourceKeyHash;
 
-    public ResourceInStorage getResource() {
+    public Resource getResource() {
         return resource;
     }
 
@@ -22,7 +24,7 @@ public class ResourceLinkNode {
         return previousResourceKeyHash;
     }
 
-    public void setResource(ResourceInStorage resource) {
+    public void setResource(Resource resource) {
         this.resource = resource;
     }
 

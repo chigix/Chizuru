@@ -2,7 +2,10 @@ package com.chigix.resserver.PutResource;
 
 import com.chigix.resserver.sharablehandlers.Context;
 import com.chigix.resserver.ApplicationContext;
+import com.chigix.resserver.entity.Bucket;
 import com.chigix.resserver.entity.Chunk;
+import com.chigix.resserver.entity.ChunkedResource;
+import com.chigix.resserver.entity.Resource;
 import com.chigix.resserver.sharablehandlers.ResourceInfoHandler;
 import com.chigix.resserver.util.Authorization;
 import io.netty.buffer.ByteBuf;
@@ -65,7 +68,10 @@ public class Routing extends RoutingConfig.PUT {
                 new SimpleChannelInboundHandler<Context>() {
             @Override
             protected void messageReceived(ChannelHandlerContext ctx, Context msg) throws Exception {
-                msg.getResource().empty();
+                Resource r = msg.getResource();
+                Bucket b = msg.getResource().getBucket();
+                String key = msg.getResource().getKey();
+                msg.setResource(application.ResourceFactory.createChunkedResource(key, b));
                 ctx.channel().attr(CONTEXT).set(msg);
             }
         }, new SimpleChannelInboundHandler<HttpContent>() {
@@ -137,7 +143,7 @@ public class Routing extends RoutingConfig.PUT {
                         };
                     }
                 }
-                application.ResourceDao.appendChunk(routing_ctx.getResource(), chunk);
+                ((ChunkedResource) routing_ctx.getResource()).appendChunk(chunk);
             }
         }, new SimpleChannelInboundHandler<LastHttpContent>() {
             @Override

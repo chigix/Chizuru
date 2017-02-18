@@ -1,7 +1,7 @@
 package com.chigix.resserver.GetResource;
 
 import com.chigix.resserver.entity.Chunk;
-import com.chigix.resserver.entity.Resource;
+import com.chigix.resserver.entity.ChunkedResource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class ResourceInputStream extends InputStream {
 
-    private final Resource resource;
+    private final ChunkedResource resource;
 
     private Iterator<Chunk> chunks = null;
 
@@ -26,7 +26,7 @@ public class ResourceInputStream extends InputStream {
 
     private final AtomicInteger bufferReaderIndex = new AtomicInteger();
 
-    public ResourceInputStream(Resource resource, int buffer_size) {
+    public ResourceInputStream(ChunkedResource resource, int buffer_size) {
         this.resource = resource;
         buffer = new byte[buffer_size];
         bufferReaderIndex.set(0);
