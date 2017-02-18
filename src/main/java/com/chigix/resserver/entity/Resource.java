@@ -1,9 +1,7 @@
 package com.chigix.resserver.entity;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.UUID;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -12,30 +10,14 @@ import org.joda.time.DateTimeZone;
  *
  * @author Richard Lea <chigix@zoho.com>
  */
-public class Resource {
+public abstract class Resource {
 
     private final String key;
-
-    private final ModelProxy<Bucket> bucket;
 
     private final Map<String, String> metaData;
 
     private final String versionId;
-
-    public Resource(final Bucket bucket, String key) {
-        this(() -> bucket, key, UUID.randomUUID().toString());
-    }
-
-    public Resource(ModelProxy<Bucket> bucket, String key, String versionId) {
-        this.bucket = bucket;
-        this.key = key;
-        this.versionId = versionId;
-        metaData = new HashMap<>();
-        metaData.put("Content-Type", "application/octet-stream");
-    }
-
     private DateTime lastModified = new DateTime(DateTimeZone.forID("GMT"));
-
     /**
      * The entity tag is an MD5 hash of the object. The ETag only reflects
      * changes to the contents of an object, not its metadata. Default as the
@@ -44,6 +26,17 @@ public class Resource {
     private String eTag = "d41d8cd98f00b204e9800998ecf8427e";
 
     private String size = "0";
+
+    public Resource(String key) {
+        this(key, UUID.randomUUID().toString());
+    }
+
+    public Resource(String key, String versionId) {
+        this.key = key;
+        this.metaData = new HashMap<>();
+        this.versionId = versionId;
+        metaData.put("Content-Type", "application/octet-stream");
+    }
 
     public String getKey() {
         return key;
@@ -81,9 +74,7 @@ public class Resource {
         return "STANDARD";
     }
 
-    public Bucket getBucket() {
-        return bucket.getProxiedModel();
-    }
+    public abstract Bucket getBucket();
 
     public void setMetaData(String key, String value) {
         metaData.put(key, value);
@@ -102,30 +93,7 @@ public class Resource {
     }
 
     /**
-     * It depends on Dao implementation. Defaultly return empty chunks list for
-     * the manually created Resource object.
-     *
-     * @return
-     */
-    public Iterator<Chunk> getChunks() {
-        return new Iterator<Chunk>() {
-            @Override
-            public boolean hasNext() {
-                return false;
-            }
-
-            @Override
-            public Chunk next() {
-                throw new NoSuchElementException();
-            }
-        };
-    }
-
-    /**
      * Empty the content in this resource.
      */
-    public void empty() {
-        throw new UnsupportedOperationException("Current Implement doesn't support this method.");
-    }
-
+    public abstract void empty();
 }
