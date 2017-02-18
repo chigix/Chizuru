@@ -86,8 +86,7 @@ public class ResourceDaoImpl implements ResourceDao {
         return result;
     }
 
-    @Override
-    public Resource saveResource(Resource resource) throws NoSuchBucket, DaoException {
+    public Resource saveResourceNoIndex(Resource resource) throws NoSuchBucket, DaoException {
         String key_hash;
         Bucket belonged_bucket;
         try {
@@ -110,17 +109,32 @@ public class ResourceDaoImpl implements ResourceDao {
             throw new NoSuchBucket(belonged_bucket.getName());
         }
         String resource_xml = Serializer.serializeResource(resource);
-        ((ConcurrentMap<String, String>) db.hashMap(ResourceKeys.RESOURCE_DB).open()).put(key_hash, resource_xml);
+        ((ConcurrentMap<String, String>) db.hashMap(ResourceKeys.RESOURCE_DB).open())
+                .put(key_hash, resource_xml);
+        ((ConcurrentMap<String, String>) db.hashMap(ResourceKeys.RESOURCE_DB_VERSION_INDEX).open())
+                .putIfAbsent(resource.getVersionId(), key_hash);
         db.commit();
+        Resource resource_to_return = Serializer.deserializeResource(resource_xml);
+        ResourceExtension ext = (ResourceExtension) resource_to_return;
+        ext.setResourceDao(this);
+        ext.setBucket((BucketInStorage) belonged_bucket);
+        return resource_to_return;
+    }
+
+    @Override
+    public Resource saveResource(Resource resource) throws NoSuchBucket, DaoException {
+        Resource r = saveResourceNoIndex(resource);
         int count = 0;
-        while (!appendBucketResourceLink((BucketInStorage) belonged_bucket, resource, key_hash)) {
+        BucketInStorage belonged_bucket = (BucketInStorage) r.getBucket();
+        String key_hash = ((ResourceExtension) r).getKeyHash();
+        while (!appendBucketResourceLink(belonged_bucket, r, key_hash)) {
             count++;
             if (count > 10) {
                 throw new DaoException() {
                     @Override
                     public String getMessage() {
                         return MessageFormat.format("Resource [{0}] is trying to be added into bucket: {1}",
-                                resource.getKey(), key_hash);
+                                r.getKey(), key_hash);
                     }
 
                 };
@@ -130,11 +144,7 @@ public class ResourceDaoImpl implements ResourceDao {
             } catch (InterruptedException ex) {
             }
         }
-        Resource resource_to_return = Serializer.deserializeResource(resource_xml);
-        ResourceExtension ext = (ResourceExtension) resource_to_return;
-        ext.setResourceDao(this);
-        ext.setBucket((BucketInStorage) belonged_bucket);
-        return resource_to_return;
+        return r;
     }
 
     private boolean appendBucketResourceLink(BucketInStorage belonged, Resource resource, String key_hash) {

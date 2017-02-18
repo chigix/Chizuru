@@ -12,6 +12,7 @@ import org.mapdb.Serializer;
 public class ResourceKeys {
 
     public static final String RESOURCE_DB = "RESOURCE_DB:[String]resource_key_hash:[Xml]ResourceInStorage";
+    public static final String RESOURCE_DB_VERSION_INDEX = "RESOURCE_DB:[String]versionId:[String]resource_key_hash";
     public static final String RESOURCE_LINK_LOCK_DB = "RESOURCE_LINK_LOCK_DB:[String]resource_key_hash:[String]lock_uuid";
     public static final String RESOURCE_LINK_DB = "RESOURCE_LINK_DB:[String]resource_key_hash:[Xml]ResourceLinkNode";
     public static final String RESOURCE_LINK_START_DB = "RESOURCE_LINK_START_DB:[String]bucket_UUID:[String]resource_key_hash";
@@ -24,6 +25,8 @@ public class ResourceKeys {
      * versionId_chunkNo : usage --> get chunk content hash.
      */
     public static final String CHUNK_LIST_DB = "RESOURCE_CHUNK_DB:[String]versionId_chunkNo:[String]chunk_content_hash";
+
+    public static final String SUBRESOURCE_LIST_DB = "SUBRESOURCE_LIST_DB:[String]versionId_chunkNo:[String]chunk_content_hash";
 
     public static void updateDBScheme(DB db) {
         if (!db.exists(RESOURCE_DB)) {
@@ -40,6 +43,12 @@ public class ResourceKeys {
         }
         if (!db.exists(RESOURCE_LINK_END_DB)) {
             db.hashMap(RESOURCE_LINK_END_DB, Serializer.STRING_ASCII, Serializer.STRING_ASCII).create();
+        }
+        if (!db.exists(RESOURCE_DB_VERSION_INDEX)) {
+            db.hashMap(RESOURCE_DB_VERSION_INDEX, Serializer.STRING_ASCII, Serializer.STRING_ASCII).create();
+        }
+        if (!db.exists(SUBRESOURCE_LIST_DB)) {
+            db.hashMap(SUBRESOURCE_LIST_DB, Serializer.STRING_ASCII, Serializer.STRING_ASCII).create();
         }
         db.hashMap(RESOURCE_LINK_LOCK_DB, Serializer.STRING_ASCII, Serializer.STRING_ASCII).createOrOpen().clear();
     }
