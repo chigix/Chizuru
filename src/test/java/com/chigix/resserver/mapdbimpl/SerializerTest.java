@@ -1,8 +1,11 @@
 package com.chigix.resserver.mapdbimpl;
 
+import com.chigix.resserver.entity.Bucket;
 import com.chigix.resserver.entity.Chunk;
-import com.chigix.resserver.entity.ModelProxy;
 import com.chigix.resserver.entity.Resource;
+import com.chigix.resserver.mapdbimpl.entity.ChunkedResource;
+import com.chigix.resserver.mapdbimpl.entity.ResourceExtension;
+import java.util.Iterator;
 import java.util.UUID;
 import org.joda.time.DateTime;
 import org.junit.After;
@@ -45,19 +48,19 @@ public class SerializerTest {
         System.out.println("serializeResource");
         final BucketInStorage b = new BucketInStorage("TARGET_BUCKET");
         b.setUUID("JJJJJJ");
-        Resource r = new Resource(() -> {
-            return b;
-        }, "BANKAI", "457002e0-f4cd-49e8-b46b-22409589a09c");
+        ChunkedResource r = new ChunkedResource("BANKAI", "457002e0-f4cd", "22409589a09c", b.getUUID(), b.getName());
+        r.setBucket(b);
         r.setETag(UUID.randomUUID().toString());
         r.setLastModified(DateTime.parse("2017-01-12T09:06:00.863Z"));
         r.removeMetaData("Content-Type");
         assertEquals(
                 "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-                + "<Resource><Bucket>TARGET_BUCKET</Bucket>"
+                + "<Resource><Type>ChunkedResource</Type><BucketName>TARGET_BUCKET</BucketName>"
+                + "<BucketUUID>JJJJJJ</BucketUUID>"
                 + "<Key>BANKAI</Key><Etag>" + r.getETag() + "</Etag>"
                 + "<LastModified>2017-01-12T09:06:00.863Z</LastModified>"
-                + "<KeyHash>fad83f6fd4131cbd6a3341bcba0c41ff</KeyHash>"
-                + "<Size>0</Size><VersionId>457002e0-f4cd-49e8-b46b-22409589a09c</VersionId>"
+                + "<KeyHash>457002e0-f4cd</KeyHash>"
+                + "<Size>0</Size><VersionId>22409589a09c</VersionId>"
                 + "<StorageClass>STANDARD</StorageClass></Resource>",
                 Serializer.serializeResource(r));
     }
@@ -70,22 +73,37 @@ public class SerializerTest {
         System.out.println("deserializeResource");
         BucketInStorage b = new BucketInStorage("TARGET_BUCKET");
         b.setUUID(UUID.randomUUID().toString());
-        Resource r = new Resource(b, "BANKAI");
+        com.chigix.resserver.entity.ChunkedResource r = new com.chigix.resserver.entity.ChunkedResource("BANKAI", "22409589a09c") {
+            @Override
+            public Iterator<Chunk> getChunks() {
+                throw new UnsupportedOperationException("Not supported yet.");
+            }
+
+            @Override
+            public void appendChunk(Chunk chunk) {
+                throw new UnsupportedOperationException("Not supported yet.");
+            }
+
+            @Override
+            public Bucket getBucket() {
+                return b;
+            }
+
+            @Override
+            public void empty() {
+                throw new UnsupportedOperationException("Not supported yet.");
+            }
+        };
         r.setETag(UUID.randomUUID().toString());
         r.setLastModified(DateTime.parse("2017-01-12T09:06:00.863Z"));
         r.removeMetaData("Content-Type");
         String random_key = UUID.randomUUID().toString();
         r.setMetaData("x-key", random_key);
-        ResourceInStorage result = Serializer.deserializeResource(Serializer.serializeResource(r));
-        assertEquals(ResourceInStorage.hashKey(b.getUUID(), result.getKey()), result.getKeyHash());
+        Resource result = Serializer.deserializeResource(Serializer.serializeResource(r));
+        assertTrue(result instanceof com.chigix.resserver.entity.ChunkedResource);
+        assertEquals(ResourceExtension.hashKey(b.getUUID(), result.getKey()), ((ResourceExtension) result).getKeyHash());
         assertEquals(r.getVersionId(), result.getVersionId());
         assertEquals(random_key, result.snapshotMetaData().get("x-key"));
-        assertNull(result.getBucketProxy().getProxied());
-        try {
-            result.getBucket();
-            fail("ProxiedException should be thrown.");
-        } catch (ModelProxy.ProxiedException e) {
-        }
     }
 
     /**
