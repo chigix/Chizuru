@@ -3,8 +3,6 @@ package com.chigix.resserver.sharablehandlers;
 import com.chigix.resserver.ApplicationContext;
 import com.chigix.resserver.entity.Bucket;
 import com.chigix.resserver.entity.Resource;
-import com.chigix.resserver.entity.error.DaoException;
-import com.chigix.resserver.entity.error.NoSuchBucket;
 import com.chigix.resserver.entity.error.NoSuchKey;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -43,7 +41,7 @@ public class ResourceInfoHandler extends SimpleChannelInboundHandler<HttpRouted>
                     (String) msg.decodedParams().get("resource_key")
             );
         } catch (NoSuchKey noSuchKey) {
-            r = fixUnexistedResource(new Resource(b, (String) msg.decodedParams().get("resource_key")), msg, b);
+            r = new Context.UnpersistedResource(b, (String) msg.decodedParams().get("resource_key"));
         } catch (Exception ex) {
             msg.deny();
             throw ex;
@@ -51,14 +49,6 @@ public class ResourceInfoHandler extends SimpleChannelInboundHandler<HttpRouted>
         Context routing_ctx = new Context(msg, r);
         msg.allow();
         ctx.fireChannelRead(routing_ctx);
-    }
-
-    protected Resource fixUnexistedResource(Resource r, HttpRouted routed_info, Bucket bucket) throws NoSuchKey, DaoException {
-        try {
-            return application.ResourceDao.saveResource(r);
-        } catch (NoSuchBucket ex) {
-            throw new RuntimeException(ex);
-        }
     }
 
 }

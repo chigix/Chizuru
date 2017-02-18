@@ -1,9 +1,11 @@
 package com.chigix.resserver.sharablehandlers;
 
+import com.chigix.resserver.entity.Bucket;
 import com.chigix.resserver.entity.Resource;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.router.HttpRouted;
+import java.security.InvalidParameterException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -15,7 +17,7 @@ public class Context {
 
     private final HttpRouted routedInfo;
 
-    private final Resource resource;
+    private Resource resource;
 
     private final MessageDigest etagDigest;
 
@@ -50,6 +52,13 @@ public class Context {
         return resource;
     }
 
+    public void setResource(Resource resource) {
+        if (resource == null) {
+            throw new InvalidParameterException();
+        }
+        this.resource = resource;
+    }
+
     public MessageDigest getEtagDigest() {
         return etagDigest;
     }
@@ -64,6 +73,32 @@ public class Context {
 
     public void setCachingChunkBuf(ByteBuf cachingChunkBuf) {
         this.cachingChunkBuf = cachingChunkBuf;
+    }
+
+    public static class UnpersistedResource extends Resource {
+
+        private final Bucket bucket;
+
+        public UnpersistedResource(Bucket bucket, String key) {
+            super(key);
+            this.bucket = bucket;
+        }
+
+        public UnpersistedResource(Bucket bucket, String key, String versionId) {
+            super(key, versionId);
+            this.bucket = bucket;
+        }
+
+        @Override
+        public Bucket getBucket() {
+            return bucket;
+        }
+
+        @Override
+        public void empty() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
     }
 
 }
