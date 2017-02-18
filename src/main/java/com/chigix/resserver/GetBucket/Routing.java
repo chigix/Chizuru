@@ -7,13 +7,17 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.LastHttpContent;
+import io.netty.handler.codec.http.QueryStringDecoder;
 import io.netty.handler.codec.http.router.HttpRouted;
 import io.netty.handler.codec.http.router.RoutingConfig;
 import io.netty.handler.routing.DefaultExceptionForwarder;
+import io.netty.handler.routing.Router;
 import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.util.AttributeKey;
-import io.netty.util.ReferenceCountUtil;
+import java.util.Map;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -21,9 +25,12 @@ import java.util.UUID;
  */
 public class Routing extends RoutingConfig.GET {
 
-    private final ApplicationContext application;
+    private static final Logger LOG = LoggerFactory.getLogger(Routing.class.getName());
 
+    private static final String ROUTING_NAME = "GET_BUCKET";
     private static final AttributeKey<Context> ROUTING_CONTEXT = AttributeKey.newInstance(UUID.randomUUID().toString());
+
+    private final ApplicationContext application;
 
     public Routing(ApplicationContext ctx) {
         application = ctx;
@@ -31,7 +38,7 @@ public class Routing extends RoutingConfig.GET {
 
     @Override
     public String configureRoutingName() {
-        return "GET_BUCKET";
+        return ROUTING_NAME;
     }
 
     @Override
@@ -49,23 +56,60 @@ public class Routing extends RoutingConfig.GET {
                 ctx.attr(ROUTING_CONTEXT).set(routing_ctx);
                 ctx.fireChannelRead(routing_ctx);
             }
-        },
-                new LocationHandler(application),
-                new ChunkedWriteHandler(),
-                new ChannelHandlerAdapter() {
+        }, new Router() {
             @Override
-            public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-                if (msg instanceof LastHttpContent) {
-                    Context routing_ctx = ctx.channel().attr(ROUTING_CONTEXT).get();
-                    if (routing_ctx != null) {
-                        super.channelRead(ctx, routing_ctx);
-                        ctx.channel().attr(ROUTING_CONTEXT).set(null);
-                    }
+            protected void route(ChannelHandlerContext ctx, Object msg, Map<String, ChannelPipeline> routingPipelines) throws Exception {
+                if (!(msg instanceof LastHttpContent)) {
+                    return;
                 }
-                ReferenceCountUtil.release(msg);
+                final Context routing_ctx = ctx.attr(ROUTING_CONTEXT).getAndRemove();
+                // Exception has been thrown in previous SimpleChannelInboundHandler
+                if (routing_ctx == null) {
+                    return;
+                }
+                QueryStringDecoder decoder = new QueryStringDecoder(routing_ctx.getRoutedInfo().getRequestMsg().uri());
+                if (decoder.parameters().get("location") != null) {
+                    LOG.debug(ROUTING_NAME + ":BUCKET_LOCATION");
+                    this.pipelineForward(routingPipelines.get(ROUTING_NAME + ":BUCKET_LOCATION"), routing_ctx);
+                } else {
+                    LOG.debug(ROUTING_NAME + ":RESOURCE_LIST");
+                    this.pipelineForward(routingPipelines.get(ROUTING_NAME + ":RESOURCE_LIST"), routing_ctx);
+                }
             }
 
-        }, ResourceListHandler.getInstance(application), new DefaultExceptionForwarder());
+            @Override
+            protected void initRouter(ChannelHandlerContext ctx) throws Exception {
+                this.newRouting(ctx, ROUTING_NAME + ":RESOURCE_LIST").addLast(
+                        new ChunkedWriteHandler(),
+                        ResourceListHandler.getInstance(application), new DefaultExceptionForwarder());
+                this.newRouting(ctx, ROUTING_NAME + ":BUCKET_LOCATION").addLast(LocationHandler.getInstance(application), new DefaultExceptionForwarder());
+            }
+
+            @Override
+            protected void initExceptionRouting(ChannelPipeline pipeline) {
+                final Router self = this;
+                pipeline.addLast(new ChannelHandlerAdapter() {
+                    @Override
+                    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+                        self.exceptionCaught(ctx, (Throwable) msg);
+                    }
+
+                    @Override
+                    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+                        self.exceptionCaught(ctx, cause);
+                    }
+
+                });
+            }
+
+            @Override
+            public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+                ctx.fireExceptionCaught(cause);
+            }
+
+        },
+                new DefaultExceptionForwarder()
+        );
     }
 
 }
