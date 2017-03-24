@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chigix.resserver.mybatis.DbInitMapper">
+    <update id="createBucketTable">
+        CREATE TABLE BUCKET (
+        ID INTEGER AUTO_INCREMENT NOT NULL PRIMARY KEY,
+        UUID CHAR(32) NOT NULL UNIQUE,
+        "NAME" VARCHAR(64) NOT NULL UNIQUE, 
+        CREATION_TIME CHAR(24) NOT NULL
+        );
+    </update>
+    <update id="deleteBucketTable">
+        DROP TABLE BUCKET;
+    </update>
+    <update id="createResourceTable">
+        CREATE TABLE RESOURCE (
+        ID INTEGER AUTO_INCREMENT NOT NULL PRIMARY KEY,
+        "key" VARCHAR(1024), 
+        "keyhash" CHAR(32) DEFAULT '0000000000000000000000000000000'  NOT NULL UNIQUE,
+        "bucket_uuid" CHAR(32) DEFAULT '0000000000000000000000000000000'  NOT NULL,
+        "type" VARCHAR(50), 
+        "etag" char(32) DEFAULT 'd41d8cd98f00b204e9800998ecf8427e'  NOT NULL,
+        "last_modified" CHAR(24) DEFAULT '1970-01-01T00:00:00.000Z' NOT NULL,
+        "size" VARCHAR(255) DEFAULT '0' NOT NULL,
+        "storage_class" VARCHAR(255) DEFAULT 'STANDARD' NOT NULL,
+        "version_id" CHAR(36) DEFAULT '0' NOT NULL,
+        "meta_data" CLOB NOT NULL
+        );
+        CREATE INDEX RESOURCE_KEY_IDX ON RESOURCE("key");
+    </update>
+    <update id="deleteResourceTable">
+        DROP TABLE RESOURCE
+    </update>
+    <update id="createChunkTable">
+        CREATE TABLE CHUNK (
+        ID INTEGER AUTO_INCREMENT NOT NULL PRIMARY KEY,
+        CONTENT_HASH CHAR(64) NOT NULL,
+        "SIZE" INTEGER DEFAULT 0  NOT NULL,
+        LOCATION_ID CHAR(36) NOT NULL,
+        PARENT_VERSION_ID CHAR(36) DEFAULT '0'  NOT NULL
+        );
+        CREATE INDEX CHUNK_KEY_IDX ON CHUNK(CONTENT_HASH);
+        CREATE INDEX VERSION_IDX ON CHUNK(PARENT_VERSION_ID);
+    </update>
+    <update id="deleteChunkTable">
+        DROP TABLE CHUNK
+    </update>
+</mapper>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chigix.resserver.mybatis.ChunkMapper">
+    <select id="selectAll" resultType="java.util.Map" resultSetType="FORWARD_ONLY">
+        SELECT * FROM CHUNK;
+    </select>
+    <insert id="appendChunkToVersion">
+        INSERT INTO CHUNK (CONTENT_HASH, "SIZE", LOCATION_ID, PARENT_VERSION_ID) 
+        VALUES (#{ chunk.contentHash }, #{ chunk.size }, #{ chunk.locationId }, #{ versionId })
+    </insert>
+    <select id="selectFirstChunkReference" resultType="java.util.Map">
+        SELECT * FROM CHUNK WHERE CONTENT_HASH=#{contentHash} LIMIT 1;
+    </select>
+    <select id="selectByVersion" resultType="java.util.Map" resultSetType="FORWARD_ONLY">
+        SELECT * FROM CHUNK WHERE PARENT_VERSION_ID = #{versionId}
+        <if test="_parameter != null">
+            <if test="_parameter.containsKey('continuation')">
+                AND "ID" >= (SELECT "ID" FROM CHUNK WHERE CONTENT_HASH = #{continuation} LIMIT 1)
+            </if>
+        </if>
+        LIMIT 1000
+    </select>
+</mapper>

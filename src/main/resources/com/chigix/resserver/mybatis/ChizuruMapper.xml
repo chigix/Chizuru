@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chigix.resserver.mybatis.ChizuruMapper">
+    <select id="selectChizuruSettings" resultType="java.util.Map" resultSetType="FORWARD_ONLY">
+        select * from Chizuru
+    </select>
+    <update id="saveNodeId">
+        UPDATE CHIZURU SET "value" = '${bean.currentNodeId}' WHERE "key" = 'NODE_ID';
+    </update>
+    <update id="saveMaxChunkSize">
+        UPDATE CHIZURU SET "value" = '${bean.maxChunkSize}' WHERE "key" = 'MAX_CHUNKSIZE';
+    </update>
+    <update id="saveCreatingDate">
+        UPDATE CHIZURU SET "value" = '${creationDate}' WHERE "key" = 'CREATION_DATE';
+    </update>
+    <update id="updateChizuruSettings">
+        UPDATE CHIZURU SET "value" = '${bean.currentNodeId}' WHERE "key" = 'NODE_ID';
+        UPDATE CHIZURU SET "value" = '${creationDate}' WHERE "key" = 'CREATION_DATE';
+        UPDATE CHIZURU SET "value" = '${bean.maxChunkSize}' WHERE "key" = 'MAX_CHUNKSIZE';
+    </update>
+</mapper>

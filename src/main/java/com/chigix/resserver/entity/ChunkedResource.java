@@ -24,6 +24,4 @@ public abstract class ChunkedResource extends Resource {
      */
     public abstract Iterator<Chunk> getChunks();
 
-    public abstract void appendChunk(Chunk chunk);
-
 }

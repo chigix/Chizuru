@@ -1,5 +1,6 @@
 package com.chigix.resserver.entity;
 
+import com.chigix.resserver.entity.error.NoSuchBucket;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -74,7 +75,7 @@ public abstract class Resource {
         return "STANDARD";
     }
 
-    public abstract Bucket getBucket();
+    public abstract Bucket getBucket() throws NoSuchBucket;
 
     public void setMetaData(String key, String value) {
         metaData.put(key, value);
@@ -92,8 +93,4 @@ public abstract class Resource {
         return result;
     }
 
-    /**
-     * Empty the content in this resource.
-     */
-    public abstract void empty();
 }

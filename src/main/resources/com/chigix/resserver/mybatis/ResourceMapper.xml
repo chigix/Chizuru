@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chigix.resserver.mybatis.ResourceMapper">
+    <select id="selectAllByBucketName" resultType="java.util.Map" resultSetType="FORWARD_ONLY">
+        select * from resource
+        WHERE "bucket_uuid" = (SELECT bucket.UUID FROM bucket  WHERE bucket."NAME" =  #{bucketName} LIMIT 1)
+        <if test="_parameter.containsKey('continuation')">
+            AND "ID" >= (SELECT RESOURCE.ID FROM RESOURCE WHERE RESOURCE."keyhash" = #{continuation} LIMIT 1)
+        </if>
+        LIMIT #{limit}
+    </select>
+    <select id="selectByKeyhash" resultType="java.util.Map">
+        select * from resource
+        WHERE "keyhash" = #{keyhash}
+        LIMIT 1
+    </select>
+    <select id="selectByBucketName_Key" resultType="java.util.Map">
+        select * from resource
+        WHERE "bucket_uuid" = (SELECT bucket.UUID FROM bucket  WHERE bucket."NAME" =  #{bucketName} LIMIT 1)
+        AND "key" = #{resourceKey}
+        LIMIT 1
+    </select>
+    <insert id="insert">
+        INSERT INTO RESOURCE ("key", "keyhash", "bucket_uuid", "type", "etag", 
+        "last_modified", "size", "storage_class", "version_id", "meta_data") 
+        VALUES (#{bean.key}, #{keyHash}, #{bucket.Uuid}, #{type}, #{bean.ETag}, 
+        #{lastModified}, #{bean.size}, #{bean.storageClass}, #{bean.versionId}, #{metaData})
+    </insert>
+    <update id="update">
+        UPDATE RESOURCE SET
+        "etag" = #{bean.ETag},
+        "last_modified" = #{lastModified},
+        "size" = #{bean.size},
+        "storage_class" = #{bean.storageClass},
+        "version_id" = #{bean.versionId},
+        "meta_data" = #{metaData}
+        WHERE "keyhash" = #{keyHash}
+    </update>
+    <update id="merge">
+        MERGE INTO RESOURCE ("key", "keyhash", "bucket_uuid", "type", "etag", 
+        "last_modified", "size", "storage_class", "version_id", "meta_data") 
+        KEY("keyhash") 
+        VALUES (#{bean.key}, #{keyHash}, #{bucket.Uuid}, #{type}, #{bean.ETag}, 
+        #{lastModified}, #{bean.size}, #{bean.storageClass}, #{bean.versionId}, #{metaData})
+    </update>
+    <delete id="delete">
+        DELETE FROM RESOURCE 
+        WHERE "bucket_uuid" = (SELECT bucket.UUID FROM bucket  WHERE bucket."NAME" =  #{bucket.name} LIMIT 1)
+        AND "key" = #{key}
+    </delete>
+    <delete id="deleteByKeyhash">
+        DELETE FROM RESOURCE WHERE "keyhash" = #{keyhash}
+    </delete>
+</mapper>

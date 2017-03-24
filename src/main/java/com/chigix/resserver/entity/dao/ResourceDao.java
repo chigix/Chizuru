@@ -1,6 +1,8 @@
 package com.chigix.resserver.entity.dao;
 
 import com.chigix.resserver.entity.Bucket;
+import com.chigix.resserver.entity.Chunk;
+import com.chigix.resserver.entity.ChunkedResource;
 import com.chigix.resserver.entity.Resource;
 import com.chigix.resserver.entity.error.DaoException;
 import com.chigix.resserver.entity.error.NoSuchBucket;
@@ -24,5 +26,7 @@ public interface ResourceDao {
     Iterator<Resource> listResources(Bucket bucket, String continuation);
 
     void removeResource(Resource resource) throws NoSuchKey, NoSuchBucket;
+
+    void appendChunk(ChunkedResource r, Chunk c);
 
 }
