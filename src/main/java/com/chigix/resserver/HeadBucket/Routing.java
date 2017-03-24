@@ -49,7 +49,7 @@ public class Routing extends RoutingConfig.HEAD {
             @Override
             protected void messageReceived(ChannelHandlerContext ctx, LastHttpContent msg) throws Exception {
                 HttpRouted routed_info = ctx.channel().attr(ROUTED_INFO).get();
-                application.BucketDao.findBucketByName((String) routed_info.decodedParams().get("bucketName"));
+                application.getDaoFactory().getBucketDao().findBucketByName((String) routed_info.decodedParams().get("bucketName"));
                 ctx.writeAndFlush(new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK));
                 ctx.channel().attr(ROUTED_INFO).remove();
             }

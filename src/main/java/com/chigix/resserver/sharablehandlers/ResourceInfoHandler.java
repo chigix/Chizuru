@@ -33,10 +33,10 @@ public class ResourceInfoHandler extends SimpleChannelInboundHandler<HttpRouted>
 
     @Override
     protected void messageReceived(ChannelHandlerContext ctx, HttpRouted msg) throws Exception {
-        Bucket b = application.BucketDao.findBucketByName((String) msg.decodedParams().get("bucketName"));
+        Bucket b = application.getDaoFactory().getBucketDao().findBucketByName((String) msg.decodedParams().get("bucketName"));
         Resource r;
         try {
-            r = application.ResourceDao.findResource(
+            r = application.getDaoFactory().getResourceDao().findResource(
                     b.getName(),
                     (String) msg.decodedParams().get("resource_key")
             );

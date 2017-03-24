@@ -66,7 +66,8 @@ public class Routing extends RoutingConfig.GET {
                 // resp.headers().set("x-amz-version-id", msg.getResource().getVersionId());
                 ctx.write(resp);
                 if (msg.getResource() instanceof ChunkedResource) {
-                    ctx.write(new ChunkedStream(new ResourceInputStream((ChunkedResource) msg.getResource(), 1024), 1024));
+                    ctx.write(new ChunkedStream(new ResourceInputStream((ChunkedResource) msg.getResource(), 1024), 1024))
+                            .addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
                 } else if (msg.getResource() instanceof AmassedResource) {
                     throw new UnsupportedOperationException("Not Supported Yet.");
                 }

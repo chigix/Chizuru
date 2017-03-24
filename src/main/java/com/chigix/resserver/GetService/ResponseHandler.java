@@ -59,7 +59,7 @@ public class ResponseHandler extends SimpleChannelInboundHandler<LastHttpContent
             xmlWriter.writeEndElement();// DisplayName
             xmlWriter.writeEndElement();// Owner
             xmlWriter.writeStartElement("Buckets");
-            Iterator<Bucket> it = application.BucketDao.iteratorBucket();
+            Iterator<Bucket> it = application.getDaoFactory().getBucketDao().iteratorBucket();
             while (it.hasNext()) {
                 Bucket next;
                 try {

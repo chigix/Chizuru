@@ -110,7 +110,7 @@ public class ResourceListHandler extends SimpleChannelInboundHandler<Context> {
                 xml_writer.writeCharacters(delimiter);
                 xml_writer.writeEndElement();//ListBucketResult.Delimiter
             }
-            Iterator<Resource> resources = application.ResourceDao.listResources(route_ctx.getTargetBucket());
+            Iterator<Resource> resources = application.getDaoFactory().getResourceDao().listResources(route_ctx.getTargetBucket());
             while (resources.hasNext()) {
                 Resource next = resources.next();
                 xmlWriteResourceContent(xml_writer, next);//ListBucketResult.Contents

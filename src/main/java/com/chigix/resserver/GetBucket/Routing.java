@@ -51,7 +51,7 @@ public class Routing extends RoutingConfig.GET {
         pipeline.addLast(new SimpleChannelInboundHandler<HttpRouted>() {
             @Override
             protected void messageReceived(ChannelHandlerContext ctx, HttpRouted msg) throws Exception {
-                Bucket target_bucket = application.BucketDao.findBucketByName((String) msg.decodedParams().get("bucketName"));
+                Bucket target_bucket = application.getDaoFactory().getBucketDao().findBucketByName((String) msg.decodedParams().get("bucketName"));
                 Context routing_ctx = new Context(target_bucket, msg);
                 ctx.attr(ROUTING_CONTEXT).set(routing_ctx);
                 ctx.fireChannelRead(routing_ctx);

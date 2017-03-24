@@ -6,6 +6,7 @@ import com.chigix.resserver.entity.Bucket;
 import com.chigix.resserver.entity.Chunk;
 import com.chigix.resserver.entity.ChunkedResource;
 import com.chigix.resserver.entity.Resource;
+import com.chigix.resserver.entity.error.NoSuchBucket;
 import com.chigix.resserver.sharablehandlers.ResourceInfoHandler;
 import com.chigix.resserver.util.Authorization;
 import io.netty.buffer.ByteBuf;
@@ -30,7 +31,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.security.MessageDigest;
+import java.util.Iterator;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,6 +51,8 @@ public class Routing extends RoutingConfig.PUT {
     private static final Logger LOG = LoggerFactory.getLogger(Routing.class.getName());
 
     private static final AttributeKey<Context> CONTEXT = AttributeKey.valueOf(UUID.randomUUID().toString());
+
+    private static final ConcurrentMap<String, Chunk> CHUNK_IN_WRITING = new ConcurrentHashMap<>();
 
     public Routing(ApplicationContext application) {
         this.application = application;
@@ -71,7 +77,18 @@ public class Routing extends RoutingConfig.PUT {
                 Resource r = msg.getResource();
                 Bucket b = msg.getResource().getBucket();
                 String key = msg.getResource().getKey();
-                msg.setResource(application.ResourceFactory.createChunkedResource(key, b));
+                msg.setResource(new ChunkedResource(key) {
+                    @Override
+                    public Iterator<Chunk> getChunks() {
+                        throw new UnsupportedOperationException("Not supported yet.");
+                    }
+
+                    @Override
+                    public Bucket getBucket() throws NoSuchBucket {
+                        return b;
+                    }
+
+                });
                 ctx.channel().attr(CONTEXT).set(msg);
             }
         }, new SimpleChannelInboundHandler<HttpContent>() {
@@ -123,12 +140,16 @@ public class Routing extends RoutingConfig.PUT {
                 routing_ctx.getSha256Digest().update(chunk_content);
                 final String chunk_hash = Authorization.HexEncode(digest.digest());
                 File chunk_file = new File(application.getChunksDir(), "./" + chunk_hash);
-                final Chunk chunk = application.ChunkDao.newChunk(chunk_hash, chunk_content.length);
-                application.ChunkDao.increaseChunkRef(chunk_hash);
-                if (application.ChunkDao.saveChunkIfAbsent(chunk) == null) {
+                final Chunk chunk = application.getDaoFactory().getChunkDao().newChunk(chunk_hash, chunk_content.length);
+                if (application.getDaoFactory().getChunkDao().saveChunkIfAbsent(chunk) == null
+                        && CHUNK_IN_WRITING.putIfAbsent(chunk_hash, chunk) == null) {
                     try (OutputStream out = new FileOutputStream(chunk_file)) {
                         out.write(chunk_content);
                     } catch (IOException iOException) {
+                        //@TODO Unsafe if the first thread failed writing, 
+                        // which is unknown for later threads 
+                        // who directly goto database save skipped this step.
+                        chunk_file.delete();
                         LOG.error(iOException.getMessage(), iOException);
                         throw new HttpException(iOException.getMessage()) {
                             @Override
@@ -141,16 +162,18 @@ public class Routing extends RoutingConfig.PUT {
                                 return routing_ctx.getRoutedInfo();
                             }
                         };
+                    } finally {
+                        CHUNK_IN_WRITING.remove(chunk_hash);
                     }
                 }
-                ((ChunkedResource) routing_ctx.getResource()).appendChunk(chunk);
+                application.getDaoFactory().getResourceDao().appendChunk((ChunkedResource) routing_ctx.getResource(), chunk);
             }
         }, new SimpleChannelInboundHandler<LastHttpContent>() {
             @Override
             protected void messageReceived(ChannelHandlerContext ctx, LastHttpContent msg) throws Exception {
                 Context routing_ctx = ctx.channel().attr(CONTEXT).getAndRemove();
                 routing_ctx.getResource().setETag(Authorization.HexEncode(routing_ctx.getEtagDigest().digest()));
-                application.ResourceDao.saveResource(routing_ctx.getResource());
+                application.getDaoFactory().getResourceDao().saveResource(routing_ctx.getResource());
                 DefaultFullHttpResponse resp = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
                 resp.headers().add(HttpHeaderNames.ETAG, routing_ctx.getResource().getETag());
                 ctx.writeAndFlush(resp);

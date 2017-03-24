@@ -3,6 +3,8 @@ package com.chigix.resserver;
 import com.chigix.resserver.error.DaoExceptionHandler;
 import com.chigix.resserver.error.ExceptionHandler;
 import com.chigix.resserver.error.UnwrappedExceptionHandler;
+import com.chigix.resserver.mybatis.ChizuruMapper;
+import com.chigix.resserver.mybatis.dto.ApplicationContextDto;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -23,15 +25,16 @@ import io.netty.handler.codec.http.router.FullResponseLengthFixer;
 import io.netty.handler.codec.http.router.HttpRouter;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicReference;
+import org.apache.ibatis.io.Resources;
+import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionFactory;
+import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.mapdb.DB;
-import org.mapdb.DBMaker;
-import org.mapdb.HTreeMap;
-import org.mapdb.Serializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,12 +47,9 @@ public class Application {
     private static final Logger LOG = LoggerFactory.getLogger(Application.class.getName());
 
     public static void main(String[] args) throws InterruptedException {
-        AtomicReference<ApplicationContext> ctxInited = new AtomicReference<>();
-        AtomicReference<DB> dbCreated = new AtomicReference<>();
-        initNode(ctxInited, dbCreated);
-        ctxInited.get().updateDBScheme();
-        LOG.info("NODE ID: " + ctxInited.get().getCurrentNodeId());
-        LOG.info("Created At: " + ctxInited.get().getCreationDate());
+        ApplicationContext app_ctx = initNode();
+        LOG.info("NODE ID: " + app_ctx.getCurrentNodeId());
+        LOG.info("Created At: " + app_ctx.getCreationDate());
         EventLoopGroup bossGroup = new NioEventLoopGroup();
         EventLoopGroup workerGroup = new NioEventLoopGroup();
         ServerBootstrap sb = new ServerBootstrap();
@@ -68,7 +68,7 @@ public class Application {
                         }).addLast(new HttpRequestDecoder(4096, 8192, 8192))
                                 .addLast(new HttpResponseEncoder())
                                 .addLast(new FullResponseLengthFixer())
-                                .addLast(headerFixer(ctxInited.get()), configRouter(ctxInited.get()));
+                                .addLast(headerFixer(app_ctx), configRouter(app_ctx));
                     }
                 });
         try {
@@ -78,32 +78,39 @@ public class Application {
         } finally {
             bossGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();
-            dbCreated.get().close();
         }
     }
 
-    public static void initNode(AtomicReference<ApplicationContext> ctx, AtomicReference<DB> db) {
-        File db_file = new File("./data/chizuru.db");
-        String node_id = null;
-        if (!db_file.exists()) {
-            node_id = UUID.randomUUID().toString();
+    public static SqlSessionFactory initMyBatis() {
+        InputStream in;
+        try {
+            in = Resources.getResourceAsStream("com/chigix/resserver/mybatis/mybatis-config.xml");
+        } catch (IOException ex) {
+            LOG.error("Unexpected.", ex);
+            throw new RuntimeException("Unexpected.");
         }
-        db.set(DBMaker.fileDB("./data/chizuru.db").transactionEnable().closeOnJvmShutdown().make());
-        HTreeMap<String, String> CONFIG = (HTreeMap<String, String>) db.get().hashMap("CHIZURU", Serializer.STRING, Serializer.STRING).createOrOpen();
-        if (CONFIG.get("NODE_ID") == null) {
-            if (node_id == null) {
-                throw new RuntimeException("Existing DB File without node inited.");
-            }
-            CONFIG.put("NODE_ID", node_id);
-            db.get().commit();
+        return new SqlSessionFactoryBuilder().build(in);
+    }
+
+    public static ApplicationContext initNode() {
+        SqlSessionFactory session_factory = initMyBatis();
+        SqlSession settings_session = session_factory.openSession(true);
+        ChizuruMapper chizuru = settings_session.getMapper(ChizuruMapper.class);
+        Map<String, String> settings = ChizuruMapper.SETTINGS_MAP.apply(chizuru.selectChizuruSettings());
+        final Configuration config;
+        if (settings.get("NODE_ID") == null) {
+            config = new Configuration(UUID.randomUUID().toString());
+        } else {
+            config = new Configuration(settings.get("NODE_ID"));
         }
-        if (CONFIG.get("CREATION_DATE") == null) {
-            CONFIG.put("CREATION_DATE", new DateTime(DateTimeZone.forID("GMT")).toString());
-            db.get().commit();
+        config.setSessionFactory(session_factory);
+        if (settings.get("CREATION_DATE") == null) {
+            config.setCreationDate(new DateTime(DateTimeZone.forID("GMT")));
+        } else {
+            config.setCreationDate(DateTime.parse(settings.get("CREATION_DATE")));
         }
-        if (CONFIG.get("MAX_CHUNKSIZE") == null) {
-            CONFIG.put("MAX_CHUNKSIZE", 8192 + "");
-            db.get().commit();
+        if (settings.get("MAX_CHUNKSIZE") != null) {
+            config.setMaxChunkSize(Integer.valueOf(settings.get("MAX_CHUNKSIZE")));
         }
         File chunks_dir = new File("./data/chunks");
         if (!chunks_dir.exists()) {
@@ -112,11 +119,10 @@ public class Application {
         if (!chunks_dir.isDirectory()) {
             throw new RuntimeException("Unable to have chunks directory.");
         }
-        ctx.set(new ApplicationContext(CONFIG.get("NODE_ID"),
-                DateTime.parse(CONFIG.get("CREATION_DATE")),
-                Integer.valueOf(CONFIG.get("MAX_CHUNKSIZE")),
-                new File("./data/chunks"),
-                db.get()));
+        config.setChunksDir(new File("./data/chunks"));
+        ApplicationContext result = new ApplicationContextBuilder().build(config);
+        chizuru.updateChizuruSettings(new ApplicationContextDto(result));
+        return result;
     }
 
     public static ChannelHandlerAdapter headerFixer(ApplicationContext application) {

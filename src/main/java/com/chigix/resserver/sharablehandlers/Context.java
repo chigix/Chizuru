@@ -94,11 +94,6 @@ public class Context {
             return bucket;
         }
 
-        @Override
-        public void empty() {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-
     }
 
 }

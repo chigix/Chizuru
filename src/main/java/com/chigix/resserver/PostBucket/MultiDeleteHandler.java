@@ -73,7 +73,7 @@ public class MultiDeleteHandler extends ChannelHandlerAdapter {
     }
 
     private void handleRoutedInfo(Context ctx, HttpRouted routed) throws NoSuchBucket {
-        ctx.setBucket(application.BucketDao.findBucketByName((String) routed.decodedParams().get("bucketName")));
+        ctx.setBucket(application.getDaoFactory().getBucketDao().findBucketByName((String) routed.decodedParams().get("bucketName")));
     }
 
     private void response(ChannelHandlerContext ctx, Context routing_ctx) {
@@ -104,7 +104,7 @@ public class MultiDeleteHandler extends ChannelHandlerAdapter {
                     continue;
                 }
                 try {
-                    application.ResourceDao.removeResource(application.ResourceDao.findResource(routing_ctx.getBucket(), key_node.getTextContent()));
+                    application.getDaoFactory().getResourceDao().removeResource(application.getDaoFactory().getResourceDao().findResource(routing_ctx.getBucket(), key_node.getTextContent()));
                 } catch (NoSuchKey | NoSuchBucket ex) {
                     continue;
                 }

@@ -65,12 +65,7 @@
         <dependency>
             <groupId>com.chigix</groupId>
             <artifactId>netty-router</artifactId>
-            <version>3.3.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.mapdb</groupId>
-            <artifactId>mapdb</artifactId>
-            <version>3.0.2</version>
+            <version>3.3.1</version>
         </dependency>
         <dependency>
             <groupId>com.h2database</groupId>
@@ -86,6 +81,11 @@
             <groupId>commons-beanutils</groupId>
             <artifactId>commons-beanutils</artifactId>
             <version>1.9.3</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml</groupId>
+            <artifactId>aalto-xml</artifactId>
+            <version>1.0.0</version>
         </dependency>
         <dependency>
             <groupId>joda-time</groupId>

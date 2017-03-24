@@ -49,7 +49,7 @@ public class Routing extends RoutingConfig.DELETE {
             @Override
             protected void messageReceived(ChannelHandlerContext ctx, LastHttpContent msg) throws Exception {
                 HttpRouted routed_info = ctx.channel().attr(ROUTED_INFO).get();
-                Bucket bucket = application.BucketDao.deleteBucketByName((String) routed_info.decodedParams().get("bucketName"));
+                Bucket bucket = application.getDaoFactory().getBucketDao().deleteBucketByName((String) routed_info.decodedParams().get("bucketName"));
                 ctx.writeAndFlush(new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NO_CONTENT));
             }
         });

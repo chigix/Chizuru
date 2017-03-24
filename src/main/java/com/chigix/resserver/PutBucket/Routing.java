@@ -14,6 +14,8 @@ import io.netty.handler.codec.http.router.RoutingConfig;
 import io.netty.handler.routing.DefaultExceptionForwarder;
 
 /**
+ * Creates a new bucket.
+ * http://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketPUT.html
  *
  * @author Richard Lea <chigix@zoho.com>
  */
@@ -41,7 +43,7 @@ public class Routing extends RoutingConfig.PUT {
             @Override
             protected void messageReceived(ChannelHandlerContext ctx, HttpRouted msg) throws Exception {
                 msg.allow();
-                Bucket bucket = application.BucketDao.createBucket((String) msg.decodedParams().get("bucketName"));
+                Bucket bucket = application.getDaoFactory().getBucketDao().createBucket((String) msg.decodedParams().get("bucketName"));
                 DefaultFullHttpResponse resp = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
                 resp.headers().add(HttpHeaderNames.LOCATION, "/" + bucket.getName());
                 ctx.writeAndFlush(resp);
