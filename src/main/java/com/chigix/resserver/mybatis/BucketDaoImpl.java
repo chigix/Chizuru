@@ -63,7 +63,7 @@ public class BucketDaoImpl implements BucketDao {
     }
 
     @Override
-    public Bucket createBucket(String name) throws BucketAlreadyExists {
+    public BucketBean createBucket(String name) throws BucketAlreadyExists {
         BucketBean result = new BucketBean(name);
         try {
             if (bucketMapper.insert(result.getUuid(), result.getName(), result.getCreationTime().toString()) == 1) {

@@ -5,15 +5,23 @@
 <configuration>
     <properties>
         <property name="driver" value="org.h2.Driver" />
-        <property name="url" value="jdbc:h2:./data/Chizuru" />
         <property name="username" value="Chizuru" />
     </properties>
-    <environments default="development">
-        <environment id="development">
+    <environments default="chizuru">
+        <environment id="chizuru">
             <transactionManager type="JDBC"/>
             <dataSource type="POOLED">
                 <property name="driver" value="${driver}"/>
-                <property name="url" value="${url}"/>
+                <property name="url" value="jdbc:h2:./data/Chizuru"/>
+                <property name="username" value="${username}"/>
+                <property name="password" value=""/>
+            </dataSource>
+        </environment>
+        <environment id="upload">
+            <transactionManager type="JDBC"/>
+            <dataSource type="POOLED">
+                <property name="driver" value="${driver}"/>
+                <property name="url" value="jdbc:h2:./data/Uploading"/>
                 <property name="username" value="${username}"/>
                 <property name="password" value=""/>
             </dataSource>
@@ -23,6 +31,7 @@
         <mapper resource="com/chigix/resserver/mybatis/BucketMapper.xml"/>
         <mapper resource="com/chigix/resserver/mybatis/ResourceMapper.xml"/>
         <mapper resource="com/chigix/resserver/mybatis/ChunkMapper.xml"/>
+        <mapper resource="com/chigix/resserver/mybatis/UploadMapper.xml"/>
         <mapper resource="com/chigix/resserver/mybatis/ChizuruMapper.xml"/>
     </mappers>
 </configuration>

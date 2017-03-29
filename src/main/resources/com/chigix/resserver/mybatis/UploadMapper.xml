@@ -1,0 +1,65 @@
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chigix.resserver.mybatis.MultipartUploadMapper">
+    <update id="createUploadTable">
+        CREATE TABLE UPLOAD (
+        id INTEGER AUTO_INCREMENT NOT NULL PRIMARY KEY,
+        "uuid" CHAR(32) NOT NULL,
+        "initiated_at" CHAR(24) DEFAULT '1970-01-01T00:00:00.000Z' NOT NULL,
+        "resource_keyhash" CHAR(32) NOT NULL,
+        "resource_version" CHAR(36) NOT NULL,
+        "bucket_uuid" CHAR(32) DEFAULT '0000000000000000000000000000000'  NOT NULL,
+        "resource_key" VARCHAR(1024),
+        "bucket_name" VARCHAR(64) NOT NULL
+        );
+        CREATE INDEX UPLOAD_UUID_IDX ON UPLOAD("uuid");
+        CREATE INDEX UPLOAD_BUCKET_IDX ON UPLOAD("bucket_uuid");
+        CREATE TABLE RESOURCE (
+        ID INTEGER AUTO_INCREMENT NOT NULL PRIMARY KEY,
+        "key" VARCHAR(1024), 
+        "keyhash" CHAR(32) DEFAULT '0000000000000000000000000000000'  NOT NULL UNIQUE,
+        "bucket_uuid" CHAR(32) DEFAULT '0000000000000000000000000000000'  NOT NULL,
+        "type" VARCHAR(50), 
+        "etag" char(32) DEFAULT 'd41d8cd98f00b204e9800998ecf8427e'  NOT NULL,
+        "last_modified" CHAR(24) DEFAULT '1970-01-01T00:00:00.000Z' NOT NULL,
+        "size" VARCHAR(255) DEFAULT '0' NOT NULL,
+        "storage_class" VARCHAR(255) DEFAULT 'STANDARD' NOT NULL,
+        "version_id" CHAR(36) DEFAULT '0' NOT NULL,
+        "meta_data" CLOB NOT NULL
+        );
+        CREATE INDEX RESOURCE_KEY_IDX ON RESOURCE("key");
+        CREATE INDEX RESOURCE_KEYHASH_IDX ON RESOURCE("keyhash");
+
+        CREATE TABLE SUBRESOURCE (
+        ID INTEGER AUTO_INCREMENT NOT NULL PRIMARY KEY,
+        "key" CHAR(32) DEFAULT '0000000000000000000000000000000' NOT NULL, 
+        "parent_version_id" CHAR(36) DEFAULT '0000000000000000000000000000000' NOT NULL, 
+        "type" VARCHAR(50), 
+        "etag" char(32) DEFAULT 'd41d8cd98f00b204e9800998ecf8427e'  NOT NULL,
+        "last_modified" CHAR(24) DEFAULT '1970-01-01T00:00:00.000Z' NOT NULL,
+        "size" VARCHAR(255) DEFAULT '0' NOT NULL,
+        "storage_class" VARCHAR(255) DEFAULT 'STANDARD' NOT NULL,
+        "version_id" CHAR(36) DEFAULT '0' NOT NULL
+        );
+        CREATE INDEX SUBRESOURCE_KEY_IDX ON SUBRESOURCE("key");
+        CREATE INDEX SUBRESOURCE_PARENT_IDX ON SUBRESOURCE("parent_version_id");
+        CREATE INDEX SUBRESOURCE_ETAG_IDX ON SUBRESOURCE("etag");
+    </update>
+    <select id="selectByUuid" resultType="java.util.Map">
+        SELECT * FROM upload WHERE "uuid" = #{uuid} LIMIT 1
+    </select>
+    <select id="selectAll" resultType="java.util.Map" resultSetType="FORWARD_ONLY">
+        SELECT * FROM upload
+    </select>
+    <select id="selectAllByBucketUuid" resultType="java.util.Map" resultSetType="FORWARD_ONLY">
+        SELECT * FROM upload WHERE "bucket_uuid" = #{bucket_uuid} LIMIT 1000
+    </select>
+    <insert id="insert">
+        INSERT INTO UPLOAD ("uuid", "initiated_at", "resource_key", "resource_keyhash", "resource_version", "bucket_uuid", "bucket_name") 
+        VALUES (#{bean.uploadId}, #{initiatedAt}, #{bean.resource.key}, #{keyHash}, #{bean.resource.versionId}, #{bean.resource.bucket.uuid}, #{bean.resource.bucket.name})
+    </insert>
+    <delete id="deleteByUuid">
+        DELETE FROM UPLOAD WHERE "uuid" = #{uuid};
+    </delete>
+</mapper>

@@ -36,7 +36,7 @@ public class BucketMapperTest {
 
     @Before
     public void setUp() throws IOException {
-        session = TestUtils.setUpDatabase();
+        session = TestUtils.setUpDatabase("chizuru");
         session.update("com.chigix.resserver.mybatis.DbInitMapper.createBucketTable");
         mapper = session.getMapper(BucketMapper.class);
     }

@@ -35,7 +35,7 @@ public class ChunkDaoImplTest {
 
     @Before
     public void setUp() throws IOException {
-        session = TestUtils.setUpDatabase();
+        session = TestUtils.setUpDatabase("chizuru");
         session.update("com.chigix.resserver.mybatis.DbInitMapper.createChunkTable");
         chunkMapper = session.getMapper(ChunkMapper.class);
         chunkDao = new ChunkDaoImpl(chunkMapper);
