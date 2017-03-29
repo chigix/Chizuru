@@ -1,5 +1,6 @@
 package com.chigix.resserver.mybatis.bean;
 
+import com.chigix.resserver.entity.AmassedResource;
 import com.chigix.resserver.entity.Bucket;
 import com.chigix.resserver.entity.Chunk;
 import com.chigix.resserver.entity.ChunkedResource;
@@ -17,6 +18,8 @@ public class ChunkedResourceBean extends ChunkedResource implements ResourceExte
     private BucketBean bucket;
 
     private Integer id = null;
+
+    private AmassedResourceBean parentResource = null;
 
     public ChunkedResourceBean(String key, String keyhash) {
         super(key);
@@ -38,6 +41,7 @@ public class ChunkedResourceBean extends ChunkedResource implements ResourceExte
         return bucket;
     }
 
+    @Override
     public void setBucket(BucketBean bucket) {
         this.bucket = bucket;
     }
@@ -55,6 +59,14 @@ public class ChunkedResourceBean extends ChunkedResource implements ResourceExte
     @Override
     public void setId(Integer id) {
         this.id = id;
+    }
+
+    public AmassedResourceBean getParentResource() {
+        return parentResource;
+    }
+
+    public void setParentResource(AmassedResourceBean parentResource) {
+        this.parentResource = parentResource;
     }
 
 }

@@ -1,5 +1,6 @@
 package com.chigix.resserver.entity.dao;
 
+import com.chigix.resserver.entity.AmassedResource;
 import com.chigix.resserver.entity.Bucket;
 import com.chigix.resserver.entity.Chunk;
 import com.chigix.resserver.entity.ChunkedResource;
@@ -28,5 +29,7 @@ public interface ResourceDao {
     void removeResource(Resource resource) throws NoSuchKey, NoSuchBucket;
 
     void appendChunk(ChunkedResource r, Chunk c);
+
+    void appendChunkedResource(AmassedResource parent, ChunkedResource c, String partNumber);
 
 }

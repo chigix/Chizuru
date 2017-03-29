@@ -3,6 +3,7 @@ package com.chigix.resserver.mybatis.dto;
 import com.chigix.resserver.entity.AmassedResource;
 import com.chigix.resserver.entity.Resource;
 import com.chigix.resserver.entity.error.NoSuchBucket;
+import com.chigix.resserver.mybatis.bean.AmassedResourceBean;
 import com.chigix.resserver.mybatis.bean.BucketBean;
 import com.chigix.resserver.mybatis.bean.ResourceExtension;
 import java.io.StringWriter;
@@ -23,6 +24,9 @@ public class ResourceDto {
 
     private final BucketBean bucket;
 
+    private AmassedResourceBean parentResource;
+    
+
     public ResourceDto(Resource bean, BucketBean bucket) {
         this.bean = bean;
         this.bucket = bucket;
@@ -34,6 +38,15 @@ public class ResourceDto {
     public ResourceDto(ResourceExtension bean) throws NoSuchBucket {
         this.bean = (Resource) bean;
         this.bucket = (BucketBean) this.bean.getBucket();
+    }
+
+    public ResourceDto setParentResource(AmassedResourceBean parentResource) {
+        this.parentResource = parentResource;
+        return this;
+    }
+
+    public AmassedResourceBean getParentResource() {
+        return parentResource;
     }
 
     public Resource getBean() {

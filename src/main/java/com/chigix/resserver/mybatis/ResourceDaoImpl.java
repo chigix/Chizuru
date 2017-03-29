@@ -1,13 +1,14 @@
 package com.chigix.resserver.mybatis;
 
+import com.chigix.resserver.entity.AmassedResource;
 import com.chigix.resserver.entity.Bucket;
 import com.chigix.resserver.entity.Chunk;
 import com.chigix.resserver.entity.ChunkedResource;
 import com.chigix.resserver.entity.Resource;
 import com.chigix.resserver.entity.dao.ResourceDao;
-import com.chigix.resserver.entity.error.DaoException;
 import com.chigix.resserver.entity.error.NoSuchBucket;
 import com.chigix.resserver.entity.error.NoSuchKey;
+import com.chigix.resserver.mybatis.bean.AmassedResourceBean;
 import com.chigix.resserver.mybatis.bean.BucketBean;
 import com.chigix.resserver.mybatis.bean.ChunkedResourceBean;
 import com.chigix.resserver.mybatis.bean.ResourceExtension;
@@ -50,27 +51,54 @@ public class ResourceDaoImpl implements ResourceDao {
     private static final Function<ConverterSpecification, Resource> TO_DOMAIN = (specs) -> {
         final ResourceDaoImpl resource_dao = specs.resourceDao;
         final Map<String, String> m = specs.dto;
-        ChunkedResourceBean b = new ChunkedResourceBean(m.get("key"), m.get("version_id"), m.get("keyhash")) {
-            @Override
-            public Bucket getBucket() throws NoSuchBucket {
-                Bucket b = super.getBucket();
-                if (b != null) {
-                    return b;
+        Resource b;
+        if ("AmassedResource".equals(m.get("type"))) {
+            b = new AmassedResourceBean(m.get("key"), m.get("version_id"), m.get("keyhash")) {
+                @Override
+                public BucketBean getBucket() throws NoSuchBucket {
+                    BucketBean b = super.getBucket();
+                    if (b != null) {
+                        return b;
+                    }
+                    BucketBean bb = resource_dao.bucketDao.findBucketByUuid(m.get("bucket_uuid"));
+                    if (bb == null) {
+                        throw new NoSuchBucket("Seems that bucket have been removed.");
+                    }
+                    setBucket(bb);
+                    return bb;
                 }
-                BucketBean bb = resource_dao.bucketDao.findBucketByUuid(m.get("bucket_uuid"));
-                if (bb == null) {
-                    throw new NoSuchBucket("Seems that bucket have been removed.");
+
+                @Override
+                public Iterator<ChunkedResource> getSubResources() {
+                    return super.getSubResources(); //To change body of generated methods, choose Tools | Templates.
                 }
-                setBucket(bb);
-                return bb;
-            }
 
-            @Override
-            public Iterator<Chunk> getChunks() {
-                return resource_dao.chunkDao.listChunksByResource(this);
-            }
+            };
+        } else if ("ChunkedResource".equals(m.get("type"))) {
+            b = new ChunkedResourceBean(m.get("key"), m.get("version_id"), m.get("keyhash")) {
+                @Override
+                public Bucket getBucket() throws NoSuchBucket {
+                    Bucket b = super.getBucket();
+                    if (b != null) {
+                        return b;
+                    }
+                    BucketBean bb = resource_dao.bucketDao.findBucketByUuid(m.get("bucket_uuid"));
+                    if (bb == null) {
+                        throw new NoSuchBucket("Seems that bucket have been removed.");
+                    }
+                    setBucket(bb);
+                    return bb;
+                }
 
-        };
+                @Override
+                public Iterator<Chunk> getChunks() {
+                    return resource_dao.chunkDao.listChunksByResource(this);
+                }
+
+            };
+        } else {
+            throw new RuntimeException("Unexpected resource type: [" + m.get("type") + "}");
+        }
         b.setETag(m.get("etag"));
         b.setLastModified(DateTime.parse(m.get("last_modified")));
         b.setSize(m.get("size"));
@@ -87,8 +115,11 @@ public class ResourceDaoImpl implements ResourceDao {
                 b.setMetaData(meta.getAttributes().getNamedItem("name").getTextContent(),
                         meta.getAttributes().getNamedItem("content").getTextContent());
             }
-        } catch (XPathExpressionException | ParserConfigurationException | SAXException | IOException ex) {
-            throw new RuntimeException("Unexpected Xml Parse Config exception", ex);
+        } catch (XPathExpressionException | ParserConfigurationException
+                | SAXException | IOException | IllegalArgumentException ex) {
+            if (specs.metas != null) {
+                throw new RuntimeException("Unexpected Xml Parse Config exception", ex);
+            }
         }
         return b;
     };
@@ -125,14 +156,34 @@ public class ResourceDaoImpl implements ResourceDao {
             if (data == null) {
                 throw new NoSuchKey(resourceKey);
             }
-            return TO_DOMAIN.apply(generateConverterSpecs(data));
+            Resource r = TO_DOMAIN.apply(generateConverterSpecs(data));
+            ((ResourceExtension) r).setBucket((BucketBean) bucket);
+            return r;
         } else {
             return findResource(bucket.getName(), resourceKey);
         }
     }
 
+    public Resource findResource(BucketBean bucket, String resourceKey, String versionId) throws NoSuchKey, NoSuchBucket {
+        Map data = resourceMapper.selectByKeyhash_Version(ResourceExtension.hashKey(bucket.getUuid(), resourceKey), versionId);
+        if (data == null) {
+            throw new NoSuchKey(resourceKey);
+        }
+        return TO_DOMAIN.apply(generateConverterSpecs(data));
+    }
+
     @Override
-    public Resource saveResource(Resource resource) throws NoSuchBucket, DaoException {
+    public Resource saveResource(final Resource resource) throws NoSuchBucket {
+        return saveResource(resource, (t) -> {
+            if (resource instanceof ChunkedResourceBean && ((ChunkedResourceBean) resource).getParentResource() != null) {
+                t.setParentResource(((ChunkedResourceBean) resource).getParentResource());
+            }
+            return t;
+        });
+    }
+
+    // @TODO: check again is this method necessary???
+    public Resource saveResource(Resource resource, Function<ResourceDto, ResourceDto> config) throws NoSuchBucket {
         Bucket b = resource.getBucket();
         ResourceDto dto;
         if (b instanceof BucketBean) {
@@ -144,11 +195,18 @@ public class ResourceDaoImpl implements ResourceDao {
             }
             dto = new ResourceDto(resource, bb);
         }
-        if (resourceMapper.merge(dto) > 0) {
-            return resource;
+        dto = config.apply(dto);
+        if (dto.getParentResource() != null) {
+            return resourceMapper.insert(dto) > 0 ? resource : null;
         } else {
-            return null;
+            return resourceMapper.merge(dto) > 0 ? resource : null;
         }
+    }
+
+    public ChunkedResourceBean findSubResourcePart(String partKey, String partEtag, AmassedResource parent) {
+        return (ChunkedResourceBean) TO_DOMAIN.apply(generateConverterSpecs(
+                resourceMapper.selectSubResourceByKeyEtagParent(partKey, parent.getVersionId(), partEtag
+                )));
     }
 
     @Override
@@ -191,10 +249,13 @@ public class ResourceDaoImpl implements ResourceDao {
             }
 
         };
-        try {
-            specs.metas = ((Clob) dto.get("meta_data")).getAsciiStream();
-        } catch (SQLException ex) {
-            throw new RuntimeException("Unexpected when get inputstream from Resource Clob info.", ex);
+        Clob meta_data = (Clob) dto.get("meta_data");
+        if (meta_data != null) {
+            try {
+                specs.metas = ((Clob) dto.get("meta_data")).getAsciiStream();
+            } catch (SQLException ex) {
+                throw new RuntimeException("Unexpected when get inputstream from Resource Clob info.", ex);
+            }
         }
         return specs;
     }
@@ -205,13 +266,19 @@ public class ResourceDaoImpl implements ResourceDao {
         chunkMapper.appendChunkToVersion(r.getVersionId(), c);
     }
 
+    // @TODO:  Check later if this method is used and necessary.
+    @Override
+    public void appendChunkedResource(AmassedResource parent, ChunkedResource c, String partNumber) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
     private static class ConverterSpecification {
 
         private ResourceDaoImpl resourceDao;
 
         private Map<String, String> dto;
 
-        private InputStream metas;
+        private InputStream metas = null;
 
     }
 

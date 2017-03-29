@@ -18,6 +18,4 @@ public abstract class AmassedResource extends Resource {
 
     public abstract Iterator<ChunkedResource> getSubResources();
 
-    public abstract void appendSubResource();
-
 }

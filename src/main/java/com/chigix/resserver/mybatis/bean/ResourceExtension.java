@@ -16,6 +16,8 @@ public interface ResourceExtension {
 
     String getKeyHash();
 
+    void setBucket(BucketBean bucket);
+
     public static String hashKey(String bucket_uuid, String resource_key) {
         String keytohash = MessageFormat.format("[bucket: {0}, key: {1}]", bucket_uuid, resource_key);
         MessageDigest digest;

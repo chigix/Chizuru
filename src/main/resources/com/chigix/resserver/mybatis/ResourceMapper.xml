@@ -3,6 +3,12 @@
   PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.chigix.resserver.mybatis.ResourceMapper">
+    <select id="selectAll"  resultType="java.util.Map" resultSetType="FORWARD_ONLY">
+        SELECT * FROM resource
+    </select>
+    <select id="selectAllSubResources"  resultType="java.util.Map" resultSetType="FORWARD_ONLY">
+        SELECT * FROM SUBRESOURCE
+    </select>
     <select id="selectAllByBucketName" resultType="java.util.Map" resultSetType="FORWARD_ONLY">
         select * from resource
         WHERE "bucket_uuid" = (SELECT bucket.UUID FROM bucket  WHERE bucket."NAME" =  #{bucketName} LIMIT 1)
@@ -22,11 +28,57 @@
         AND "key" = #{resourceKey}
         LIMIT 1
     </select>
-    <insert id="insert">
-        INSERT INTO RESOURCE ("key", "keyhash", "bucket_uuid", "type", "etag", 
+    <select id="selectByKeyhash_Version"  resultType="java.util.Map">
+        select * from resource
+        WHERE "keyhash" = #{keyhash}
+        AND "version_id" = #{versionId}
+        LIMIT 1
+    </select>
+    <select id="selectSubResourceByKeyEtagParent"  resultType="java.util.Map">
+        select * from subresource
+        WHERE  "key" = #{resourceKey}
+        AND "parent_version_id" = #{parent_version_id}
+        AND "etag" = #{etag}
+        LIMIT 1
+    </select>
+    <sql id="resourceColumns">
+        ("key", "keyhash", "bucket_uuid", "type", "etag", 
         "last_modified", "size", "storage_class", "version_id", "meta_data") 
-        VALUES (#{bean.key}, #{keyHash}, #{bucket.Uuid}, #{type}, #{bean.ETag}, 
+    </sql>
+    <sql id="resourceValues">
+        (#{bean.key}, #{keyHash}, #{bucket.Uuid}, #{type}, #{bean.ETag}, 
         #{lastModified}, #{bean.size}, #{bean.storageClass}, #{bean.versionId}, #{metaData})
+    </sql>
+    <sql id="subResourceColumns">
+        ("key", "parent_version_id", "type", "etag", 
+        "last_modified", "size", "storage_class", "version_id") 
+    </sql>
+    <sql id="subResourceValues">
+        (#{bean.key}, #{parentResource.versionId}, #{type}, #{bean.ETag}, 
+        #{lastModified}, #{bean.size}, #{bean.storageClass}, #{bean.versionId})
+    </sql>
+    <insert id="insert">
+        INSERT INTO
+        <if test='"ChunkedResource".equals(type)'>
+            <if test='parentResource == null'>
+                RESOURCE
+                <include refid="resourceColumns"></include>
+                VALUES
+                <include refid="resourceValues"></include>
+            </if>
+            <if test='parentResource != null'>
+                SUBRESOURCE
+                <include refid="subResourceColumns"></include>
+                VALUES
+                <include refid="subResourceValues"></include>
+            </if>
+        </if>
+        <if test='"AmassedResource".equals(type)'>
+            RESOURCE
+            <include refid="resourceColumns"></include>
+            VALUES
+            <include refid="resourceValues"></include>
+        </if>
     </insert>
     <update id="update">
         UPDATE RESOURCE SET
@@ -39,11 +91,27 @@
         WHERE "keyhash" = #{keyHash}
     </update>
     <update id="merge">
-        MERGE INTO RESOURCE ("key", "keyhash", "bucket_uuid", "type", "etag", 
-        "last_modified", "size", "storage_class", "version_id", "meta_data") 
-        KEY("keyhash") 
-        VALUES (#{bean.key}, #{keyHash}, #{bucket.Uuid}, #{type}, #{bean.ETag}, 
-        #{lastModified}, #{bean.size}, #{bean.storageClass}, #{bean.versionId}, #{metaData})
+        MERGE INTO
+        <if test='"ChunkedResource".equals(type)'>
+            <if test='parentResource == null'>
+                RESOURCE
+                <include refid="resourceColumns"></include>
+                KEY("keyhash") VALUES
+                <include refid="resourceValues"></include>
+            </if>
+            <if test='parentResource != null'>
+                SUBRESOURCE
+                <include refid="subResourceColumns"></include>
+                KEY("key") VALUES
+                <include refid="subResourceValues"></include>
+            </if>
+        </if>
+        <if test='"AmassedResource".equals(type)'>
+            RESOURCE
+            <include refid="resourceColumns"></include>
+            KEY("keyhash") VALUES
+            <include refid="resourceValues"></include>
+        </if>
     </update>
     <delete id="delete">
         DELETE FROM RESOURCE 

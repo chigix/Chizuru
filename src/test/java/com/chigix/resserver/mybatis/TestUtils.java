@@ -13,9 +13,9 @@ import org.apache.ibatis.session.SqlSessionFactoryBuilder;
  */
 public class TestUtils {
 
-    public static final SqlSession setUpDatabase() throws IOException {
+    public static final SqlSession setUpDatabase(String env) throws IOException {
         InputStream in = Resources.getResourceAsStream("com/chigix/resserver/mybatis/mybatis-config.xml");
-        SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(in);
+        SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(in, env);
         SqlSession session = sqlSessionFactory.openSession();
         return session;
     }

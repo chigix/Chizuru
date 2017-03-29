@@ -46,7 +46,7 @@ public class ResourceDaoImplTest {
 
     @Before
     public void setUp() throws IOException {
-        session = TestUtils.setUpDatabase();
+        session = TestUtils.setUpDatabase("chizuru");
         session.update("com.chigix.resserver.mybatis.DbInitMapper.createBucketTable");
         session.update("com.chigix.resserver.mybatis.DbInitMapper.createResourceTable");
         session.update("com.chigix.resserver.mybatis.DbInitMapper.createChunkTable");
@@ -121,6 +121,32 @@ public class ResourceDaoImplTest {
             result.getBucket();
             fail("NoSuchBucket Exception should be thrown here.");
         } catch (NoSuchBucket noSuchBucket) {
+        }
+    }
+
+    /**
+     * Test of findResource method, of class ResourceDaoImpl.
+     *
+     * @throws java.lang.Exception
+     */
+    @Test
+    public void testFindResource_3args() throws Exception {
+        System.out.println("findResource");
+        BucketBean bucket = new BucketBean("test_bucket");
+        bucketMapper.insert(bucket.getUuid(), bucket.getName(), bucket.getCreationTime().toString());
+        ChunkedResourceBean r = new ChunkedResourceBean("RES_1", ResourceExtension.hashKey(bucket.getUuid(), "RES_1"));
+        r.setMetaData("Content-Type", "BANKAI");
+        r.setBucket(bucket);
+        resourceMapper.insert(new ResourceDto(r));
+        Resource result = resourceDao.findResource(bucket, r.getKey(), r.getVersionId());
+        assertEquals(bucket.getUuid(), ((BucketBean) result.getBucket()).getUuid());
+        assertEquals("BANKAI", result.snapshotMetaData().get("Content-Type"));
+        bucketMapper.deleteByUuid(bucket.getUuid());
+        assertEquals(bucket.getUuid(), ((BucketBean) result.getBucket()).getUuid());
+        try {
+            resourceDao.findResource(bucket.getName(), r.getKey());
+            fail("NoSuchKey Exception should be thrown here.");
+        } catch (NoSuchKey e) {
         }
     }
 
@@ -214,6 +240,20 @@ public class ResourceDaoImplTest {
         assertEquals(1, resourceMapper.selectAllByBucketName(bb.getName(), 1000).size());
         resourceDao.removeResource(r);
         assertEquals(0, resourceMapper.selectAllByBucketName(bb.getName(), 1000).size());
+    }
+
+    /**
+     * Test of appendChunk method, of class ResourceDaoImpl.
+     */
+    @Test
+    public void testAppendChunk() {
+        System.out.println("appendChunk");
+        ChunkedResource r = null;
+        Chunk c = null;
+        ResourceDaoImpl instance = null;
+        instance.appendChunk(r, c);
+        // TODO review the generated test code and remove the default call to fail.
+        fail("The test case is a prototype.");
     }
 
 }
