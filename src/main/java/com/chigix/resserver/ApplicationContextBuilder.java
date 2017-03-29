@@ -23,7 +23,9 @@ public class ApplicationContextBuilder {
 
     public ApplicationContext build(final Configuration conf) {
         final String request_id_header_name = Long.toHexString(Double.doubleToLongBits(Math.random()));
-        final DaoFactory dao_factory = createDaoFactory(conf.getCurrentNodeId(), conf.getChunksDir(), conf.getSessionFactory());
+        final DaoFactory dao_factory = createDaoFactory(
+                conf.getCurrentNodeId(), conf.getChunksDir(),
+                conf.getMainSession(), conf.getUploadSession());
         final Map<String, String> nodes = conf.getNodesMapping();
         nodes.put(conf.getCurrentNodeId(), "127.0.0.1");
 
@@ -65,9 +67,9 @@ public class ApplicationContextBuilder {
         };
     }
 
-    private DaoFactory createDaoFactory(String currentNodeId, File chunksDir, SqlSessionFactory sessionFactory) {
+    private DaoFactory createDaoFactory(String currentNodeId, File chunksDir, SqlSessionFactory mainSession, SqlSessionFactory uploadSession) {
         final ThreadLocal<ChunkDao> weavedChunkDao = new ThreadLocal<>();
-        return new DaoFactoryImpl(sessionFactory) {
+        return new DaoFactoryImpl(mainSession, uploadSession) {
             @Override
             public ChunkDao getChunkDao() {
                 if (weavedChunkDao.get() == null) {

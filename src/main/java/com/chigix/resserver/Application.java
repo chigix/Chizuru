@@ -81,7 +81,7 @@ public class Application {
         }
     }
 
-    public static SqlSessionFactory initMyBatis() {
+    public static SqlSessionFactory initMyBatis(String env) {
         InputStream in;
         try {
             in = Resources.getResourceAsStream("com/chigix/resserver/mybatis/mybatis-config.xml");
@@ -89,39 +89,53 @@ public class Application {
             LOG.error("Unexpected.", ex);
             throw new RuntimeException("Unexpected.");
         }
-        return new SqlSessionFactoryBuilder().build(in);
+        return new SqlSessionFactoryBuilder().build(in, env);
     }
 
     public static ApplicationContext initNode() {
-        SqlSessionFactory session_factory = initMyBatis();
-        SqlSession settings_session = session_factory.openSession(true);
-        ChizuruMapper chizuru = settings_session.getMapper(ChizuruMapper.class);
-        Map<String, String> settings = ChizuruMapper.SETTINGS_MAP.apply(chizuru.selectChizuruSettings());
-        final Configuration config;
-        if (settings.get("NODE_ID") == null) {
-            config = new Configuration(UUID.randomUUID().toString());
-        } else {
-            config = new Configuration(settings.get("NODE_ID"));
+        SqlSessionFactory session_factory = initMyBatis("chizuru");
+        ApplicationContext result;
+        try (SqlSession settings_session = session_factory.openSession(true)) {
+            ChizuruMapper chizuru = settings_session.getMapper(ChizuruMapper.class);
+            Map<String, String> settings = ChizuruMapper.SETTINGS_MAP.apply(chizuru.selectChizuruSettings());
+            final Configuration config;
+            if (settings.get("NODE_ID") == null) {
+                config = new Configuration(UUID.randomUUID().toString());
+            } else {
+                config = new Configuration(settings.get("NODE_ID"));
+            }
+            config.setMainSession(session_factory);
+            File uploadDbFile_1 = new File("./data/Uploading.mv.db");
+            File uploadDbFile_2 = new File("./data/Uploading.trace.db");
+            if (uploadDbFile_1.exists()) {
+                uploadDbFile_1.delete();
+            }
+            if (uploadDbFile_2.exists()) {
+                uploadDbFile_2.delete();
+            }
+            config.setUploadSession(initMyBatis("upload"));
+            try (SqlSession upload_session = config.getUploadSession().openSession(true)) {
+                upload_session.update("com.chigix.resserver.mybatis.MultipartUploadMapper.createUploadTable");
+            }
+            if (settings.get("CREATION_DATE") == null) {
+                config.setCreationDate(new DateTime(DateTimeZone.forID("GMT")));
+            } else {
+                config.setCreationDate(DateTime.parse(settings.get("CREATION_DATE")));
+            }
+            if (settings.get("MAX_CHUNKSIZE") != null) {
+                config.setMaxChunkSize(Integer.valueOf(settings.get("MAX_CHUNKSIZE")));
+            }
+            File chunks_dir = new File("./data/chunks");
+            if (!chunks_dir.exists()) {
+                chunks_dir.mkdirs();
+            }
+            if (!chunks_dir.isDirectory()) {
+                throw new RuntimeException("Unable to have chunks directory.");
+            }
+            config.setChunksDir(new File("./data/chunks"));
+            result = new ApplicationContextBuilder().build(config);
+            chizuru.updateChizuruSettings(new ApplicationContextDto(result));
         }
-        config.setSessionFactory(session_factory);
-        if (settings.get("CREATION_DATE") == null) {
-            config.setCreationDate(new DateTime(DateTimeZone.forID("GMT")));
-        } else {
-            config.setCreationDate(DateTime.parse(settings.get("CREATION_DATE")));
-        }
-        if (settings.get("MAX_CHUNKSIZE") != null) {
-            config.setMaxChunkSize(Integer.valueOf(settings.get("MAX_CHUNKSIZE")));
-        }
-        File chunks_dir = new File("./data/chunks");
-        if (!chunks_dir.exists()) {
-            chunks_dir.mkdirs();
-        }
-        if (!chunks_dir.isDirectory()) {
-            throw new RuntimeException("Unable to have chunks directory.");
-        }
-        config.setChunksDir(new File("./data/chunks"));
-        ApplicationContext result = new ApplicationContextBuilder().build(config);
-        chizuru.updateChizuruSettings(new ApplicationContextDto(result));
         return result;
     }
 
@@ -181,6 +195,7 @@ public class Application {
                 this.newRouting(ctx, new com.chigix.resserver.DeleteBucket.Routing(application));
                 this.newRouting(ctx, new com.chigix.resserver.GetResource.Routing(application));
                 this.newRouting(ctx, new com.chigix.resserver.PutResource.Routing(application));
+                this.newRouting(ctx, com.chigix.resserver.PostResource.Routing.getInstance(application));
             }
 
         };

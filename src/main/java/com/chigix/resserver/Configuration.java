@@ -23,7 +23,9 @@ public class Configuration {
 
     private DateTime creationDate = new DateTime(DateTimeZone.forID("GMT"));
 
-    private SqlSessionFactory sessionFactory;
+    private SqlSessionFactory mainSession;
+
+    private SqlSessionFactory uploadSession;
 
     public Configuration(String currentNodeId) {
         this.currentNodeId = currentNodeId;
@@ -33,12 +35,20 @@ public class Configuration {
         return currentNodeId;
     }
 
-    public SqlSessionFactory getSessionFactory() {
-        return sessionFactory;
+    public SqlSessionFactory getMainSession() {
+        return mainSession;
     }
 
-    public void setSessionFactory(SqlSessionFactory sessionFactory) {
-        this.sessionFactory = sessionFactory;
+    public void setMainSession(SqlSessionFactory sessionFactory) {
+        this.mainSession = sessionFactory;
+    }
+
+    public SqlSessionFactory getUploadSession() {
+        return uploadSession;
+    }
+
+    public void setUploadSession(SqlSessionFactory uploadSession) {
+        this.uploadSession = uploadSession;
     }
 
     public File getChunksDir() {

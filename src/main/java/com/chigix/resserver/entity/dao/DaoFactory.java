@@ -12,4 +12,6 @@ public interface DaoFactory {
 
     ResourceDao getResourceDao();
 
+    MultipartUploadDao getUploadDao();
+
 }
