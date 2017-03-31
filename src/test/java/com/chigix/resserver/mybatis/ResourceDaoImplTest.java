@@ -9,10 +9,10 @@ import com.chigix.resserver.entity.error.NoSuchKey;
 import com.chigix.resserver.mybatis.bean.BucketBean;
 import com.chigix.resserver.mybatis.bean.ChunkedResourceBean;
 import com.chigix.resserver.mybatis.bean.ResourceExtension;
+import com.chigix.resserver.mybatis.dto.ResourceBuilder;
 import com.chigix.resserver.mybatis.dto.ResourceDto;
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.Map;
 import org.apache.ibatis.session.SqlSession;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -84,7 +84,7 @@ public class ResourceDaoImplTest {
         ChunkedResourceBean r = new ChunkedResourceBean("RES_1", ResourceExtension.hashKey(bucket.getUuid(), "RES_1"));
         r.setMetaData("Content-Type", "BANKAI");
         r.setBucket(bucket);
-        resourceMapper.insert(new ResourceDto(r));
+        resourceMapper.insertResource(new ResourceDto(r));
         Resource result = resourceDao.findResource(bucket.getName(), r.getKey());
         assertEquals(bucket.getUuid(), ((BucketBean) result.getBucket()).getUuid());
         assertEquals("BANKAI", result.snapshotMetaData().get("Content-Type"));
@@ -110,7 +110,7 @@ public class ResourceDaoImplTest {
         ChunkedResourceBean r = new ChunkedResourceBean("RES_1", ResourceExtension.hashKey(bucket.getUuid(), "RES_1"));
         r.setMetaData("Content-Type", "BANKAI");
         r.setBucket(bucket);
-        resourceMapper.insert(new ResourceDto(r));
+        resourceMapper.insertResource(new ResourceDto(r));
         Resource result = resourceDao.findResource(bucket, r.getKey());
         assertEquals(bucket.getUuid(), ((BucketBean) result.getBucket()).getUuid());
         assertEquals("BANKAI", result.snapshotMetaData().get("Content-Type"));
@@ -137,7 +137,7 @@ public class ResourceDaoImplTest {
         ChunkedResourceBean r = new ChunkedResourceBean("RES_1", ResourceExtension.hashKey(bucket.getUuid(), "RES_1"));
         r.setMetaData("Content-Type", "BANKAI");
         r.setBucket(bucket);
-        resourceMapper.insert(new ResourceDto(r));
+        resourceMapper.insertResource(new ResourceDto(r));
         Resource result = resourceDao.findResource(bucket, r.getKey(), r.getVersionId());
         assertEquals(bucket.getUuid(), ((BucketBean) result.getBucket()).getUuid());
         assertEquals("BANKAI", result.snapshotMetaData().get("Content-Type"));
@@ -173,10 +173,10 @@ public class ResourceDaoImplTest {
 
         };
         resourceDao.saveResource(r);
-        Map map = resourceMapper.selectByBucketName_Key(bb.getName(), r.getKey());
-        assertEquals(ResourceExtension.hashKey(bb.getUuid(), r.getKey()), map.get("keyhash"));
-        assertEquals(bb.getUuid(), map.get("bucket_uuid"));
-        assertEquals("ChunkedResource", map.get("type"));
+        ResourceBuilder map = resourceMapper.selectByBucketName_Key(bb.getName(), r.getKey());
+        assertEquals(ResourceExtension.hashKey(bb.getUuid(), r.getKey()), map.getKeyHash());
+        assertEquals(bb.getUuid(), map.getBucketUuid());
+        assertEquals("ChunkedResource", map.getResourceType());
     }
 
     @Test
@@ -187,10 +187,10 @@ public class ResourceDaoImplTest {
         ChunkedResourceBean r = new ChunkedResourceBean("TEST_RESOURCE", ResourceExtension.hashKey(bb.getUuid(), "TEST_RESOURCE"));
         r.setBucket(bb);
         resourceDao.saveResource(r);
-        Map map = resourceMapper.selectByBucketName_Key(bb.getName(), r.getKey());
-        assertEquals(r.getKeyHash(), map.get("keyhash"));
-        assertEquals(bb.getUuid(), map.get("bucket_uuid"));
-        assertEquals("ChunkedResource", map.get("type"));
+        ResourceBuilder map = resourceMapper.selectByBucketName_Key(bb.getName(), r.getKey());
+        assertEquals(r.getKeyHash(), map.getKeyHash());
+        assertEquals(bb.getUuid(), map.getBucketUuid());
+        assertEquals("ChunkedResource", map.getResourceType());
     }
 
     /**
@@ -206,9 +206,9 @@ public class ResourceDaoImplTest {
         ChunkedResourceBean r_1 = new ChunkedResourceBean("REC_1", ResourceExtension.hashKey(bb.getUuid(), "REC_1"));
         ChunkedResourceBean r_2 = new ChunkedResourceBean("REC_2", ResourceExtension.hashKey(bb.getUuid(), "REC_2"));
         ChunkedResourceBean r_3 = new ChunkedResourceBean("REC_3", ResourceExtension.hashKey(bb.getUuid(), "REC_3"));
-        resourceMapper.insert(new ResourceDto(r_1, bb));
-        resourceMapper.insert(new ResourceDto(r_2, bb));
-        resourceMapper.insert(new ResourceDto(r_3, bb));
+        resourceMapper.insertResource(new ResourceDto(r_1, bb));
+        resourceMapper.insertResource(new ResourceDto(r_2, bb));
+        resourceMapper.insertResource(new ResourceDto(r_3, bb));
         assertEquals(3, resourceMapper.selectAllByBucketName(bb.getName(), 1000).size());
     }
 
@@ -236,7 +236,7 @@ public class ResourceDaoImplTest {
         bucketMapper.insert(bb.getUuid(), bb.getName(), bb.getCreationTime().toString());
         ChunkedResourceBean r = new ChunkedResourceBean("TEST_RESOURCE", ResourceExtension.hashKey(bb.getUuid(), "TEST_RESOURCE"));
         r.setBucket(bb);
-        resourceMapper.insert(new ResourceDto(r));
+        resourceMapper.insertResource(new ResourceDto(r));
         assertEquals(1, resourceMapper.selectAllByBucketName(bb.getName(), 1000).size());
         resourceDao.removeResource(r);
         assertEquals(0, resourceMapper.selectAllByBucketName(bb.getName(), 1000).size());
