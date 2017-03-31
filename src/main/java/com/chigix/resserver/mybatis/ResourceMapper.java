@@ -1,9 +1,9 @@
 package com.chigix.resserver.mybatis;
 
 import com.chigix.resserver.entity.Resource;
+import com.chigix.resserver.mybatis.dto.ResourceBuilder;
 import com.chigix.resserver.mybatis.dto.ResourceDto;
 import java.util.List;
-import java.util.Map;
 import org.apache.ibatis.annotations.Param;
 
 /**
@@ -12,17 +12,17 @@ import org.apache.ibatis.annotations.Param;
  */
 public interface ResourceMapper {
 
-    List<Map<String, Object>> selectAllByBucketName(@Param("bucketName") String bucketName, @Param("limit") int limit);
+    List<ResourceBuilder> selectAllByBucketName(@Param("bucketName") String bucketName, @Param("limit") int limit);
 
-    List<Map<String, Object>> selectAllByBucketName(@Param("bucketName") String bucketName, @Param("limit") int limit, @Param("continuation") String continuation);
+    List<ResourceBuilder> selectAllByBucketName(@Param("bucketName") String bucketName, @Param("limit") int limit, @Param("continuation") String continuation);
 
-    Map<String, Object> selectByKeyhash(@Param("keyhash") String keyhash);
+    ResourceBuilder selectByKeyhash(@Param("keyhash") String keyhash);
 
-    Map<String, Object> selectByBucketName_Key(@Param("bucketName") String bucketName, @Param("resourceKey") String key);
+    ResourceBuilder selectByBucketName_Key(@Param("bucketName") String bucketName, @Param("resourceKey") String key);
 
-    Map<String, Object> selectByKeyhash_Version(@Param("keyhash") String keyhash, @Param("versionId") String versionId);
+    ResourceBuilder selectByKeyhash_Version(@Param("keyhash") String keyhash, @Param("versionId") String versionId);
 
-    List<Map<String, Object>> selectSubResourceByParentKeyhash(@Param("keyhash") String keyhash);
+    List<ResourceBuilder> selectSubResourceByParentKeyhash(@Param("keyhash") String keyhash);
 
     /**
      *
@@ -31,17 +31,19 @@ public interface ResourceMapper {
      * token.
      * @return
      */
-    List<Map<String, Object>> selectSubResourceByParentKeyhash(@Param("keyhash") String keyhash, @Param("continuation") String continuation);
+    List<ResourceBuilder> selectSubResourceByParentKeyhash(@Param("keyhash") String keyhash, @Param("continuation") String continuation);
 
-    Map<String, Object> selectSubResourceByKeyEtagParent(@Param("resourceKey") String key, @Param("parent_version_id") String parentVersionId, @Param("etag") String etag);
+    ResourceBuilder selectSubResourceByKeyEtagParent(@Param("resourceKey") String key, @Param("parent_version_id") String parentVersionId, @Param("etag") String etag);
 
     int removeSubResourcesByParent(@Param("parent_version_id") String parentVersionId);
 
-    int insert(ResourceDto r);
+    int insertResource(ResourceDto r);
+
+    int insertSubResource(ResourceDto r);
 
     int update(ResourceDto r);
 
-    int merge(ResourceDto r);
+    int mergeResource(ResourceDto r);
 
     int delete(Resource r);
 

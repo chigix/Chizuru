@@ -68,13 +68,13 @@ public class ResourceMapperTest {
         session.insert("com.chigix.resserver.mybatis.BucketMapper.insert", map);
         ChunkedResourceBean r_1 = new ChunkedResourceBean("REC_1", ResourceExtension.hashKey(bb.getUuid(), "REC_1"));
         r_1.setBucket(bb);
-        mapper.insert(new ResourceDto(r_1));
+        mapper.insertResource(new ResourceDto(r_1));
         ChunkedResourceBean r_2 = new ChunkedResourceBean("REC_2", ResourceExtension.hashKey(bb.getUuid(), "REC_2"));
         r_2.setBucket(bb);
-        mapper.insert(new ResourceDto(r_2));
+        mapper.insertResource(new ResourceDto(r_2));
         ChunkedResourceBean r_3 = new ChunkedResourceBean("REC_3", ResourceExtension.hashKey(bb.getUuid(), "REC_3"));
         r_3.setBucket(bb);
-        mapper.insert(new ResourceDto(r_3));
+        mapper.insertResource(new ResourceDto(r_3));
         assertEquals(3, mapper.selectAllByBucketName("TEST_BUCKET", 1000).size());
         assertEquals(2, mapper.selectAllByBucketName("TEST_BUCKET", 1000, r_2.getKeyHash()).size());
     }
@@ -83,9 +83,10 @@ public class ResourceMapperTest {
      * Test of selectByKeyhash method, of class ResourceMapper.
      *
      * @throws com.chigix.resserver.entity.error.NoSuchBucket
+     * @throws java.lang.ReflectiveOperationException
      */
     @Test
-    public void testSelectByKeyhash() throws NoSuchBucket {
+    public void testSelectByKeyhash() throws NoSuchBucket, ReflectiveOperationException {
         System.out.println("selectByKeyhash");
         BucketBean bb = new BucketBean("TEST_BUCKET");
         HashMap<String, String> map = new HashMap<>();
@@ -96,14 +97,14 @@ public class ResourceMapperTest {
         System.out.println(session.selectOne("com.chigix.resserver.mybatis.BucketMapper.selectByName", map).toString());
         ChunkedResourceBean r_1 = new ChunkedResourceBean("REC_1", ResourceExtension.hashKey(bb.getUuid(), "REC_1"));
         r_1.setBucket(bb);
-        mapper.insert(new ResourceDto(r_1));
+        mapper.insertResource(new ResourceDto(r_1));
         ChunkedResourceBean r_2 = new ChunkedResourceBean("REC_2", ResourceExtension.hashKey(bb.getUuid(), "REC_2"));
         r_2.setBucket(bb);
-        mapper.insert(new ResourceDto(r_2));
+        mapper.insertResource(new ResourceDto(r_2));
         ChunkedResourceBean r_3 = new ChunkedResourceBean("REC_3", ResourceExtension.hashKey(bb.getUuid(), "REC_3"));
         r_3.setBucket(bb);
-        mapper.insert(new ResourceDto(r_3));
-        assertEquals("REC_3", mapper.selectByKeyhash(r_3.getKeyHash()).get("key"));
+        mapper.insertResource(new ResourceDto(r_3));
+        assertEquals("REC_3", mapper.selectByKeyhash(r_3.getKeyHash()).getResourceKey());
     }
 
     /**
@@ -132,14 +133,14 @@ public class ResourceMapperTest {
         System.out.println(session.selectOne("com.chigix.resserver.mybatis.BucketMapper.selectByName", map).toString());
         ChunkedResourceBean r_1 = new ChunkedResourceBean("REC_1", ResourceExtension.hashKey(bb.getUuid(), "REC_1"));
         r_1.setBucket(bb);
-        mapper.insert(new ResourceDto(r_1));
+        mapper.insertResource(new ResourceDto(r_1));
         ChunkedResourceBean r_2 = new ChunkedResourceBean("REC_2", ResourceExtension.hashKey(bb.getUuid(), "REC_2"));
         r_2.setBucket(bb);
-        mapper.insert(new ResourceDto(r_2));
+        mapper.insertResource(new ResourceDto(r_2));
         ChunkedResourceBean r_3 = new ChunkedResourceBean("REC_3", ResourceExtension.hashKey(bb.getUuid(), "REC_3"));
         r_3.setBucket(bb);
-        mapper.insert(new ResourceDto(r_3));
-        assertEquals(r_3.getKeyHash(), mapper.selectByBucketName_Key("TEST_BUCKET", "REC_3").get("keyhash"));
+        mapper.insertResource(new ResourceDto(r_3));
+        assertEquals(r_3.getKeyHash(), mapper.selectByBucketName_Key("TEST_BUCKET", "REC_3").getKeyHash());
     }
 
     /**
@@ -158,16 +159,19 @@ public class ResourceMapperTest {
         session.insert("com.chigix.resserver.mybatis.BucketMapper.insert", map);
         AmassedResourceBean parent = new AmassedResourceBean("PARENT_RESOURCE", ResourceExtension.hashKey(bb.getUuid(), "PARENT_RESOURCE"));
         parent.setBucket(bb);
-        mapper.insert(new ResourceDto(parent, bb));
+        mapper.insertResource(new ResourceDto(parent, bb));
         ChunkedResourceBean r_1 = new ChunkedResourceBean("REC_1", ResourceExtension.hashKey(bb.getUuid(), "REC_1"));
         r_1.setBucket(bb);
-        mapper.insert(new ResourceDto(r_1).setParentResource(parent));
+        r_1.setParentResource(parent);
+        mapper.insertSubResource(new ResourceDto(r_1));
         ChunkedResourceBean r_2 = new ChunkedResourceBean("REC_2", ResourceExtension.hashKey(bb.getUuid(), "REC_2"));
         r_2.setBucket(bb);
-        mapper.insert(new ResourceDto(r_2).setParentResource(parent));
+        r_2.setParentResource(parent);
+        mapper.insertSubResource(new ResourceDto(r_2));
         ChunkedResourceBean r_3 = new ChunkedResourceBean("REC_3", ResourceExtension.hashKey(bb.getUuid(), "REC_3"));
         r_3.setBucket(bb);
-        mapper.insert(new ResourceDto(r_3).setParentResource(parent));
+        r_3.setParentResource(parent);
+        mapper.insertSubResource(new ResourceDto(r_3));
     }
 
     /**
@@ -177,16 +181,28 @@ public class ResourceMapperTest {
      * @throws com.chigix.resserver.entity.error.NoSuchBucket
      */
     @Test
-    public void testInsert() throws Exception {
-        System.out.println("insert");
+    public void testInsertResource() throws Exception {
+        System.out.println("insertResource");
         final BucketBean bb = new BucketBean("TEST_BUCKET");
         ChunkedResourceBean r_chunked = new ChunkedResourceBean("TEST_RESOURCE_KEY", ResourceExtension.hashKey(bb.getUuid(), "TEST_RESOURCE_KEY"));
         r_chunked.setBucket(bb);
-        assertEquals(1, mapper.insert(new ResourceDto(r_chunked)));
+        assertEquals(1, mapper.insertResource(new ResourceDto(r_chunked)));
         AmassedResourceBean ar = new AmassedResourceBean("TEST_PARENT_RESOURCE", "PARENT_RESOURCE_KEYHASH");
         ar.setBucket(bb);
-        mapper.insert(new ResourceDto(ar));
-        assertEquals(1, mapper.insert(new ResourceDto(r_chunked).setParentResource(ar)));
+        assertEquals(1, mapper.insertResource(new ResourceDto(ar)));
+    }
+
+    @Test
+    public void testInsertSubResource() throws Exception {
+        System.out.println("insertSubResource");
+        final BucketBean bb = new BucketBean("TEST_BUCKET");
+        AmassedResourceBean ar = new AmassedResourceBean("TEST_PARENT_RESOURCE", "PARENT_RESOURCE_KEYHASH");
+        ar.setBucket(bb);
+        assertEquals(1, mapper.insertResource(new ResourceDto(ar)));
+        ChunkedResourceBean r_chunked = new ChunkedResourceBean("TEST_RESOURCE_KEY", ResourceExtension.hashKey(bb.getUuid(), "TEST_RESOURCE_KEY"));
+        r_chunked.setBucket(bb);
+        r_chunked.setParentResource(ar);
+        assertEquals(1, mapper.insertSubResource(new ResourceDto(r_chunked)));
     }
 
     /**
@@ -200,10 +216,10 @@ public class ResourceMapperTest {
         BucketBean bb = new BucketBean("TEST_BUCKET");
         ChunkedResourceBean r_chunked = new ChunkedResourceBean("TEST_RESOURCE_KEY", ResourceExtension.hashKey(bb.getUuid(), "TEST_RESOURCE_KEY"));
         r_chunked.setBucket(bb);
-        mapper.insert(new ResourceDto(r_chunked));
+        mapper.insertResource(new ResourceDto(r_chunked));
         r_chunked.setSize("123123123");
         mapper.update(new ResourceDto(r_chunked));
-        assertEquals("123123123", mapper.selectByKeyhash(r_chunked.getKeyHash()).get("size"));
+        assertEquals("123123123", mapper.selectByKeyhash(r_chunked.getKeyHash()).getSize());
     }
 
     /**
@@ -222,7 +238,7 @@ public class ResourceMapperTest {
         session.insert("com.chigix.resserver.mybatis.BucketMapper.insert", map);
         ChunkedResourceBean r_chunked = new ChunkedResourceBean("TEST_RESOURCE_KEY", ResourceExtension.hashKey(bb.getUuid(), "TEST_RESOURCE_KEY"));
         r_chunked.setBucket(bb);
-        mapper.insert(new ResourceDto(r_chunked));
+        mapper.insertResource(new ResourceDto(r_chunked));
         assertEquals(1, mapper.delete(r_chunked));
     }
 
@@ -237,7 +253,7 @@ public class ResourceMapperTest {
         BucketBean bb = new BucketBean("TEST_BUCKET");
         ChunkedResourceBean r_chunked = new ChunkedResourceBean("TEST_RESOURCE_KEY", ResourceExtension.hashKey(bb.getUuid(), "TEST_RESOURCE_KEY"));
         r_chunked.setBucket(bb);
-        mapper.insert(new ResourceDto(r_chunked));
+        mapper.insertResource(new ResourceDto(r_chunked));
         assertEquals(1, mapper.deleteByKeyhash(r_chunked.getKeyHash()));
     }
 
@@ -247,17 +263,16 @@ public class ResourceMapperTest {
      * @throws com.chigix.resserver.entity.error.NoSuchBucket
      */
     @Test
-    public void testMerge() throws NoSuchBucket {
-        System.out.println("merge");
+    public void testMergeResource() throws NoSuchBucket {
+        System.out.println("mergeResource");
         BucketBean bb = new BucketBean("TEST_BUCKET");
         ChunkedResourceBean r_chunked = new ChunkedResourceBean("TEST_RESOURCE_KEY",
                 ResourceExtension.hashKey(bb.getUuid(), "TEST_RESOURCE_KEY"));
         r_chunked.setBucket(bb);
-        assertEquals(1, mapper.merge(new ResourceDto(r_chunked)));
+        assertEquals(1, mapper.mergeResource(new ResourceDto(r_chunked)));
         AmassedResourceBean ar = new AmassedResourceBean("TEST_PARENT_RESOURCE", "PARENT_RESOURCE_KEYHASH");
         ar.setBucket(bb);
-        mapper.merge(new ResourceDto(ar));
-        assertEquals(1, mapper.merge(new ResourceDto(r_chunked).setParentResource(ar)));
+        assertEquals(1, mapper.mergeResource(new ResourceDto(ar)));
     }
 
 }
