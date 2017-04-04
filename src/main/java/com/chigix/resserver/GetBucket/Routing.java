@@ -48,6 +48,7 @@ public class Routing extends RoutingConfig.GET {
 
     @Override
     public void configurePipeline(ChannelPipeline pipeline) {
+        final DefaultExceptionForwarder exception_forwarder = new DefaultExceptionForwarder();
         pipeline.addLast(new SimpleChannelInboundHandler<HttpRouted>() {
             @Override
             protected void messageReceived(ChannelHandlerContext ctx, HttpRouted msg) throws Exception {
@@ -93,16 +94,15 @@ public class Routing extends RoutingConfig.GET {
 
             @Override
             protected void initExceptionRouting(ChannelPipeline pipeline) {
-                final Router self = this;
                 pipeline.addLast(new ChannelHandlerAdapter() {
                     @Override
                     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-                        self.exceptionCaught(ctx, (Throwable) msg);
+                        exception_forwarder.exceptionCaught(ctx, (Throwable) msg);
                     }
 
                     @Override
                     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-                        self.exceptionCaught(ctx, cause);
+                        exception_forwarder.exceptionCaught(ctx, cause);
                     }
 
                 });
@@ -110,11 +110,11 @@ public class Routing extends RoutingConfig.GET {
 
             @Override
             public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-                ctx.fireExceptionCaught(cause);
+                exception_forwarder.exceptionCaught(ctx, cause);
             }
 
         },
-                new DefaultExceptionForwarder()
+                exception_forwarder
         );
     }
 
