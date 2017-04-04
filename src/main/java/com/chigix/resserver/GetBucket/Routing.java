@@ -56,7 +56,7 @@ public class Routing extends RoutingConfig.GET {
                 ctx.attr(ROUTING_CONTEXT).set(routing_ctx);
                 ctx.fireChannelRead(routing_ctx);
             }
-        }, new Router() {
+        }, new Router(true, "GetBucketRouter") {
             @Override
             protected void route(ChannelHandlerContext ctx, Object msg, Map<String, ChannelPipeline> routingPipelines) throws Exception {
                 if (!(msg instanceof LastHttpContent)) {
@@ -71,6 +71,9 @@ public class Routing extends RoutingConfig.GET {
                 if (decoder.parameters().get("location") != null) {
                     LOG.debug(ROUTING_NAME + ":BUCKET_LOCATION");
                     this.pipelineForward(routingPipelines.get(ROUTING_NAME + ":BUCKET_LOCATION"), routing_ctx);
+                } else if (decoder.parameters().get("uploads") != null) {
+                    LOG.debug(ROUTING_NAME + ":LIST_UPLOADS");
+                    this.pipelineForward(routingPipelines.get(ROUTING_NAME + ":LIST_UPLOADS"), routing_ctx);
                 } else {
                     LOG.debug(ROUTING_NAME + ":RESOURCE_LIST");
                     this.pipelineForward(routingPipelines.get(ROUTING_NAME + ":RESOURCE_LIST"), routing_ctx);
@@ -83,6 +86,9 @@ public class Routing extends RoutingConfig.GET {
                         new ChunkedWriteHandler(),
                         ResourceListHandler.getInstance(application), new DefaultExceptionForwarder());
                 this.newRouting(ctx, ROUTING_NAME + ":BUCKET_LOCATION").addLast(LocationHandler.getInstance(application), new DefaultExceptionForwarder());
+                this.newRouting(ctx, ROUTING_NAME + ":LIST_UPLOADS").addLast(
+                        new ChunkedWriteHandler(),
+                        ListUploadsHandler.getInstance(application), new DefaultExceptionForwarder());
             }
 
             @Override
