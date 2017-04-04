@@ -3,6 +3,11 @@ package com.chigix.resserver.GetBucket;
 import com.chigix.resserver.ApplicationContext;
 import com.chigix.resserver.entity.Bucket;
 import com.chigix.resserver.entity.Resource;
+import com.chigix.resserver.util.HttpHeaderUtil;
+import com.chigix.resserver.util.InputStreamProxy;
+import com.chigix.resserver.util.IteratorInputStream;
+import com.chigix.resserver.util.OutputStreamProxy;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -10,25 +15,25 @@ import io.netty.handler.codec.http.DefaultHttpResponse;
 import io.netty.handler.codec.http.HttpChunkedInput;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
-import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import io.netty.handler.stream.ChunkedStream;
-import io.netty.util.CharsetUtil;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-import java.nio.charset.Charset;
-import java.util.Iterator;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.SequenceInputStream;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.zip.GZIPOutputStream;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
 /**
+ * GET Bucket (List Objects) Version 2
+ * http://docs.aws.amazon.com/AmazonS3/latest/API/v2-RESTBucketGET.html
  *
  * @author Richard Lea <chigix@zoho.com>
  */
@@ -64,68 +69,73 @@ public class ResourceListHandler extends SimpleChannelInboundHandler<Context> {
      */
     @Override
     protected void messageReceived(ChannelHandlerContext ctx, final Context route_ctx) throws Exception {
-        final boolean isGzip = checkIsGzip(route_ctx.getRoutedInfo().getRequestMsg());
-        QueryStringDecoder decoder = new QueryStringDecoder(route_ctx.getRoutedInfo().getRequestMsg().uri());
-        String delimiter = decodeQueryParamString(decoder, "delimiter");
-        String encoding_type = decodeQueryParamString(decoder, "encoding-type");
-        String max_keys = decodeQueryParamString(decoder, "max-keys");
-        String prefix = decodeQueryParamString(decoder, "prefix");
-        String continuation_token = decodeQueryParamString(decoder, "continuation-token");
-        String fetch_owner = decodeQueryParamString(decoder, "fetch-owner");
-        String start_after = decodeQueryParamString(decoder, "start-after");
+        final boolean isGzip = HttpHeaderUtil.isGzip(route_ctx.getRoutedInfo().getRequestMsg());
         DefaultHttpResponse resp = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
         resp.headers().set(HttpHeaderNames.CONTENT_TYPE, "application/xml");
         resp.headers().set(HttpHeaderNames.TRANSFER_ENCODING, HttpHeaderValues.CHUNKED);
         ctx.write(resp);
-        final PipedInputStream inputstream = new PipedInputStream();
-        ctx.write(new HttpChunkedInput(new ChunkedStream(inputstream)));
-        OutputStream encoding_stream = new PipedOutputStream(inputstream);
+        final OutputStreamProxy<ByteArrayOutputStream> byte_stream = new OutputStreamProxy<>();
+        byte_stream.setStream(new ByteArrayOutputStream());
+        final XMLStreamWriter xml_writer;
         if (isGzip) {
-            encoding_stream = new GZIPOutputStream(encoding_stream);
             resp.headers().set(HttpHeaderNames.CONTENT_ENCODING, HttpHeaderValues.GZIP);
+            xml_writer = XML_FACTORY.createXMLStreamWriter(new GZIPOutputStream(byte_stream, true), "UTF-8");
+        } else {
+            xml_writer = XML_FACTORY.createXMLStreamWriter(byte_stream, "UTF-8");
         }
-        try (OutputStreamWriter writer = new OutputStreamWriter(encoding_stream, CharsetUtil.UTF_8)) {
-            XMLStreamWriter xml_writer = XML_FACTORY.createXMLStreamWriter(writer);
-            xml_writer.writeStartDocument("UTF-8", "1.0");
-            xml_writer.writeStartElement("ListBucketResult");
-            xmlWriteBucketName(xml_writer, route_ctx.getTargetBucket());
-            xmlWriteStartAfter(xml_writer, start_after); //ListBucketResult.StartAfter
-            Charset encodingType;
-            if (encoding_type == null) {
-                encodingType = CharsetUtil.UTF_8;
-            } else {
-                encodingType = Charset.forName(encoding_type);
-                xml_writer.writeStartElement("Encoding-Type");
-                xml_writer.writeCharacters(encoding_type);
-                xml_writer.writeEndElement();
+        final QueryStringDecoder decoder = new QueryStringDecoder(route_ctx.getRoutedInfo().getRequestMsg().uri());
+        InputStream result = new SequenceInputStream(
+                new InputStreamProxy() {
+            @Override
+            public int read() throws IOException {
+                try {
+                    return super.read();
+                } catch (NullPointerException nullPointerException) {
+                    if (getStream() == null) {
+                        try {
+                            setStream(generateDocumentStart(xml_writer, byte_stream, decoder, route_ctx.getTargetBucket()));
+                        } catch (XMLStreamException ex) {
+                            throw new RuntimeException("Unexpected!!!XMLException", ex);
+                        }
+                        return read();
+                    } else {
+                        throw nullPointerException;
+                    }
+                }
             }
-            xml_writer.writeStartElement("Prefix");
-            if (prefix != null) {
-                xml_writer.writeCharacters(prefix);
-            }
-            xml_writer.writeEndElement();//ListBucketResult.Prefix
-            xmlWriteMaxKeys(xml_writer, max_keys);//ListBucketResult.MaxKeys
-            if (delimiter != null) {
-                xml_writer.writeStartElement("Delimiter");
-                xml_writer.writeCharacters(delimiter);
-                xml_writer.writeEndElement();//ListBucketResult.Delimiter
-            }
-            Iterator<Resource> resources = application.getDaoFactory().getResourceDao().listResources(route_ctx.getTargetBucket());
-            while (resources.hasNext()) {
-                Resource next = resources.next();
-                xmlWriteResourceContent(xml_writer, next);//ListBucketResult.Contents
-            }
-            xml_writer.writeStartElement("IsTruncated");
-            xml_writer.writeCharacters("false");
-            xml_writer.writeEndElement();//ListBucketResult.IsTruncated
-            xml_writer.writeStartElement("KeyCount");
-            xml_writer.writeCharacters(2 + "");
-            xml_writer.writeEndElement();//ListBucketResult.KeyCount
-            //xmlWriteCommonPrefixes(xml_writer, delimiter);//ListBucketResult.CommonPrefixes
-            xml_writer.writeEndElement();// ListBucketResult
-            xml_writer.writeEndDocument();
-        }
-        ctx.flush();
+
+        },
+                new SequenceInputStream(new IteratorInputStream<Resource>(application.getDaoFactory().getResourceDao().listResources(route_ctx.getTargetBucket())) {
+                    @Override
+                    protected InputStream next(Resource item) throws NoSuchElementException {
+                        final ByteArrayOutputStream result = new ByteArrayOutputStream();
+                        byte_stream.setStream(result);
+                        try {
+                            xmlWriteResourceContent(xml_writer, item);
+                        } catch (XMLStreamException ex) {
+                            throw new RuntimeException("Unexpected!! stringwriter closed", ex);
+                        }
+                        byte_stream.setStream(null);
+                        return new ByteArrayInputStream(result.toByteArray());
+                    }
+                }, new InputStreamProxy() {
+                    @Override
+                    public int read() throws IOException {
+                        try {
+                            return super.read();
+                        } catch (NullPointerException nullPointerException) {
+                            if (getStream() == null) {
+                                setStream(generateDocumentEnd(xml_writer, byte_stream));
+                                return read();
+                            } else {
+                                throw nullPointerException;
+                            }
+                        }
+                    }
+
+                })
+        );
+        ctx.writeAndFlush(new HttpChunkedInput(new ChunkedStream(result))).addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
     }
 
     private String decodeQueryParamString(QueryStringDecoder decoder, String key) {
@@ -138,6 +148,63 @@ public class ResourceListHandler extends SimpleChannelInboundHandler<Context> {
         } else {
             return null;
         }
+    }
+
+    private InputStream generateDocumentStart(XMLStreamWriter xml_writer,
+            OutputStreamProxy<ByteArrayOutputStream> stream,
+            QueryStringDecoder query, Bucket bucket) throws XMLStreamException {
+        final String delimiter = decodeQueryParamString(query, "delimiter");
+        final String start_after = decodeQueryParamString(query, "start-after");
+        final String encoding_type = decodeQueryParamString(query, "encoding-type");
+        final String prefix = decodeQueryParamString(query, "prefix");
+        final String max_keys = decodeQueryParamString(query, "max-keys");
+        final String continuation_token = decodeQueryParamString(query, "continuation-token");
+        final String fetch_owner = decodeQueryParamString(query, "fetch-owner");
+        xml_writer.writeStartDocument("UTF-8", "1.0");
+        xml_writer.writeStartElement("ListBucketResult");
+        xmlWriteBucketName(xml_writer, bucket);
+        xmlWriteStartAfter(xml_writer, start_after); //ListBucketResult.StartAfter
+        if (encoding_type != null) {
+            xml_writer.writeStartElement("Encoding-Type");
+            xml_writer.writeCharacters(encoding_type);
+            xml_writer.writeEndElement();
+        }
+        xml_writer.writeStartElement("Prefix");
+        if (prefix != null) {
+            xml_writer.writeCharacters(prefix);
+        }
+        xml_writer.writeEndElement();//ListBucketResult.Prefix
+        xmlWriteMaxKeys(xml_writer, max_keys);//ListBucketResult.MaxKeys
+        if (delimiter != null) {
+            xml_writer.writeStartElement("Delimiter");
+            xml_writer.writeCharacters(delimiter);
+            xml_writer.writeEndElement();//ListBucketResult.Delimiter
+        }
+        byte[] result = stream.getStream().toByteArray();
+        stream.setStream(null);
+        return new ByteArrayInputStream(result);
+    }
+
+    private InputStream generateDocumentEnd(XMLStreamWriter xml_writer,
+            OutputStreamProxy<ByteArrayOutputStream> stream) {
+        final ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        stream.setStream(bytes);
+        try {
+            xml_writer.writeStartElement("IsTruncated");
+            xml_writer.writeCharacters("false");
+            xml_writer.writeEndElement();//ListBucketResult.IsTruncated
+            xml_writer.writeStartElement("KeyCount");
+            xml_writer.writeCharacters(2 + "");
+            xml_writer.writeEndElement();//ListBucketResult.KeyCount
+            //xmlWriteCommonPrefixes(xml_writer, delimiter);//ListBucketResult.CommonPrefixes
+            xml_writer.writeEndElement();// ListBucketResult
+            xml_writer.writeEndDocument();
+            xml_writer.flush();
+            xml_writer.close();
+        } catch (XMLStreamException ex) {
+            throw new RuntimeException("Unexpected!! Stringwriter closed.", ex);
+        }
+        return new ByteArrayInputStream(stream.getStream().toByteArray());
     }
 
     private void xmlWriteCommonPrefixes(XMLStreamWriter writer, String delimiter) throws XMLStreamException {
@@ -188,21 +255,6 @@ public class ResourceListHandler extends SimpleChannelInboundHandler<Context> {
             writer.writeCharacters("100");
         }
         writer.writeEndElement();//ListBucketResult.MaxKeys
-    }
-
-    private boolean checkIsGzip(HttpRequest req) {
-        String[] accepting_encodings;
-        try {
-            accepting_encodings = req.headers().get(HttpHeaderNames.ACCEPT_ENCODING).toString().split(",");
-        } catch (NullPointerException e) {
-            accepting_encodings = new String[]{};
-        }
-        for (String accepting_encoding : accepting_encodings) {
-            if (accepting_encoding.trim().equalsIgnoreCase("gzip")) {
-                return true;
-            }
-        }
-        return false;
     }
 
 }
