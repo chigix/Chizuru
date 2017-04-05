@@ -125,6 +125,9 @@ public class Application {
             if (settings.get("MAX_CHUNKSIZE") != null) {
                 config.setMaxChunkSize(Integer.valueOf(settings.get("MAX_CHUNKSIZE")));
             }
+            if (settings.get("TRANSFER_BUFFERSIZE") != null) {
+                config.setTransferBufferSize(Integer.valueOf(settings.get("TRANSFER_BUFFERSIZE")));
+            }
             File chunks_dir = new File("./data/chunks");
             if (!chunks_dir.exists()) {
                 chunks_dir.mkdirs();
@@ -180,9 +183,10 @@ public class Application {
         return new HttpRouter() {
             @Override
             protected void initExceptionRouting(ChannelPipeline pipeline) {
-                pipeline.addLast(DaoExceptionHandler.getInstance(application))
-                        .addLast(new UnwrappedExceptionHandler())
-                        .addLast(ExceptionHandler.getInstance(application));
+                pipeline.addLast(new UnwrappedExceptionHandler(),
+                        DaoExceptionHandler.getInstance(application),
+                        ExceptionHandler.getInstance(application)
+                );
             }
 
             @Override

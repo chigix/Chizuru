@@ -14,16 +14,19 @@ public interface ChizuruMapper {
 
     public static final Function<List<Map<String, String>>, Map<String, String>> SETTINGS_MAP = (List<Map<String, String>> t) -> {
         Map<String, String> result = new HashMap<>();
-        for (Map<String, String> map : t) {
+        t.forEach((map) -> {
             result.put(map.get("key"), map.get("value"));
-        }
+        });
         return result;
     };
 
     List<Map<String, String>> selectChizuruSettings();
 
     int updateChizuruSettings(ApplicationContextDto dto);
+
     int saveNodeId(ApplicationContextDto dto);
+
     int saveMaxChunkSize(ApplicationContextDto dto);
+
     int saveCreatingDate(ApplicationContextDto dto);
 }

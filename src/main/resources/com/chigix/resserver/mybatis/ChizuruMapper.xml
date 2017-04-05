@@ -19,5 +19,6 @@
         UPDATE CHIZURU SET "value" = '${bean.currentNodeId}' WHERE "key" = 'NODE_ID';
         UPDATE CHIZURU SET "value" = '${creationDate}' WHERE "key" = 'CREATION_DATE';
         UPDATE CHIZURU SET "value" = '${bean.maxChunkSize}' WHERE "key" = 'MAX_CHUNKSIZE';
+        UPDATE CHIZURU SET "value" = '${bean.transferBufferSize}' WHERE "key" = 'TRANSFER_BUFFERSIZE';
     </update>
 </mapper>

@@ -15,7 +15,9 @@ public class Configuration {
 
     private final Map<String, String> nodesMapping = new HashMap<>();
 
-    private int maxChunkSize = 8192;
+    private int maxChunkSize = 8 * 1024 * 1024;
+
+    private int transferBufferSize = 2 * 1024 * 1024;
 
     private File chunksDir;
 
@@ -79,6 +81,14 @@ public class Configuration {
 
     public void setMaxChunkSize(int maxChunkSize) {
         this.maxChunkSize = maxChunkSize;
+    }
+
+    public int getTransferBufferSize() {
+        return transferBufferSize;
+    }
+
+    public void setTransferBufferSize(int transferBufferSize) {
+        this.transferBufferSize = transferBufferSize;
     }
 
     public Map<String, String> getNodesMapping() {

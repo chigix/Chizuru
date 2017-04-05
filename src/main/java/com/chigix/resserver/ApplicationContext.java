@@ -18,6 +18,8 @@ public interface ApplicationContext {
 
     int getMaxChunkSize();
 
+    int getTransferBufferSize();
+
     String getRequestIdHeaderName();
 
     DaoFactory getDaoFactory();

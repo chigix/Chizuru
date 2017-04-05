@@ -51,6 +51,11 @@ public class ApplicationContextBuilder {
             }
 
             @Override
+            public int getTransferBufferSize() {
+                return conf.getTransferBufferSize();
+            }
+
+            @Override
             public String getRequestIdHeaderName() {
                 return request_id_header_name;
             }
@@ -64,6 +69,7 @@ public class ApplicationContextBuilder {
             public void addNode(String nodeId, String nodeIPAddress) {
                 nodes.put(nodeId, nodeIPAddress);
             }
+
         };
     }
 
