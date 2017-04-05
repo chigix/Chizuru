@@ -75,6 +75,11 @@ public class Context {
         this.cachingChunkBuf = cachingChunkBuf;
     }
 
+    public void copyTo(Context target) {
+        target.setCachingChunkBuf(cachingChunkBuf);
+        target.setResource(resource);
+    }
+
     public static class UnpersistedResource extends Resource {
 
         private final Bucket bucket;

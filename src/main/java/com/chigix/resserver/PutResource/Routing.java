@@ -5,7 +5,6 @@ import com.chigix.resserver.ApplicationContext;
 import com.chigix.resserver.entity.Bucket;
 import com.chigix.resserver.entity.Chunk;
 import com.chigix.resserver.entity.ChunkedResource;
-import com.chigix.resserver.entity.Resource;
 import com.chigix.resserver.entity.error.NoSuchBucket;
 import com.chigix.resserver.sharablehandlers.ResourceInfoHandler;
 import com.chigix.resserver.util.Authorization;
@@ -21,6 +20,7 @@ import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.LastHttpContent;
+import io.netty.handler.codec.http.QueryStringDecoder;
 import io.netty.handler.codec.http.router.HttpException;
 import io.netty.handler.codec.http.router.HttpRouted;
 import io.netty.handler.codec.http.router.RoutingConfig;
@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.security.MessageDigest;
 import java.util.Iterator;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -41,6 +42,11 @@ import org.slf4j.LoggerFactory;
 /**
  * Adds a resource to a bucket.
  * http://docs.aws.amazon.com/AmazonS3/latest/API/RESTObjectPUT.html
+ *
+ * Here, PUT Resource is only designed for saving Chunk file and
+ * ChunkedResource. AmassedResource would not be modified in this handler, which
+ * should only be updated via Multipart Upload Init API and Multipart Upload
+ * Complete API.
  *
  * @author Richard Lea <chigix@zoho.com>
  */
@@ -74,10 +80,24 @@ public class Routing extends RoutingConfig.PUT {
                 new SimpleChannelInboundHandler<Context>() {
             @Override
             protected void messageReceived(ChannelHandlerContext ctx, Context msg) throws Exception {
-                Resource r = msg.getResource();
-                Bucket b = msg.getResource().getBucket();
+                Context routing_ctx = msg;
+                final Bucket b = msg.getResource().getBucket();
                 String key = msg.getResource().getKey();
-                msg.setResource(new ChunkedResource(key) {
+                QueryStringDecoder decoder = new QueryStringDecoder(msg.getRoutedInfo().getRequestMsg().uri());
+                List<String> parameter_upload_id = decoder.parameters().get("uploadId");
+                List<String> parameter_upload_number = decoder.parameters().get("partNumber");
+                if (parameter_upload_id != null && parameter_upload_id.size() > 0
+                        && parameter_upload_number != null
+                        && parameter_upload_number.size() > 0) {
+                    MultipartUploadContext multi_ctx = new MultipartUploadContext(
+                            msg.getRoutedInfo(),
+                            null);
+                    msg.copyTo(multi_ctx);
+                    multi_ctx.setMultipartUpload(application.getDaoFactory().getUploadDao().findUpload(parameter_upload_id.get(0)));
+                    multi_ctx.setPartNumber(Integer.valueOf(parameter_upload_number.get(0)));
+                    routing_ctx = multi_ctx;
+                }
+                routing_ctx.setResource(new ChunkedResource(key) {
                     @Override
                     public Iterator<Chunk> getChunks() {
                         throw new UnsupportedOperationException("Not supported yet.");
@@ -89,7 +109,8 @@ public class Routing extends RoutingConfig.PUT {
                     }
 
                 });
-                ctx.channel().attr(CONTEXT).set(msg);
+                ctx.channel().attr(CONTEXT).set(routing_ctx);
+
             }
         }, new SimpleChannelInboundHandler<HttpContent>() {
             @Override
@@ -133,7 +154,7 @@ public class Routing extends RoutingConfig.PUT {
             protected void messageReceived(ChannelHandlerContext ctx, ByteBuf msg) throws Exception {
                 Context routing_ctx = ctx.channel().attr(CONTEXT).get();
                 MessageDigest digest = Chunk.contentHashDigest();
-                byte[] chunk_content = new byte[msg.writerIndex()];
+                final byte[] chunk_content = new byte[msg.writerIndex()];
                 msg.readBytes(chunk_content);
                 digest.update(chunk_content);
                 routing_ctx.getEtagDigest().update(chunk_content);
@@ -173,7 +194,14 @@ public class Routing extends RoutingConfig.PUT {
             protected void messageReceived(ChannelHandlerContext ctx, LastHttpContent msg) throws Exception {
                 Context routing_ctx = ctx.channel().attr(CONTEXT).getAndRemove();
                 routing_ctx.getResource().setETag(Authorization.HexEncode(routing_ctx.getEtagDigest().digest()));
-                application.getDaoFactory().getResourceDao().saveResource(routing_ctx.getResource());
+                if (routing_ctx instanceof MultipartUploadContext) {
+                    application.getDaoFactory().getUploadDao().appendChunkedResource(
+                            ((MultipartUploadContext) routing_ctx).getMultipartUpload(),
+                            (ChunkedResource) routing_ctx.getResource(),
+                            ((MultipartUploadContext) routing_ctx).getPartNumber() + "");
+                } else {
+                    application.getDaoFactory().getResourceDao().saveResource(routing_ctx.getResource());
+                }
                 DefaultFullHttpResponse resp = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
                 resp.headers().add(HttpHeaderNames.ETAG, routing_ctx.getResource().getETag());
                 ctx.writeAndFlush(resp);
