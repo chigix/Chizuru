@@ -44,7 +44,7 @@ public class Context {
         this.queryDecoder = new QueryStringDecoder(routedInfo.getRequestMsg().uri());
         String content_type = routedInfo.getRequestMsg().headers().getAndConvert(HttpHeaderNames.CONTENT_TYPE);
         if (content_type != null) {
-            resource.setMetaData(HttpHeaderNames.CONTENT_TYPE.toString(), content_type);
+            resource.setMetaData("Content-Type", content_type);
         }
     }
 

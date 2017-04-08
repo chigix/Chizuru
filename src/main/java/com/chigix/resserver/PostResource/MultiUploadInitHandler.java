@@ -57,8 +57,7 @@ public class MultiUploadInitHandler extends SimpleChannelInboundHandler<Context>
 
     @Override
     protected void messageReceived(ChannelHandlerContext ctx, Context msg) throws Exception {
-        MultipartUpload upload = application.getDaoFactory().getUploadDao().initiateUpload(
-                new AmassedResource(msg.getResource().getKey()) {
+        final AmassedResource r = new AmassedResource(msg.getResource().getKey()) {
             @Override
             public Iterator<ChunkedResource> getSubResources() {
                 throw new UnsupportedOperationException("Not supported yet. Please refetch resource from dao.");
@@ -68,8 +67,12 @@ public class MultiUploadInitHandler extends SimpleChannelInboundHandler<Context>
             public Bucket getBucket() throws NoSuchBucket {
                 return msg.getResource().getBucket();
             }
+        };
+        msg.getResource().snapshotMetaData().entrySet().forEach((entry) -> {
+            r.setMetaData(entry.getKey(), entry.getValue());
         });
-        MultipartUploadContext routing_ctx = new MultipartUploadContext(msg.getRoutedInfo(), upload.getResource());
+        final MultipartUpload upload = application.getDaoFactory().getUploadDao().initiateUpload(r);
+        final MultipartUploadContext routing_ctx = new MultipartUploadContext(msg.getRoutedInfo(), upload.getResource());
         routing_ctx.setUpload(upload);
         ctx.channel().attr(ROUTING_CTX).set(routing_ctx);
         msg.getRoutedInfo().allow();

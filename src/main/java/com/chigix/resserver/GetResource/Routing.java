@@ -60,12 +60,17 @@ public class Routing extends RoutingConfig.GET {
                     msg.getRoutedInfo().deny();
                     throw new NoSuchKey(msg.getResource().getKey());
                 }
+                msg.getRoutedInfo().allow();
                 DefaultHttpResponse resp = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
+                msg.getResource().snapshotMetaData().forEach((name, value) -> {
+                    resp.headers().set(name, value);
+                });
                 resp.headers().set(HttpHeaderNames.CONTENT_LENGTH, msg.getResource().getSize());
                 resp.headers().set(HttpHeaderNames.LAST_MODIFIED, msg.getResource().getLastModified().toString("E, dd MMM yyyy HH:mm:ss 'GMT'", Locale.US));
                 // resp.headers().set("x-amz-version-id", msg.getResource().getVersionId());
                 ctx.write(resp);
                 if (msg.getResource() instanceof ChunkedResource) {
+                    //@TODO: check FileNotFoundException.
                     ctx.write(new ChunkedStream(new ResourceInputStream((ChunkedResource) msg.getResource(), 1024), 1024))
                             .addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
                 } else if (msg.getResource() instanceof AmassedResource) {
@@ -75,7 +80,6 @@ public class Routing extends RoutingConfig.GET {
                 if (!HttpHeaderUtil.isKeepAlive(msg.getRoutedInfo().getRequestMsg())) {
                     lastContentFuture.addListener(ChannelFutureListener.CLOSE);
                 }
-                msg.getRoutedInfo().allow();
             }
         }, new DefaultExceptionForwarder());
     }

@@ -5,6 +5,7 @@ import com.chigix.resserver.ApplicationContext;
 import com.chigix.resserver.entity.Bucket;
 import com.chigix.resserver.entity.Chunk;
 import com.chigix.resserver.entity.ChunkedResource;
+import com.chigix.resserver.entity.Resource;
 import com.chigix.resserver.entity.error.NoSuchBucket;
 import com.chigix.resserver.sharablehandlers.ResourceInfoHandler;
 import com.chigix.resserver.util.Authorization;
@@ -80,6 +81,7 @@ public class Routing extends RoutingConfig.PUT {
                 new SimpleChannelInboundHandler<Context>() {
             @Override
             protected void messageReceived(ChannelHandlerContext ctx, Context msg) throws Exception {
+                final Resource prebuilt = msg.getResource();
                 Context routing_ctx = msg;
                 final Bucket b = msg.getResource().getBucket();
                 String key = msg.getResource().getKey();
@@ -97,7 +99,7 @@ public class Routing extends RoutingConfig.PUT {
                     multi_ctx.setPartNumber(Integer.valueOf(parameter_upload_number.get(0)));
                     routing_ctx = multi_ctx;
                 }
-                routing_ctx.setResource(new ChunkedResource(key) {
+                final ChunkedResource new_resource = new ChunkedResource(key) {
                     @Override
                     public Iterator<Chunk> getChunks() {
                         throw new UnsupportedOperationException("Not supported yet.");
@@ -108,7 +110,11 @@ public class Routing extends RoutingConfig.PUT {
                         return b;
                     }
 
+                };
+                prebuilt.snapshotMetaData().forEach((k, v) -> {
+                    new_resource.setMetaData(k, v);
                 });
+                routing_ctx.setResource(new_resource);
                 ctx.channel().attr(CONTEXT).set(routing_ctx);
                 msg.getRoutedInfo().allow();
             }
