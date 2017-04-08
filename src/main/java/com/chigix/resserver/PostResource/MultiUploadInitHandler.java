@@ -69,9 +69,10 @@ public class MultiUploadInitHandler extends SimpleChannelInboundHandler<Context>
                 return msg.getResource().getBucket();
             }
         });
-        MultipartUploadContext routing_ctx = new MultipartUploadContext(msg.getRoutedInfo(), msg.getResource());
+        MultipartUploadContext routing_ctx = new MultipartUploadContext(msg.getRoutedInfo(), upload.getResource());
         routing_ctx.setUpload(upload);
         ctx.channel().attr(ROUTING_CTX).set(routing_ctx);
+        msg.getRoutedInfo().allow();
     }
 
     @Sharable
