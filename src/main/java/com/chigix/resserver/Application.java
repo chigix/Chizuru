@@ -29,6 +29,8 @@ import java.io.InputStream;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -46,10 +48,14 @@ public class Application {
 
     private static final Logger LOG = LoggerFactory.getLogger(Application.class.getName());
 
+    public static ExecutorService amassedResourceFileReadingPool;
+
     public static void main(String[] args) throws InterruptedException {
         ApplicationContext app_ctx = initNode();
         LOG.info("NODE ID: " + app_ctx.getCurrentNodeId());
         LOG.info("Created At: " + app_ctx.getCreationDate());
+        // @TODO: support Capacity for fixed Thread pool configure from command line.
+        amassedResourceFileReadingPool = Executors.newFixedThreadPool(10);
         EventLoopGroup bossGroup = new NioEventLoopGroup();
         EventLoopGroup workerGroup = new NioEventLoopGroup();
         ServerBootstrap sb = new ServerBootstrap();
@@ -199,7 +205,7 @@ public class Application {
                 this.newRouting(ctx, new com.chigix.resserver.DeleteBucket.Routing(application));
                 this.newRouting(ctx, new com.chigix.resserver.GetResource.Routing(application));
                 this.newRouting(ctx, new com.chigix.resserver.PutResource.Routing(application));
-                this.newRouting(ctx, com.chigix.resserver.PostResource.Routing.getInstance(application));
+                this.newRouting(ctx, new com.chigix.resserver.PostResource.Routing(application));
             }
 
         };
