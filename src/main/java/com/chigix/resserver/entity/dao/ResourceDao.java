@@ -1,11 +1,9 @@
 package com.chigix.resserver.entity.dao;
 
-import com.chigix.resserver.entity.AmassedResource;
 import com.chigix.resserver.entity.Bucket;
 import com.chigix.resserver.entity.Chunk;
 import com.chigix.resserver.entity.ChunkedResource;
 import com.chigix.resserver.entity.Resource;
-import com.chigix.resserver.entity.error.DaoException;
 import com.chigix.resserver.entity.error.NoSuchBucket;
 import com.chigix.resserver.entity.error.NoSuchKey;
 import java.util.Iterator;
@@ -20,7 +18,7 @@ public interface ResourceDao {
 
     Resource findResource(Bucket bucket, String resourceKey) throws NoSuchKey, NoSuchBucket;
 
-    Resource saveResource(Resource resource) throws NoSuchBucket, DaoException;
+    Resource saveResource(Resource resource) throws NoSuchBucket;
 
     Iterator<Resource> listResources(Bucket bucket) throws NoSuchBucket;
 
@@ -29,7 +27,5 @@ public interface ResourceDao {
     void removeResource(Resource resource) throws NoSuchKey, NoSuchBucket;
 
     void appendChunk(ChunkedResource r, Chunk c);
-
-    void appendChunkedResource(AmassedResource parent, ChunkedResource c, String partNumber);
 
 }
