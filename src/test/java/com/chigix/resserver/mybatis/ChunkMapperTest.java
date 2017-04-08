@@ -94,16 +94,16 @@ public class ChunkMapperTest {
     public void testSelectByVersion() throws Exception {
         System.out.println("selectByVersion");
         final String location_id = UUID.randomUUID().toString();
-        final ChunkedResource[] resources = new ChunkedResource[10];
+        final ChunkedResourceBean[] resources = new ChunkedResourceBean[10];
         final Map<String, Chunk[]> resourceChunks = new HashMap<>();
-        final CountDownLatch signal = new CountDownLatch(resources.length);
+        final CountDownLatch signal_1 = new CountDownLatch(resources.length);
         final AtomicInteger count = new AtomicInteger();
         for (count.set(0); count.get() < resources.length; count.incrementAndGet()) {
             final int i = count.get();
             new Thread() {
                 @Override
                 public void run() {
-                    ChunkedResource resource = new ChunkedResourceBean("KEY_" + i, UUID.randomUUID().toString().replace("-", ""));
+                    ChunkedResourceBean resource = new ChunkedResourceBean("KEY_" + i, UUID.randomUUID().toString().replace("-", ""));
                     resources[i] = resource;
                     resourceChunks.put(resource.getKey(), new Chunk[10000]);
                     Chunk[] chunks = resourceChunks.get(resource.getKey());
@@ -112,11 +112,29 @@ public class ChunkMapperTest {
                         chunks[j] = chunk;
                         mapper.appendChunkToVersion(resource.getVersionId(), chunk);
                     }
-                    signal.countDown();
+                    signal_1.countDown();
                 }
             }.start();
         }
-        signal.await();
+        signal_1.await();
+        final CountDownLatch signal_2 = new CountDownLatch(resources.length);
+        for (int i = 0; i < resources.length; i++) {
+            final int j = i;
+            new Thread() {
+                @Override
+                public void run() {
+                    ChunkedResourceBean resource = new ChunkedResourceBean(resources[j].getKey(),
+                            resources[j].getKeyHash());
+                    resources[j] = resource;
+                    Chunk[] chunks = resourceChunks.get(resource.getKey());
+                    for (Chunk chunk : chunks) {
+                        mapper.appendChunkToVersion(resource.getVersionId(), chunk);
+                    }
+                    signal_2.countDown();
+                }
+            }.start();
+        }
+        signal_2.await();
         for (ChunkedResource resource : resources) {
             String continuation = null;
             List<Map<String, String>> versions;

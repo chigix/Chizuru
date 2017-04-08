@@ -17,7 +17,9 @@
         SELECT * FROM CHUNK WHERE PARENT_VERSION_ID = #{versionId}
         <if test="_parameter != null">
             <if test="_parameter.containsKey('continuation')">
-                AND "ID" >= (SELECT "ID" FROM CHUNK WHERE CONTENT_HASH = #{continuation} LIMIT 1)
+                AND "ID" >= (SELECT "ID" FROM CHUNK WHERE CONTENT_HASH = #{continuation} 
+                AND PARENT_VERSION_ID = #{versionId} 
+                LIMIT 1)
             </if>
         </if>
         LIMIT 1000
