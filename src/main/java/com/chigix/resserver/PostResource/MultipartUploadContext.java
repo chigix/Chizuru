@@ -1,7 +1,7 @@
 package com.chigix.resserver.PostResource;
 
+import com.chigix.resserver.entity.AmassedResource;
 import com.chigix.resserver.entity.MultipartUpload;
-import com.chigix.resserver.entity.Resource;
 import com.chigix.resserver.sharablehandlers.Context;
 import com.chigix.resserver.util.XPathNode;
 import com.fasterxml.aalto.AsyncByteArrayFeeder;
@@ -29,14 +29,23 @@ class MultipartUploadContext extends Context {
 
     private CompleteMultipartUploadPart currentXmlStreamUploadPart = null;
 
-    private final MultiUploadCompleteContentHandler.CalculateEtag currentEtagCalculator
-            = new MultiUploadCompleteContentHandler.CalculateEtag();
+    private final MultiUploadCompleteContentHandler.CalculateEtag currentEtagCalculator;
 
-    public MultipartUploadContext(HttpRouted routedInfo, Resource resource) {
+    public MultipartUploadContext(HttpRouted routedInfo, AmassedResource resource) {
         super(routedInfo, resource);
         AsyncXMLStreamReader<AsyncByteArrayFeeder> reader = new InputFactoryImpl().createAsyncForByteArray();
         xmlStreamReader = reader;
         xmlStreamFeeder = reader.getInputFeeder();
+        currentEtagCalculator = new MultiUploadCompleteContentHandler.CalculateEtag(this);
+    }
+
+    @Override
+    public AmassedResource getResource() {
+        return (AmassedResource) super.getResource();
+    }
+
+    public void setResource(AmassedResource resource) {
+        super.setResource(resource);
     }
 
     public void setUpload(MultipartUpload upload) {

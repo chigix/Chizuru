@@ -2,6 +2,7 @@ package com.chigix.resserver.PostResource;
 
 import com.chigix.resserver.Application;
 import com.chigix.resserver.ApplicationContext;
+import com.chigix.resserver.entity.AmassedResource;
 import com.chigix.resserver.entity.Chunk;
 import com.chigix.resserver.entity.ChunkedResource;
 import com.chigix.resserver.entity.dao.MultipartUploadDao;
@@ -17,8 +18,7 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import java.math.BigInteger;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -135,11 +135,14 @@ class MultiUploadCompleteContentHandler extends MultiUploadCompleteHandler.Conte
 
     private boolean tryAppendChunkResourceReading(String xpath, MultipartUploadContext ctx, MultipartUploadDao uploaddao, ResourceDao resourcedao) throws InvalidPart, NoSuchBucket {
         if ("/CompleteMultipartUpload/Part".equals(xpath)) {
+            final AmassedResource amassed_resource = ctx.getResource();
             final MultipartUploadContext.CompleteMultipartUploadPart part = ctx.getCurrentXmlStreamUploadPart();
             final ChunkedResource part_resource = uploaddao.findUploadPart(ctx.getUpload(),
                     part.getPartNumber(),
                     part.getEtag());
             ctx.getCurrentEtagCalculator().appendChunkResource(part_resource);
+            amassed_resource.setSize(new BigInteger(amassed_resource.getSize())
+                    .add(new BigInteger(part_resource.getSize())).toString());
             resourcedao.saveResource(part_resource); // Part Resource
             return true;
         }
@@ -163,21 +166,17 @@ class MultiUploadCompleteContentHandler extends MultiUploadCompleteHandler.Conte
 
         private boolean chunkReadersLocked = false;
 
-        private final MessageDigest etagDigest;
+        private final MultipartUploadContext routingContext;
 
-        public CalculateEtag() {
-            try {
-                this.etagDigest = MessageDigest.getInstance("MD5");
-            } catch (NoSuchAlgorithmException ex) {
-                throw new RuntimeException("Unexpected!!!!Fix algorithm name in code", ex);
-            }
+        public CalculateEtag(MultipartUploadContext ctx) {
+            this.routingContext = ctx;
         }
 
         @Override
         public void run() {
             chunkReaders.forEach((chunkReader) -> {
                 chunkReader.hookTask((buffer) -> {
-                    etagDigest.update(buffer);
+                    routingContext.getEtagDigest().update(buffer);
                 });
                 chunkReader.run();
             });
@@ -205,10 +204,6 @@ class MultiUploadCompleteContentHandler extends MultiUploadCompleteHandler.Conte
                     }
                 }
             }));
-        }
-
-        public MessageDigest getEtagDigest() {
-            return etagDigest;
         }
 
         public void endLock() {

@@ -1,6 +1,7 @@
 package com.chigix.resserver.PostResource;
 
 import com.chigix.resserver.ApplicationContext;
+import com.chigix.resserver.entity.AmassedResource;
 import com.chigix.resserver.entity.error.NoSuchUpload;
 import com.chigix.resserver.util.Authorization;
 import io.netty.buffer.Unpooled;
@@ -31,13 +32,17 @@ class MultiUploadCompleteResponseHandler extends SimpleChannelInboundHandler<Mul
 
     @Override
     protected void messageReceived(ChannelHandlerContext ctx, MultipartUploadContext msg) throws Exception {
-        application.getDaoFactory().getResourceDao().saveResource(msg.getResource()); // AmassedResource
+        final AmassedResource r = msg.getResource();
+        r.setETag(Authorization.HexEncode(msg.getEtagDigest().digest()));
+        application.getDaoFactory().getResourceDao().saveResource(r); // AmassedResource
         StringBuilder sb = new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
         sb.append("<CompleteMultipartUploadResult xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\">");
-        sb.append("<Location>http://Example-Bucket.s3.amazonaws.com/Example-Object</Location>");
-        sb.append("<Bucket>").append(msg.getUpload().getResource().getBucket().getName()).append("</Bucket>");
-        sb.append("<Key>").append(msg.getResource().getKey()).append("</Key>");
-        sb.append("<ETag>\"").append(Authorization.HexEncode(msg.getCurrentEtagCalculator().getEtagDigest().digest())).append("\"</ETag>");
+        sb.append("<Location>http://Example-Bucket.s3.amazonaws.com/")
+                .append(r.getBucket().getName()).append("/")
+                .append(r.getKey()).append("</Location>");
+        sb.append("<Bucket>").append(r.getBucket().getName()).append("</Bucket>");
+        sb.append("<Key>").append(r.getKey()).append("</Key>");
+        sb.append("<ETag>\"").append(r.getETag()).append("\"</ETag>");
         sb.append("</CompleteMultipartUploadResult>");
         ctx.writeAndFlush(new DefaultFullHttpResponse(HttpVersion.HTTP_1_1,
                 HttpResponseStatus.OK,
@@ -47,7 +52,7 @@ class MultiUploadCompleteResponseHandler extends SimpleChannelInboundHandler<Mul
                         LOG.info("UPLOAD SUCCEEDED: [{}], RESOURCE: [{}:{}]",
                                 msg.getUpload().getUploadId(),
                                 msg.getUpload().getResource().getKey(),
-                                msg.getResource().getVersionId());
+                                r.getVersionId());
                         try {
                             application.getDaoFactory().getUploadDao().removeUpload(msg.getUpload());
                         } catch (NoSuchUpload noSuchUpload) {
@@ -59,7 +64,7 @@ class MultiUploadCompleteResponseHandler extends SimpleChannelInboundHandler<Mul
                                 + "UPLOAD SUCCEEDED: [{}], RESOURCE: [{}:{}]",
                                 msg.getUpload().getUploadId(),
                                 msg.getUpload().getResource().getKey(),
-                                msg.getResource().getVersionId()
+                                r.getVersionId()
                         );
                     }
                 }
