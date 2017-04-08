@@ -4,6 +4,7 @@ import com.chigix.resserver.entity.Bucket;
 import com.chigix.resserver.entity.Resource;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.QueryStringDecoder;
 import io.netty.handler.codec.http.router.HttpRouted;
 import java.security.InvalidParameterException;
 import java.security.MessageDigest;
@@ -25,6 +26,8 @@ public class Context {
 
     private ByteBuf cachingChunkBuf;
 
+    private final QueryStringDecoder queryDecoder;
+
     public Context(HttpRouted routedInfo, Resource resource) {
         try {
             this.etagDigest = MessageDigest.getInstance("MD5");
@@ -38,6 +41,7 @@ public class Context {
         }
         this.routedInfo = routedInfo;
         this.resource = resource;
+        this.queryDecoder = new QueryStringDecoder(routedInfo.getRequestMsg().uri());
         String content_type = routedInfo.getRequestMsg().headers().getAndConvert(HttpHeaderNames.CONTENT_TYPE);
         if (content_type != null) {
             resource.setMetaData(HttpHeaderNames.CONTENT_TYPE.toString(), content_type);
@@ -46,6 +50,10 @@ public class Context {
 
     public HttpRouted getRoutedInfo() {
         return routedInfo;
+    }
+
+    public QueryStringDecoder getQueryDecoder() {
+        return queryDecoder;
     }
 
     public Resource getResource() {

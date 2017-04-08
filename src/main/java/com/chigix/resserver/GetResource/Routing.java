@@ -75,6 +75,7 @@ public class Routing extends RoutingConfig.GET {
                 if (!HttpHeaderUtil.isKeepAlive(msg.getRoutedInfo().getRequestMsg())) {
                     lastContentFuture.addListener(ChannelFutureListener.CLOSE);
                 }
+                msg.getRoutedInfo().allow();
             }
         }, new DefaultExceptionForwarder());
     }

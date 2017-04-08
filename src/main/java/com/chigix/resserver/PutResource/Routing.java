@@ -110,7 +110,7 @@ public class Routing extends RoutingConfig.PUT {
 
                 });
                 ctx.channel().attr(CONTEXT).set(routing_ctx);
-
+                msg.getRoutedInfo().allow();
             }
         }, new SimpleChannelInboundHandler<HttpContent>() {
             @Override

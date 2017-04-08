@@ -37,7 +37,7 @@ public class ResourceInfoHandler extends SimpleChannelInboundHandler<HttpRouted>
         Resource r;
         try {
             r = application.getDaoFactory().getResourceDao().findResource(
-                    b.getName(),
+                    b,
                     (String) msg.decodedParams().get("resource_key")
             );
         } catch (NoSuchKey noSuchKey) {
@@ -47,7 +47,6 @@ public class ResourceInfoHandler extends SimpleChannelInboundHandler<HttpRouted>
             throw ex;
         }
         Context routing_ctx = new Context(msg, r);
-        msg.allow();
         ctx.fireChannelRead(routing_ctx);
     }
 
