@@ -15,7 +15,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
-import org.junit.Ignore;
 
 /**
  *
@@ -110,7 +109,6 @@ public class ResourceMapperTest {
     /**
      * Test of selectByKeyhash_Version method, of class ResourceMapper.
      */
-    @Ignore
     @Test
     public void testSelectByKeyhash_Version() {
         System.out.println("selectByKeyhash_Version");

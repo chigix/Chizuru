@@ -62,7 +62,7 @@ public class MultipartUploadMapperTest {
         AmassedResource r = new AmassedResource("TEST_RESOURCE") {
             @Override
             public Iterator<ChunkedResource> getSubResources() {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                throw new UnsupportedOperationException("Not supported yet.");
             }
 
             @Override
@@ -71,6 +71,9 @@ public class MultipartUploadMapperTest {
             }
         };
         assertEquals(1, mapper.insert(new MultipartUploadDto(new MultipartUpload(r))));
+        assertEquals(1, mapper.insert(new MultipartUploadDto(new MultipartUpload(r))));
+        assertEquals(1, mapper.insert(new MultipartUploadDto(new MultipartUpload(r))));
+        assertEquals(3, session.selectList("com.chigix.resserver.mybatis.MultipartUploadMapper.selectAll").size());
     }
 
     /**
