@@ -1,6 +1,7 @@
 package com.chigix.resserver.PostResource;
 
 import com.chigix.resserver.ApplicationContext;
+import com.chigix.resserver.entity.error.NoSuchUpload;
 import com.chigix.resserver.util.Authorization;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandler;
@@ -30,6 +31,7 @@ class MultiUploadCompleteResponseHandler extends SimpleChannelInboundHandler<Mul
 
     @Override
     protected void messageReceived(ChannelHandlerContext ctx, MultipartUploadContext msg) throws Exception {
+        application.getDaoFactory().getResourceDao().saveResource(msg.getResource()); // AmassedResource
         StringBuilder sb = new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
         sb.append("<CompleteMultipartUploadResult xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\">");
         sb.append("<Location>http://Example-Bucket.s3.amazonaws.com/Example-Object</Location>");
@@ -46,7 +48,12 @@ class MultiUploadCompleteResponseHandler extends SimpleChannelInboundHandler<Mul
                                 msg.getUpload().getUploadId(),
                                 msg.getUpload().getResource().getKey(),
                                 msg.getResource().getVersionId());
-                        application.getDaoFactory().getUploadDao().removeUpload(msg.getUpload());
+                        try {
+                            application.getDaoFactory().getUploadDao().removeUpload(msg.getUpload());
+                        } catch (NoSuchUpload noSuchUpload) {
+                            // No problem because the resource have been saved
+                            // successfully code could be executed till here.
+                        }
                     } else {
                         LOG.warn("Response Writing Error for Upload Success. Upload session is still preserved. "
                                 + "UPLOAD SUCCEEDED: [{}], RESOURCE: [{}:{}]",

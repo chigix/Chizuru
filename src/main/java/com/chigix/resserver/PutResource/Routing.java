@@ -43,10 +43,10 @@ import org.slf4j.LoggerFactory;
  * Adds a resource to a bucket.
  * http://docs.aws.amazon.com/AmazonS3/latest/API/RESTObjectPUT.html
  *
- * Here, PUT Resource is only designed for saving Chunk file and
- * ChunkedResource. AmassedResource would not be modified in this handler, which
- * should only be updated via Multipart Upload Init API and Multipart Upload
- * Complete API.
+ * Here, every resource received through PUT Resource will be equally preserved
+ * as a {@link ChunkedResource}. AmassedResource would not be modified in this
+ * handler, which should only be updated via Multipart Upload Init API and
+ * Multipart Upload Complete API.
  *
  * @author Richard Lea <chigix@zoho.com>
  */
@@ -200,7 +200,7 @@ public class Routing extends RoutingConfig.PUT {
                             (ChunkedResource) routing_ctx.getResource(),
                             ((MultipartUploadContext) routing_ctx).getPartNumber() + "");
                 } else {
-                    application.getDaoFactory().getResourceDao().saveResource(routing_ctx.getResource());
+                    application.getDaoFactory().getResourceDao().saveResource(routing_ctx.getResource()); // Individual ChunkedResource
                 }
                 DefaultFullHttpResponse resp = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
                 resp.headers().add(HttpHeaderNames.ETAG, routing_ctx.getResource().getETag());

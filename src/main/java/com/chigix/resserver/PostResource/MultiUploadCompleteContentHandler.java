@@ -97,7 +97,6 @@ class MultiUploadCompleteContentHandler extends MultiUploadCompleteHandler.Conte
                     // @TODO: application.getDaoFactory().getResourceDao()
                     //        .removeSubResource(routing_ctx.getResource());
                     routing_ctx.getCurrentEtagCalculator().onFinished = (Callable) () -> {
-                        application.getDaoFactory().getUploadDao().removeUpload(routing_ctx.getUpload());
                         ctx.fireChannelRead(routing_ctx);
                         return null;
                     };
@@ -141,7 +140,7 @@ class MultiUploadCompleteContentHandler extends MultiUploadCompleteHandler.Conte
                     part.getPartNumber(),
                     part.getEtag());
             ctx.getCurrentEtagCalculator().appendChunkResource(part_resource);
-            resourcedao.saveResource(part_resource);
+            resourcedao.saveResource(part_resource); // Part Resource
             return true;
         }
         return false;
