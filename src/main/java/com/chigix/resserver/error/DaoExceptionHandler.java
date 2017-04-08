@@ -53,6 +53,7 @@ public class DaoExceptionHandler extends HttpExceptionInboundHandler<DaoExceptio
     protected void handleException(ChannelHandlerContext ctx, HttpException exc) {
         DaoException daoexception = (DaoException) exc.getCause();
         switch (daoexception.getCode()) {
+            case "NoSuchKey":
             case "NoSuchBucket":
                 ctx.writeAndFlush(new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NOT_FOUND, generateXmlMessage(daoexception, exc.getHttpRequest())));
                 return;
