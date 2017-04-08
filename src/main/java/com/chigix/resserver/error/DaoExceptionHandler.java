@@ -60,6 +60,9 @@ public class DaoExceptionHandler extends HttpExceptionInboundHandler<DaoExceptio
             case "BucketAlreadyExists":
                 ctx.writeAndFlush(new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.CONFLICT, generateXmlMessage(daoexception, exc.getHttpRequest())));
                 return;
+            case "InvalidPart":
+                ctx.writeAndFlush(new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.BAD_REQUEST, generateXmlMessage(daoexception, exc.getHttpRequest())));
+                return;
         }
         LOG.error("DAOException: [{}] is not handled.", daoexception.getCode());
     }
