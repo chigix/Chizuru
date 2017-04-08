@@ -7,14 +7,12 @@ import com.chigix.resserver.entity.Resource;
 import com.chigix.resserver.entity.error.NoSuchBucket;
 import com.chigix.resserver.mybatis.BucketDaoImpl;
 import com.chigix.resserver.mybatis.ChunkDaoImpl;
+import com.chigix.resserver.mybatis.ResourceDaoImpl;
 import com.chigix.resserver.mybatis.bean.AmassedResourceBean;
 import com.chigix.resserver.mybatis.bean.BucketBean;
 import com.chigix.resserver.mybatis.bean.ChunkedResourceBean;
-import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.Iterator;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -34,7 +32,21 @@ import org.xml.sax.SAXException;
  */
 public class ResourceBuilder {
 
-    private InputStream metas;
+    public static ResourceBuilder createFrom(ResourceDto dto) {
+        ResourceBuilder rb = new ResourceBuilder();
+        rb.setBucketUuid(dto.getBucket().getUuid());
+        rb.setEtag(dto.getBean().getETag());
+        rb.setKeyHash(dto.getKeyHash());
+        rb.setLastModified(dto.getLastModified());
+        rb.setMetas(dto.getMetaData());
+        rb.setResourceKey(dto.getBean().getKey());
+        rb.setResourceType(dto.getType());
+        rb.setSize(dto.getBean().getSize());
+        rb.setVersionId(dto.getBean().getVersionId());
+        return rb;
+    }
+
+    private String metas = null;
 
     private String resourceKey;
 
@@ -53,7 +65,7 @@ public class ResourceBuilder {
     private String size;
 
     public void setMetas(String metas) {
-        this.metas = new ByteArrayInputStream(metas.getBytes());
+        this.metas = metas;
     }
 
     public void setResourceKey(String resourceKey) {
@@ -73,11 +85,7 @@ public class ResourceBuilder {
     }
 
     public String getMetas() {
-        try {
-            return new BufferedReader(new InputStreamReader(metas)).readLine();
-        } catch (IOException ex) {
-            return null;
-        }
+        return this.metas;
     }
 
     public String getResourceKey() {
@@ -128,11 +136,11 @@ public class ResourceBuilder {
         this.size = size;
     }
 
-    public Resource build(BucketDaoImpl bucketdao, ChunkDaoImpl chunkdao) {
+    public Resource build(BucketDaoImpl bucketdao, ChunkDaoImpl chunkdao, ResourceDaoImpl resourceDao) {
         Resource b;
         switch (resourceType) {
             case "AmassedResource":
-                b = constructAmassedResource(bucketdao);
+                b = constructAmassedResource(bucketdao, resourceDao);
                 break;
             case "ChunkedResource":
                 b = constructChunkedResource(bucketdao, chunkdao);
@@ -147,7 +155,7 @@ public class ResourceBuilder {
         XPath xpath = XPathFactory.newInstance().newXPath();
         try {
             doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().
-                    parse(metas);
+                    parse(new ByteArrayInputStream(this.metas.getBytes()));
             NodeList meta_nodes = (NodeList) xpath.compile("//Metas/Meta")
                     .evaluate(doc, XPathConstants.NODESET);
             for (int i = 0; i < meta_nodes.getLength(); i++) {
@@ -156,7 +164,7 @@ public class ResourceBuilder {
                         meta.getAttributes().getNamedItem("content").getTextContent());
             }
         } catch (XPathExpressionException | ParserConfigurationException
-                | SAXException | IOException | IllegalArgumentException ex) {
+                | SAXException | IOException | IllegalArgumentException | NullPointerException ex) {
             if (metas != null) {
                 throw new RuntimeException("Unexpected Xml Parse Config exception", ex);
             }
@@ -164,7 +172,7 @@ public class ResourceBuilder {
         return b;
     }
 
-    private AmassedResourceBean constructAmassedResource(final BucketDaoImpl bucketdao) {
+    private AmassedResourceBean constructAmassedResource(final BucketDaoImpl bucketdao, final ResourceDaoImpl resourceDao) {
         return new AmassedResourceBean(resourceKey, versionId, keyHash) {
             @Override
             public BucketBean getBucket() throws NoSuchBucket {
@@ -172,17 +180,31 @@ public class ResourceBuilder {
                 if (b != null) {
                     return b;
                 }
-                BucketBean bb = bucketdao.findBucketByUuid(bucketUuid);
-                if (bb == null) {
-                    throw new NoSuchBucket("Seems that bucket have been removed.");
+                try {
+                    BucketBean bb = bucketdao.findBucketByUuid(bucketUuid);
+                    if (bb == null) {
+                        throw new NoSuchBucket("Seems that bucket have been removed.");
+                    }
+                    setBucket(bb);
+                    return bb;
+                } catch (NullPointerException ex) {
+                    if (bucketdao == null) {
+                        throw new UnsupportedOperationException("BucketDao is not given. This operation is disabled.");
+                    }
+                    throw ex;
                 }
-                setBucket(bb);
-                return bb;
             }
 
             @Override
             public Iterator<ChunkedResource> getSubResources() {
-                return super.getSubResources(); //To change body of generated methods, choose Tools | Templates.
+                try {
+                    return resourceDao.listSubResources(this);
+                } catch (NullPointerException ex) {
+                    if (resourceDao == null) {
+                        throw new UnsupportedOperationException("ResourceDao is not given. This operation is disabled.");
+                    }
+                    throw ex;
+                }
             }
 
         };
@@ -196,17 +218,31 @@ public class ResourceBuilder {
                 if (b != null) {
                     return b;
                 }
-                BucketBean bb = bucketdao.findBucketByUuid(bucketUuid);
-                if (bb == null) {
-                    throw new NoSuchBucket("Seems that bucket have been removed.");
+                try {
+                    BucketBean bb = bucketdao.findBucketByUuid(bucketUuid);
+                    if (bb == null) {
+                        throw new NoSuchBucket("Seems that bucket have been removed.");
+                    }
+                    setBucket(bb);
+                    return bb;
+                } catch (NullPointerException ex) {
+                    if (bucketdao == null) {
+                        throw new UnsupportedOperationException("BucketDao is not given. This operation is disabled.");
+                    }
+                    throw ex;
                 }
-                setBucket(bb);
-                return bb;
             }
 
             @Override
             public Iterator<Chunk> getChunks() {
-                return chunkdao.listChunksByResource(this);
+                try {
+                    return chunkdao.listChunksByResource(this);
+                } catch (NullPointerException e) {
+                    if (chunkdao == null) {
+                        throw new UnsupportedOperationException("ChunkDao is not given. This operation is disabled.");
+                    }
+                    throw e;
+                }
             }
 
         };

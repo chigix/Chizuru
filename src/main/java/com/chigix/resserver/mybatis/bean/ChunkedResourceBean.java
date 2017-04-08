@@ -1,6 +1,5 @@
 package com.chigix.resserver.mybatis.bean;
 
-import com.chigix.resserver.entity.AmassedResource;
 import com.chigix.resserver.entity.Bucket;
 import com.chigix.resserver.entity.Chunk;
 import com.chigix.resserver.entity.ChunkedResource;
