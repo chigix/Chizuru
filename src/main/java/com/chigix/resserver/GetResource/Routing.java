@@ -6,14 +6,12 @@ import com.chigix.resserver.entity.ChunkedResource;
 import com.chigix.resserver.entity.error.NoSuchKey;
 import com.chigix.resserver.sharablehandlers.Context;
 import com.chigix.resserver.sharablehandlers.ResourceInfoHandler;
-import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.DefaultHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpHeaderUtil;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.LastHttpContent;
@@ -22,16 +20,14 @@ import io.netty.handler.routing.DefaultExceptionForwarder;
 import io.netty.handler.stream.ChunkedStream;
 import io.netty.handler.stream.ChunkedWriteHandler;
 import java.util.Locale;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
+ * GET Resource
+ * http://docs.aws.amazon.com/AmazonS3/latest/API/RESTObjectGET.html
  *
  * @author Richard Lea <chigix@zoho.com>
  */
 public class Routing extends RoutingConfig.GET {
-
-    private static final Logger LOG = LoggerFactory.getLogger(Routing.class.getName());
 
     private final ApplicationContext application;
 
@@ -69,17 +65,17 @@ public class Routing extends RoutingConfig.GET {
                 resp.headers().set(HttpHeaderNames.LAST_MODIFIED, msg.getResource().getLastModified().toString("E, dd MMM yyyy HH:mm:ss 'GMT'", Locale.US));
                 // resp.headers().set("x-amz-version-id", msg.getResource().getVersionId());
                 ctx.write(resp);
+                // @TODO: Check Gzip and support GZIP.
                 if (msg.getResource() instanceof ChunkedResource) {
-                    //@TODO: check FileNotFoundException.
-                    ctx.write(new ChunkedStream(new ResourceInputStream((ChunkedResource) msg.getResource(), 1024), 1024))
-                            .addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
+                    ctx.write(new ChunkedStream(new ResourceInputStream(
+                            ((ChunkedResource) msg.getResource()).getChunks(),
+                            application))).addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
                 } else if (msg.getResource() instanceof AmassedResource) {
-                    throw new UnsupportedOperationException("Not Supported Yet.");
+                    ctx.write(new ChunkedStream(new AmassedInputStream(
+                            ((AmassedResource) msg.getResource()).getSubResources(),
+                            application))).addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
                 }
-                ChannelFuture lastContentFuture = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);
-                if (!HttpHeaderUtil.isKeepAlive(msg.getRoutedInfo().getRequestMsg())) {
-                    lastContentFuture.addListener(ChannelFutureListener.CLOSE);
-                }
+                ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT).addListener(ChannelFutureListener.CLOSE);
             }
         }, new DefaultExceptionForwarder());
     }
