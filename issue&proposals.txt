@@ -1,3 +1,2 @@
-* If no map db file support, directly use the list of files in this directory, surely the directory information would be impossible to be recorded for files.
 * Authentication request should be solved by PHP web service, rather than Netty IO service.
 * The real file name and virtual directory information should be stored in application layer, of course the Strategy of access control should also be implimented in application.
