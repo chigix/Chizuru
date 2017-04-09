@@ -14,10 +14,10 @@
         <result property="etag" column="etag"  />
         <result property="size" column="size"  />
     </resultMap>
-    <select id="selectAll" resultMap="resourceResultMap"   resultSetType="FORWARD_ONLY">
+    <select id="selectAll"  resultType="java.util.Map"   resultSetType="FORWARD_ONLY">
         SELECT * FROM resource
     </select>
-    <select id="selectAllSubResources"  resultMap="resourceResultMap" resultSetType="FORWARD_ONLY">
+    <select id="selectAllSubResources"  resultType="java.util.Map" resultSetType="FORWARD_ONLY">
         SELECT * FROM SUBRESOURCE
     </select>
     <select id="selectAllByBucketName" resultMap="resourceResultMap" resultSetType="FORWARD_ONLY">
@@ -45,6 +45,11 @@
         AND "version_id" = #{versionId}
         LIMIT 1
     </select>
+    <select id="selectByUploadId" resultMap="resourceResultMap">
+        SELECT * FROM resource
+        WHERE "upload_id" = #{upload_id}
+        LIMIT 1
+    </select>
     <select id="selectSubResourceByKeyEtagParent"  resultMap="resourceResultMap">
         select * from subresource
         WHERE  "key" = #{resourceKey}
@@ -52,13 +57,24 @@
         AND "etag" = #{etag}
         LIMIT 1
     </select>
+    <select id="selectSubResourcesByParentVersionId" resultMap="resourceResultMap" resultSetType="FORWARD_ONLY">
+        SELECT * FROM subresource
+        WHERE "parent_version_id" = #{parent_version_id}
+        <if test="_parameter.containsKey('continuation')">
+            AND "ID" >= (SELECT subresource.ID FROM subresource
+            WHERE subresource."version_id" = #{continuation} 
+            AND subresource."parent_version_id" = #{parent_version_id}
+            LIMIT 1)
+        </if>
+        LIMIT 1000
+    </select>
     <sql id="resourceColumns">
-        ("key", "keyhash", "bucket_uuid", "type", "etag", 
-        "last_modified", "size", "storage_class", "version_id", "meta_data") 
+        "key", "keyhash", "bucket_uuid", "type", "etag", 
+        "last_modified", "size", "storage_class", "version_id", "meta_data"
     </sql>
     <sql id="resourceValues">
-        (#{bean.key}, #{keyHash}, #{bucket.Uuid}, #{type}, #{bean.ETag}, 
-        #{lastModified}, #{bean.size}, #{bean.storageClass}, #{bean.versionId}, #{metaData})
+        #{resourceDto.bean.key}, #{resourceDto.keyHash}, #{resourceDto.bucket.Uuid}, #{resourceDto.type}, #{resourceDto.bean.ETag}, 
+        #{resourceDto.lastModified}, #{resourceDto.bean.size}, #{resourceDto.bean.storageClass}, #{resourceDto.bean.versionId}, #{resourceDto.metaData}
     </sql>
     <sql id="subResourceColumns">
         ("key", "parent_version_id", "type", "etag", 
@@ -70,9 +86,9 @@
     </sql>
     <insert id="insertResource">
         INSERT INTO RESOURCE
-        <include refid="resourceColumns"></include>
+        (<include refid="resourceColumns"></include>)
         VALUES
-        <include refid="resourceValues"></include>
+        (<include refid="resourceValues"></include>)
     </insert>
     <insert id="insertSubResource">
         INSERT INTO SUBRESOURCE
@@ -92,9 +108,15 @@
     </update>
     <update id="mergeResource">
         MERGE INTO RESOURCE
-        <include refid="resourceColumns"></include>
+        (<include refid="resourceColumns"></include>)
         KEY("keyhash") VALUES
-        <include refid="resourceValues"></include>
+        (<include refid="resourceValues"></include>)
+    </update>
+    <update id="mergeUploadingResource">
+        MERGE INTO RESOURCE
+        (<include refid="resourceColumns"></include>, "upload_id")
+        KEY("upload_id") VALUES
+        (<include refid="resourceValues"></include>, #{uploadDto.bean.uploadId})
     </update>
     <delete id="delete">
         DELETE FROM RESOURCE 
@@ -103,5 +125,8 @@
     </delete>
     <delete id="deleteByKeyhash">
         DELETE FROM RESOURCE WHERE "keyhash" = #{keyhash}
+    </delete>
+    <delete id="deleteByUploadId">
+        DELETE FROM resource WHERE "upload_id" = #{upload_id}
     </delete>
 </mapper>

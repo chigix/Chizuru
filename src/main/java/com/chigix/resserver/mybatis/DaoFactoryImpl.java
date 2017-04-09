@@ -91,10 +91,13 @@ public class DaoFactoryImpl implements DaoFactory {
     @Override
     public MultipartUploadDao getUploadDao() {
         if (uploadDao.get() == null) {
+            if (chunkDao.get() == null) {
+                getResourceDao();
+            }
             MultipartUploadDaoImpl upload_dao = new MultipartUploadDaoImpl(
-                    currentUploadSession().getMapper(MultipartUploadMapper.class), 
-                    (ResourceDaoImpl) getResourceDao(),
-                    createResourceDao(currentUploadSession().getMapper(ResourceMapper.class))
+                    currentUploadSession().getMapper(MultipartUploadMapper.class),
+                    chunkDao.get(),
+                    currentUploadSession().getMapper(ResourceMapper.class)
             );
             uploadDao.set(upload_dao);
         }

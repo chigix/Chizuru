@@ -5,10 +5,9 @@ import com.chigix.resserver.entity.ChunkedResource;
 import com.chigix.resserver.entity.dao.ChunkDao;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -57,39 +56,33 @@ public class ChunkDaoImpl implements ChunkDao {
     }
 
     public Iterator<Chunk> listChunksByResource(final ChunkedResource r) {
-        final AtomicReference<Iterator<Map<String, String>>> it = new AtomicReference<>();
         final AtomicReference<String> continuation = new AtomicReference<>();
+        final IteratorConcater<Map<String, String>> rows = new IteratorConcater<Map<String, String>>() {
+            @Override
+            protected Iterator<Map<String, String>> nextIterator() {
+                if (continuation.get() == null) {
+                    return chunkMapper.selectByVersion(r.getVersionId()).iterator();
+                }
+                Iterator<Map<String, String>> new_it = chunkMapper.selectByVersion(r.getVersionId(), continuation.get()).iterator();
+                if (continuation.get().equals(new_it.next().get("CONTENT_HASH"))) {
+                    return Collections.emptyIterator();
+                }
+                return new_it;
+            }
+        }.addListener((e) -> {
+            continuation.set(e.get("CONTENT_HASH"));
+        });
         return new Iterator<Chunk>() {
             @Override
             public boolean hasNext() {
-                if (it.get() == null) {
-                    List<Map<String, String>> rows = chunkMapper.selectByVersion(r.getVersionId());
-                    if (rows.isEmpty()) {
-                        return false;
-                    }
-                    it.set(rows.iterator());
-                }
-                if (it.get().hasNext() == true) {
-                    return true;
-                }
-                Iterator<Map<String, String>> new_it = chunkMapper.selectByVersion(r.getVersionId(), continuation.get()).iterator();
-                it.set(new_it);
-                if (!continuation.get().equals(new_it.next().get("CONTENT_HASH"))) {
-                    return false;
-                }
-                return it.get().hasNext();
+                return rows.hasNext();
             }
 
             @Override
             public Chunk next() {
-                if (hasNext() == false) {
-                    throw new NoSuchElementException();
-                }
-                Map<String, String> row = it.get().next();
+                Map<String, String> row = rows.next();
                 Object i = row.get("SIZE");
-                Chunk c = newChunk(row.get("CONTENT_HASH"), Integer.parseInt(i.toString()));
-                continuation.set(c.getContentHash());
-                return c;
+                return newChunk(row.get("CONTENT_HASH"), Integer.parseInt(i.toString()));
             }
         };
     }
