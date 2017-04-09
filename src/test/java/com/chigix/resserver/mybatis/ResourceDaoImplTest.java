@@ -1,5 +1,6 @@
 package com.chigix.resserver.mybatis;
 
+import com.chigix.resserver.entity.AmassedResource;
 import com.chigix.resserver.entity.Bucket;
 import com.chigix.resserver.entity.Chunk;
 import com.chigix.resserver.entity.ChunkedResource;
@@ -20,6 +21,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.junit.Ignore;
 
 /**
  *
@@ -196,32 +198,25 @@ public class ResourceDaoImplTest {
     /**
      * Test of listResources method, of class ResourceDaoImpl.
      *
+     * @TODO test with continuation token.
+     *
      * @throws java.lang.Exception
      */
     @Test
-    public void testListResources_Bucket() throws Exception {
+    public void testListResources() throws Exception {
         System.out.println("listResources");
         BucketBean bb = new BucketBean("TEST_BUCKET");
         bucketMapper.insert(bb.getUuid(), bb.getName(), bb.getCreationTime().toString());
-        ChunkedResourceBean r_1 = new ChunkedResourceBean("REC_1", ResourceExtension.hashKey(bb.getUuid(), "REC_1"));
-        ChunkedResourceBean r_2 = new ChunkedResourceBean("REC_2", ResourceExtension.hashKey(bb.getUuid(), "REC_2"));
-        ChunkedResourceBean r_3 = new ChunkedResourceBean("REC_3", ResourceExtension.hashKey(bb.getUuid(), "REC_3"));
-        resourceMapper.insertResource(new ResourceDto(r_1, bb));
-        resourceMapper.insertResource(new ResourceDto(r_2, bb));
-        resourceMapper.insertResource(new ResourceDto(r_3, bb));
-        assertEquals(3, resourceMapper.selectAllByBucketName(bb.getName(), 1000).size());
-    }
-
-    /**
-     * Test of listResources method, of class ResourceDaoImpl.
-     *
-     * Test case for continuation.
-     */
-    @Test
-    public void testListResources_Bucket_String() {
-        System.out.println("listResources");
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+        ChunkedResourceBean[] resources = new ChunkedResourceBean[6];
+        for (int i = 0; i < resources.length; i++) {
+            resources[i] = new ChunkedResourceBean("REC_" + i, ResourceExtension.hashKey(bb.getUuid(), "REC_" + i));
+            resources[i].setBucket(bb);
+            resourceMapper.insertResource(new ResourceDto(resources[i], bb));
+        }
+        Iterator<Resource> it = resourceDao.listResources(bb);
+        for (ChunkedResourceBean resource : resources) {
+            assertEquals(resource.getVersionId(), it.next().getVersionId());
+        }
     }
 
     /**
@@ -245,6 +240,7 @@ public class ResourceDaoImplTest {
     /**
      * Test of appendChunk method, of class ResourceDaoImpl.
      */
+    @Ignore
     @Test
     public void testAppendChunk() {
         System.out.println("appendChunk");
@@ -252,6 +248,22 @@ public class ResourceDaoImplTest {
         Chunk c = null;
         ResourceDaoImpl instance = null;
         instance.appendChunk(r, c);
+        // TODO review the generated test code and remove the default call to fail.
+        fail("The test case is a prototype.");
+    }
+
+    /**
+     * Test of listSubResources method, of class ResourceDaoImpl.
+     */
+    @Ignore
+    @Test
+    public void testListSubResources() {
+        System.out.println("listSubResources");
+        AmassedResource parent = null;
+        ResourceDaoImpl instance = null;
+        Iterator<ChunkedResource> expResult = null;
+        Iterator<ChunkedResource> result = instance.listSubResources(parent);
+        assertEquals(expResult, result);
         // TODO review the generated test code and remove the default call to fail.
         fail("The test case is a prototype.");
     }

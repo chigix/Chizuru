@@ -5,9 +5,11 @@ import com.chigix.resserver.mybatis.bean.AmassedResourceBean;
 import com.chigix.resserver.mybatis.bean.BucketBean;
 import com.chigix.resserver.mybatis.bean.ChunkedResourceBean;
 import com.chigix.resserver.mybatis.bean.ResourceExtension;
+import com.chigix.resserver.mybatis.dto.ResourceBuilder;
 import com.chigix.resserver.mybatis.dto.ResourceDto;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import org.apache.ibatis.session.SqlSession;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -170,6 +172,36 @@ public class ResourceMapperTest {
         r_3.setBucket(bb);
         r_3.setParentResource(parent);
         mapper.insertSubResource(new ResourceDto(r_3));
+    }
+
+    /**
+     * Test of selectSubResourcesByParentVersionId method, of class
+     * ResourceMapper.
+     *
+     * @throws java.lang.Exception
+     */
+    @Test
+    public void testSelectSubResourcesByParentVersionId() throws Exception {
+        System.out.println("selectSubResourcesByParentVersionId");
+        AmassedResourceBean a_r = new AmassedResourceBean("TEST_PARENT", "PARENT_KEYHASH");
+        ChunkedResourceBean[] chunkedrcs = new ChunkedResourceBean[10000];
+        for (int i = 0; i < chunkedrcs.length; i++) {
+            chunkedrcs[i] = new ChunkedResourceBean(i + "", "TEST_CHUNK_" + i);
+            chunkedrcs[i].setParentResource(a_r);
+        }
+        for (ChunkedResourceBean chunkedrc : chunkedrcs) {
+            mapper.insertSubResource(new ResourceDto(chunkedrc));
+        }
+        List<ResourceBuilder> result = mapper.selectSubResourcesByParentVersionId(a_r.getVersionId());
+        for (int i = 0; i < 1000; i++) {
+            ResourceBuilder get = result.get(i);
+            assertEquals(chunkedrcs[i].getVersionId(), get.getVersionId());
+        }
+        result = mapper.selectSubResourcesByParentVersionId(a_r.getVersionId(), result.get(999).getVersionId());
+        for (int i = 0; i < 1000; i++) {
+            ResourceBuilder get = result.get(i);
+            assertEquals(chunkedrcs[999 + i].getVersionId(), get.getVersionId());
+        }
     }
 
     /**

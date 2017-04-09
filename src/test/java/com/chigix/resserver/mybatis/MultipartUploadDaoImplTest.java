@@ -7,6 +7,8 @@ import com.chigix.resserver.entity.ChunkedResource;
 import com.chigix.resserver.entity.MultipartUpload;
 import com.chigix.resserver.entity.error.NoSuchBucket;
 import com.chigix.resserver.mybatis.bean.BucketBean;
+import com.chigix.resserver.mybatis.dto.MultipartUploadDto;
+import com.chigix.resserver.mybatis.dto.ResourceDto;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
@@ -19,7 +21,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
-import org.junit.Ignore;
 
 /**
  *
@@ -31,12 +32,9 @@ public class MultipartUploadDaoImplTest {
     private SqlSession mainSession;
 
     private ResourceMapper uploadingResourceMapper;
-    private ResourceMapper uploadedResourceMapper;
     private MultipartUploadMapper uploadMapper;
     private BucketDaoImpl bucketDao;
     private MultipartUploadDaoImpl uploadDao;
-    private ResourceDaoImpl uploadingResourceDao;
-    private ResourceDaoImpl uploadedResourceDao;
 
     public MultipartUploadDaoImplTest() {
     }
@@ -59,16 +57,12 @@ public class MultipartUploadDaoImplTest {
         uploadingSession.update("com.chigix.resserver.mybatis.MultipartUploadMapper.createUploadTable");
         uploadMapper = uploadingSession.getMapper(MultipartUploadMapper.class);
         BucketMapper bucketMapper = mainSession.getMapper(BucketMapper.class);
-        ChunkMapper chunkMapper = mainSession.getMapper(ChunkMapper.class);
         uploadingResourceMapper = uploadingSession.getMapper(ResourceMapper.class);
-        uploadedResourceMapper = mainSession.getMapper(ResourceMapper.class);
         uploadMapper = uploadingSession.getMapper(MultipartUploadMapper.class);
         bucketDao = new BucketDaoImpl(bucketMapper);
-        uploadingResourceDao = new ResourceDaoImpl(uploadingResourceMapper, chunkMapper);
-        uploadedResourceDao = new ResourceDaoImpl(uploadedResourceMapper, chunkMapper);
-        uploadingResourceDao.setBucketDao(bucketDao);
-        uploadedResourceDao.setBucketDao(bucketDao);
-        uploadDao = new MultipartUploadDaoImpl(uploadMapper, uploadedResourceDao, uploadingResourceDao);
+        uploadDao = new MultipartUploadDaoImpl(uploadMapper,
+                new ChunkDaoImpl(mainSession.getMapper(ChunkMapper.class)),
+                uploadingResourceMapper);
     }
 
     @After
@@ -188,33 +182,35 @@ public class MultipartUploadDaoImplTest {
     }
 
     /**
-     * Test of completeUpload method, of class MultipartUploadDaoImpl.
-     */
-    @Ignore
-    @Test
-    public void testCompleteUpload() throws Exception {
-        System.out.println("completeUpload");
-        MultipartUpload upload = null;
-        MultipartUploadDaoImpl instance = null;
-        MultipartUpload expResult = null;
-        MultipartUpload result = instance.completeUpload(upload);
-        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
-    }
-
-    /**
      * Test of removeUpload method, of class MultipartUploadDaoImpl.
+     *
+     * @throws java.lang.Exception
      */
-    @Ignore
     @Test
     public void testRemoveUpload() throws Exception {
         System.out.println("removeUpload");
-        MultipartUpload upload = null;
-        MultipartUploadDaoImpl instance = null;
-        instance.removeUpload(upload);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+        final BucketBean bb = new BucketBean("TEST_BUCKET");
+        AmassedResource r = new AmassedResource("TEST_AMASSED") {
+            @Override
+            public Iterator<ChunkedResource> getSubResources() {
+                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public Bucket getBucket() throws NoSuchBucket {
+                return bb;
+            }
+        };
+        MultipartUpload[] uploads = new MultipartUpload[10];
+        for (int i = 0; i < uploads.length; i++) {
+            uploads[i] = new MultipartUpload(r);
+        }
+        for (MultipartUpload upload : uploads) {
+            uploadMapper.insert(new MultipartUploadDto(upload));
+            uploadingResourceMapper.mergeUploadingResource(new ResourceDto(r, bb), new MultipartUploadDto(upload));
+        }
+        uploadDao.removeUpload(uploads[4]);
+        uploadMapper.selectAllByBucketUuid(bb.getUuid());
     }
 
     /**
@@ -226,24 +222,24 @@ public class MultipartUploadDaoImplTest {
     public void testListUploadsByBucket() throws Exception {
         System.out.println("listUploadsByBucket");
         final BucketBean bb = bucketDao.createBucket("TEST_BUCKET");
-        AmassedResource r = new AmassedResource("TEST_AMASSEDRESOURCE") {
-            @Override
-            public Iterator<ChunkedResource> getSubResources() {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
+        MultipartUpload[] uploads = new MultipartUpload[6];
+        for (int i = 0; i < uploads.length; i++) {
+            uploads[i] = uploadDao.initiateUpload(new AmassedResource("TEST_AMASSEDRESOURCE") {
+                @Override
+                public Iterator<ChunkedResource> getSubResources() {
+                    throw new UnsupportedOperationException("Not supported yet.");
+                }
 
-            @Override
-            public Bucket getBucket() throws NoSuchBucket {
-                return bb;
-            }
-        };
-        uploadDao.initiateUpload(r);
-        uploadDao.initiateUpload(r);
-        uploadDao.initiateUpload(r);
-        uploadDao.initiateUpload(r);
-        uploadDao.initiateUpload(r);
-        uploadDao.initiateUpload(r);
-        uploadDao.listUploadsByBucket(bb);
+                @Override
+                public Bucket getBucket() throws NoSuchBucket {
+                    return bb;
+                }
+            });
+        }
+        Iterator<MultipartUpload> list = uploadDao.listUploadsByBucket(bb);
+        for (MultipartUpload upload : uploads) {
+            list.next();
+        }
     }
 
     /**
