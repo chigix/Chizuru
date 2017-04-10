@@ -43,56 +43,46 @@ public abstract class IteratorInputStream<T> extends InputStream {
 
     @Override
     public int read(byte[] b) throws IOException {
-        int read = -1;
         if (currentStream != null) {
-            int length = currentStream.read(b);
-            if (length >= b.length) {
-                return length;
+            final int read = currentStream.read(b);
+            if (read < 0) {
+                currentStream.close();
+                currentStream = null;
+                return read(b);
             }
-            read = length;
-            currentStream.close();
-            currentStream = null;
+            return read;
         }
         if (!it.hasNext()) {
-            return read;
+            return -1;
         }
         try {
             currentStream = next(it.next());
         } catch (NoSuchElementException noSuchElementException) {
             currentStream = null;
         }
-        if (read < 0) {
-            read = 0;
-        }
-        int length = currentStream.read(b, read, b.length - read);
-        return read + length;
+        return read(b);
     }
 
     @Override
     public int read(final byte[] b, final int off, final int len) throws IOException {
-        int read = -1;
         if (currentStream != null) {
-            int length = currentStream.read(b, off, len);
-            if (length >= len) {
-                return length;
+            final int read = currentStream.read(b, off, len);
+            if (read < 0) {
+                currentStream.close();
+                currentStream = null;
+                return read(b, off, len);
             }
-            read = length;
-            currentStream.close();
-            currentStream = null;
+            return read;
         }
         if (!it.hasNext()) {
-            return read;
+            return -1;
         }
         try {
             currentStream = next(it.next());
         } catch (NoSuchElementException noSuchElementException) {
             currentStream = null;
         }
-        if (read < 0) {
-            read = 0;
-        }
-        int length = currentStream.read(b, read, len - read);
-        return read + length;
+        return read(b, off, len);
     }
 
     protected abstract InputStream next(T item) throws NoSuchElementException;
