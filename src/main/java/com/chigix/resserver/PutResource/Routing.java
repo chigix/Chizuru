@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.zip.GZIPOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -170,7 +171,7 @@ public class Routing extends RoutingConfig.PUT {
                 final Chunk chunk = application.getDaoFactory().getChunkDao().newChunk(chunk_hash, chunk_content.length);
                 if (application.getDaoFactory().getChunkDao().saveChunkIfAbsent(chunk) == null
                         && CHUNK_IN_WRITING.putIfAbsent(chunk_hash, chunk) == null) {
-                    try (OutputStream out = new FileOutputStream(chunk_file)) {
+                    try (final OutputStream out = new GZIPOutputStream(new FileOutputStream(chunk_file), true)) {
                         out.write(chunk_content);
                     } catch (IOException iOException) {
                         //@TODO Unsafe if the first thread failed writing, 

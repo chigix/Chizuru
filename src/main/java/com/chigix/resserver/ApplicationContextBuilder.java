@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Map;
+import java.util.zip.GZIPInputStream;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.joda.time.DateTime;
 
@@ -91,7 +92,7 @@ public class ApplicationContextBuilder {
                                 return new Chunk((String) args[0], (int) args[1], currentNodeId) {
                             @Override
                             public InputStream getInputStream() throws IOException {
-                                return new FileInputStream(new File(chunksDir, this.getContentHash()));
+                                return new GZIPInputStream(new FileInputStream(new File(chunksDir, this.getContentHash())));
                             }
 
                         };
