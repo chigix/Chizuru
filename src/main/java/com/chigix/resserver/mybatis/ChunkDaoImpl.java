@@ -1,8 +1,8 @@
 package com.chigix.resserver.mybatis;
 
-import com.chigix.resserver.entity.Chunk;
-import com.chigix.resserver.entity.ChunkedResource;
-import com.chigix.resserver.entity.dao.ChunkDao;
+import com.chigix.resserver.domain.Chunk;
+import com.chigix.resserver.domain.ChunkedResource;
+import com.chigix.resserver.domain.dao.ChunkDao;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;

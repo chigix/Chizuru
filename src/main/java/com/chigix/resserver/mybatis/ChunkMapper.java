@@ -1,6 +1,6 @@
 package com.chigix.resserver.mybatis;
 
-import com.chigix.resserver.entity.Chunk;
+import com.chigix.resserver.domain.Chunk;
 import java.util.List;
 import java.util.Map;
 import org.apache.ibatis.annotations.Param;

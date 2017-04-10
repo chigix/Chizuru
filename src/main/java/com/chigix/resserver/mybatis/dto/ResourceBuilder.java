@@ -1,10 +1,10 @@
 package com.chigix.resserver.mybatis.dto;
 
-import com.chigix.resserver.entity.Bucket;
-import com.chigix.resserver.entity.Chunk;
-import com.chigix.resserver.entity.ChunkedResource;
-import com.chigix.resserver.entity.Resource;
-import com.chigix.resserver.entity.error.NoSuchBucket;
+import com.chigix.resserver.domain.Bucket;
+import com.chigix.resserver.domain.Chunk;
+import com.chigix.resserver.domain.ChunkedResource;
+import com.chigix.resserver.domain.Resource;
+import com.chigix.resserver.domain.error.NoSuchBucket;
 import com.chigix.resserver.mybatis.BucketDaoImpl;
 import com.chigix.resserver.mybatis.ChunkDaoImpl;
 import com.chigix.resserver.mybatis.ResourceDaoImpl;

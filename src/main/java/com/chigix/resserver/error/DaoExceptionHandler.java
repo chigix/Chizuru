@@ -1,8 +1,8 @@
 package com.chigix.resserver.error;
 
 import com.chigix.resserver.ApplicationContext;
-import com.chigix.resserver.entity.error.BucketInfo;
-import com.chigix.resserver.entity.error.DaoException;
+import com.chigix.resserver.domain.error.BucketInfo;
+import com.chigix.resserver.domain.error.DaoException;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandler;

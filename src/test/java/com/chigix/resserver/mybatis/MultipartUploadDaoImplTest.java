@@ -1,11 +1,11 @@
 package com.chigix.resserver.mybatis;
 
-import com.chigix.resserver.entity.AmassedResource;
-import com.chigix.resserver.entity.Bucket;
-import com.chigix.resserver.entity.Chunk;
-import com.chigix.resserver.entity.ChunkedResource;
-import com.chigix.resserver.entity.MultipartUpload;
-import com.chigix.resserver.entity.error.NoSuchBucket;
+import com.chigix.resserver.domain.AmassedResource;
+import com.chigix.resserver.domain.Bucket;
+import com.chigix.resserver.domain.Chunk;
+import com.chigix.resserver.domain.ChunkedResource;
+import com.chigix.resserver.domain.MultipartUpload;
+import com.chigix.resserver.domain.error.NoSuchBucket;
 import com.chigix.resserver.mybatis.bean.BucketBean;
 import com.chigix.resserver.mybatis.dto.MultipartUploadDto;
 import com.chigix.resserver.mybatis.dto.ResourceDto;

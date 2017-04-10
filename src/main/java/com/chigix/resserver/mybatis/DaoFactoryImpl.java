@@ -1,10 +1,10 @@
 package com.chigix.resserver.mybatis;
 
-import com.chigix.resserver.entity.dao.BucketDao;
-import com.chigix.resserver.entity.dao.ChunkDao;
-import com.chigix.resserver.entity.dao.DaoFactory;
-import com.chigix.resserver.entity.dao.MultipartUploadDao;
-import com.chigix.resserver.entity.dao.ResourceDao;
+import com.chigix.resserver.domain.dao.BucketDao;
+import com.chigix.resserver.domain.dao.ChunkDao;
+import com.chigix.resserver.domain.dao.DaoFactory;
+import com.chigix.resserver.domain.dao.MultipartUploadDao;
+import com.chigix.resserver.domain.dao.ResourceDao;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 

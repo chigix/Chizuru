@@ -1,6 +1,6 @@
 package com.chigix.resserver;
 
-import com.chigix.resserver.entity.dao.DaoFactory;
+import com.chigix.resserver.domain.dao.DaoFactory;
 import java.io.File;
 import org.joda.time.DateTime;
 

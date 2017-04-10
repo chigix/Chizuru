@@ -197,15 +197,15 @@ public class Application {
 
             @Override
             protected void initRoutings(ChannelHandlerContext ctx, HttpRouter router) {
-                this.newRouting(ctx, new com.chigix.resserver.GetService.Routing(application));
-                this.newRouting(ctx, new com.chigix.resserver.GetBucket.Routing(application));
-                this.newRouting(ctx, new com.chigix.resserver.HeadBucket.Routing(application));
-                this.newRouting(ctx, new com.chigix.resserver.PutBucket.Routing(application));
-                this.newRouting(ctx, new com.chigix.resserver.PostBucket.Routing(application));
-                this.newRouting(ctx, new com.chigix.resserver.DeleteBucket.Routing(application));
-                this.newRouting(ctx, new com.chigix.resserver.GetResource.Routing(application));
-                this.newRouting(ctx, new com.chigix.resserver.PutResource.Routing(application));
-                this.newRouting(ctx, new com.chigix.resserver.PostResource.Routing(application));
+                this.newRouting(ctx, new com.chigix.resserver.endpoint.GetService.Routing(application));
+                this.newRouting(ctx, new com.chigix.resserver.endpoint.GetBucket.Routing(application));
+                this.newRouting(ctx, new com.chigix.resserver.endpoint.HeadBucket.Routing(application));
+                this.newRouting(ctx, new com.chigix.resserver.endpoint.PutBucket.Routing(application));
+                this.newRouting(ctx, new com.chigix.resserver.endpoint.PostBucket.Routing(application));
+                this.newRouting(ctx, new com.chigix.resserver.endpoint.DeleteBucket.Routing(application));
+                this.newRouting(ctx, new com.chigix.resserver.endpoint.GetResource.Routing(application));
+                this.newRouting(ctx, new com.chigix.resserver.endpoint.PutResource.Routing(application));
+                this.newRouting(ctx, new com.chigix.resserver.endpoint.PostResource.Routing(application));
             }
 
         };

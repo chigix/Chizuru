@@ -1,7 +1,7 @@
 package com.chigix.resserver.mybatis;
 
-import com.chigix.resserver.entity.Chunk;
-import com.chigix.resserver.entity.ChunkedResource;
+import com.chigix.resserver.domain.Chunk;
+import com.chigix.resserver.domain.ChunkedResource;
 import com.chigix.resserver.mybatis.bean.ChunkedResourceBean;
 import java.io.IOException;
 import java.util.HashMap;

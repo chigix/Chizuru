@@ -1,6 +1,6 @@
 package com.chigix.resserver.mybatis.bean;
 
-import com.chigix.resserver.entity.Bucket;
+import com.chigix.resserver.domain.Bucket;
 import java.util.UUID;
 import org.joda.time.DateTime;
 

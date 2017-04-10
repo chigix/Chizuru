@@ -1,6 +1,6 @@
 package com.chigix.resserver.mybatis;
 
-import com.chigix.resserver.entity.Resource;
+import com.chigix.resserver.domain.Resource;
 import com.chigix.resserver.mybatis.dto.MultipartUploadDto;
 import com.chigix.resserver.mybatis.dto.ResourceBuilder;
 import com.chigix.resserver.mybatis.dto.ResourceDto;

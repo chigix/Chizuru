@@ -1,8 +1,8 @@
 package com.chigix.resserver;
 
-import com.chigix.resserver.entity.Chunk;
-import com.chigix.resserver.entity.dao.ChunkDao;
-import com.chigix.resserver.entity.dao.DaoFactory;
+import com.chigix.resserver.domain.Chunk;
+import com.chigix.resserver.domain.dao.ChunkDao;
+import com.chigix.resserver.domain.dao.DaoFactory;
 import com.chigix.resserver.mybatis.ChunkDaoImpl;
 import com.chigix.resserver.mybatis.DaoFactoryImpl;
 import java.io.File;

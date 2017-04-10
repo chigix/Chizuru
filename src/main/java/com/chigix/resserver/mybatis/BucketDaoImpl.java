@@ -1,10 +1,10 @@
 package com.chigix.resserver.mybatis;
 
-import com.chigix.resserver.entity.Bucket;
-import com.chigix.resserver.entity.dao.BucketDao;
-import com.chigix.resserver.entity.error.BucketAlreadyExists;
-import com.chigix.resserver.entity.error.BucketAlreadyOwnedByYou;
-import com.chigix.resserver.entity.error.NoSuchBucket;
+import com.chigix.resserver.domain.Bucket;
+import com.chigix.resserver.domain.dao.BucketDao;
+import com.chigix.resserver.domain.error.BucketAlreadyExists;
+import com.chigix.resserver.domain.error.BucketAlreadyOwnedByYou;
+import com.chigix.resserver.domain.error.NoSuchBucket;
 import com.chigix.resserver.mybatis.bean.BucketBean;
 import java.util.Iterator;
 import java.util.Map;

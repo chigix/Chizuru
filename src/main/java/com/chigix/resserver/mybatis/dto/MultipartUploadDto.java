@@ -1,8 +1,8 @@
 package com.chigix.resserver.mybatis.dto;
 
-import com.chigix.resserver.entity.AmassedResource;
-import com.chigix.resserver.entity.MultipartUpload;
-import com.chigix.resserver.entity.error.NoSuchBucket;
+import com.chigix.resserver.domain.AmassedResource;
+import com.chigix.resserver.domain.MultipartUpload;
+import com.chigix.resserver.domain.error.NoSuchBucket;
 import com.chigix.resserver.mybatis.bean.BucketBean;
 import com.chigix.resserver.mybatis.bean.ResourceExtension;
 import java.security.InvalidParameterException;

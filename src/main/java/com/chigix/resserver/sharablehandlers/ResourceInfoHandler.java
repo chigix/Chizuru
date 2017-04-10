@@ -1,9 +1,9 @@
 package com.chigix.resserver.sharablehandlers;
 
 import com.chigix.resserver.ApplicationContext;
-import com.chigix.resserver.entity.Bucket;
-import com.chigix.resserver.entity.Resource;
-import com.chigix.resserver.entity.error.NoSuchKey;
+import com.chigix.resserver.domain.Bucket;
+import com.chigix.resserver.domain.Resource;
+import com.chigix.resserver.domain.error.NoSuchKey;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;

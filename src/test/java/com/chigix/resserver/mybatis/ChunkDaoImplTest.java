@@ -1,6 +1,6 @@
 package com.chigix.resserver.mybatis;
 
-import com.chigix.resserver.entity.Chunk;
+import com.chigix.resserver.domain.Chunk;
 import java.io.IOException;
 import org.apache.ibatis.session.SqlSession;
 import org.junit.After;

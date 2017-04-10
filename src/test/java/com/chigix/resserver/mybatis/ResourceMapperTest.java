@@ -1,6 +1,6 @@
 package com.chigix.resserver.mybatis;
 
-import com.chigix.resserver.entity.error.NoSuchBucket;
+import com.chigix.resserver.domain.error.NoSuchBucket;
 import com.chigix.resserver.mybatis.bean.AmassedResourceBean;
 import com.chigix.resserver.mybatis.bean.BucketBean;
 import com.chigix.resserver.mybatis.bean.ChunkedResourceBean;

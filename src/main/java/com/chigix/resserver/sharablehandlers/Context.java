@@ -1,7 +1,7 @@
 package com.chigix.resserver.sharablehandlers;
 
-import com.chigix.resserver.entity.Bucket;
-import com.chigix.resserver.entity.Resource;
+import com.chigix.resserver.domain.Bucket;
+import com.chigix.resserver.domain.Resource;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.QueryStringDecoder;
