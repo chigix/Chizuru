@@ -206,6 +206,7 @@ public class Application {
                 this.newRouting(ctx, new com.chigix.resserver.endpoint.GetResource.Routing(application));
                 this.newRouting(ctx, new com.chigix.resserver.endpoint.PutResource.Routing(application));
                 this.newRouting(ctx, new com.chigix.resserver.endpoint.PostResource.Routing(application));
+                this.newRouting(ctx, new com.chigix.resserver.endpoint.DeleteResource.Routing(application));
             }
 
         };
