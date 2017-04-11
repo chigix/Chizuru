@@ -10,6 +10,7 @@ import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import io.netty.handler.codec.http.router.HttpRouted;
 import io.netty.handler.codec.http.router.RoutingConfig;
+import io.netty.handler.codec.http.router.exceptions.NotFoundException;
 import io.netty.handler.routing.DefaultExceptionForwarder;
 import io.netty.handler.routing.Router;
 import io.netty.handler.stream.ChunkedWriteHandler;
@@ -75,6 +76,9 @@ public class Routing extends RoutingConfig.GET {
                 } else if (decoder.parameters().get("uploads") != null) {
                     LOG.debug(ROUTING_NAME + ":LIST_UPLOADS");
                     this.pipelineForward(routingPipelines.get(ROUTING_NAME + ":LIST_UPLOADS"), routing_ctx);
+                } else if (decoder.parameters().get("acl") != null) {
+                    LOG.debug(ROUTING_NAME + ":GET_BUCKET_ACL");
+                    throw new NotFoundException("GET_BUCKET_ACL-->NOT supported", routing_ctx.getRoutedInfo());
                 } else {
                     LOG.debug(ROUTING_NAME + ":RESOURCE_LIST");
                     this.pipelineForward(routingPipelines.get(ROUTING_NAME + ":RESOURCE_LIST"), routing_ctx);
