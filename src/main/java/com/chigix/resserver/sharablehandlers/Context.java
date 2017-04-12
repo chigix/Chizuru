@@ -46,6 +46,19 @@ public class Context {
         if (content_type != null) {
             resource.setMetaData("Content-Type", content_type);
         }
+        String cache_control = routedInfo.getRequestMsg().headers().getAndConvert(HttpHeaderNames.CACHE_CONTROL);
+        if (cache_control != null) {
+            resource.setMetaData("Cache-Control", cache_control);
+        }
+        String content_disp = routedInfo.getRequestMsg().headers().getAndConvert(HttpHeaderNames.CONTENT_DISPOSITION);
+        if (content_disp != null) {
+            resource.setMetaData("Content-Disposition", content_disp);
+        }
+        String content_enc = routedInfo.getRequestMsg().headers().getAndConvert(HttpHeaderNames.CONTENT_ENCODING);
+        if (content_enc != null) {
+            resource.setMetaData("Content-Encoding", content_enc);
+        }
+        //@TODO: discuss later whether content-length is needed to extract.
     }
 
     public HttpRouted getRoutedInfo() {
