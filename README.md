@@ -32,3 +32,8 @@ Currently, supported Configuration options for Chizuru Server Component are:
 
 * There are amazon signature testing materials included in the testing package, downloading from [Signature Version 4 Test Suite](https://docs.aws.amazon.com/ja_jp/general/latest/gr/signature-v4-test-suite.html).
 * There is a list as a proposals related to the problems of design on this component, as a scatch version of best practice in the future.
+
+# Recommended S3 compatible Client Application
+
+* [S3 Browser](http://s3browser.com/)
+* [CloudBerry Explorer](https://www.cloudberrylab.com/explorer/amazon-s3.aspx)
