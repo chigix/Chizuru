@@ -7,6 +7,7 @@ import com.chigix.resserver.domain.error.NoSuchKey;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.handler.codec.http.QueryStringDecoder;
 import io.netty.handler.codec.http.router.HttpRouted;
 
 /**
@@ -38,10 +39,11 @@ public class ResourceInfoHandler extends SimpleChannelInboundHandler<HttpRouted>
         try {
             r = application.getDaoFactory().getResourceDao().findResource(
                     b,
-                    (String) msg.decodedParams().get("resource_key")
+                    QueryStringDecoder.decodeComponent((String) msg.decodedParams().get("resource_key"))
             );
         } catch (NoSuchKey noSuchKey) {
-            r = new Context.UnpersistedResource(b, (String) msg.decodedParams().get("resource_key"));
+            r = new Context.UnpersistedResource(b,
+                    QueryStringDecoder.decodeComponent((String) msg.decodedParams().get("resource_key")));
         } catch (Exception ex) {
             msg.deny();
             throw ex;
