@@ -52,6 +52,21 @@ public class DaoFactoryImpl implements DaoFactory {
         return uploadSessions.get();
     }
 
+    public void closeSessions() {
+        SqlSession session = sessions.get();
+        SqlSession uploading = uploadSessions.get();
+        if (session != null) {
+            sessions.remove();
+            session.commit();
+            session.close();
+        }
+        if (uploading != null) {
+            uploadSessions.remove();
+            uploading.commit();
+            uploading.close();
+        }
+    }
+
     @Override
     public BucketDao getBucketDao() {
         if (bucketDao.get() == null) {

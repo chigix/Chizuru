@@ -5,6 +5,7 @@ import com.chigix.resserver.domain.dao.ChunkDao;
 import com.chigix.resserver.domain.dao.DaoFactory;
 import com.chigix.resserver.mybatis.ChunkDaoImpl;
 import com.chigix.resserver.mybatis.DaoFactoryImpl;
+import io.netty.handler.codec.http.router.HttpRouted;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -24,7 +25,7 @@ public class ApplicationContextBuilder {
 
     public ApplicationContext build(final Configuration conf) {
         final String request_id_header_name = Long.toHexString(Double.doubleToLongBits(Math.random()));
-        final DaoFactory dao_factory = createDaoFactory(
+        final DaoFactoryImpl dao_factory = createDaoFactory(
                 conf.getCurrentNodeId(), conf.getChunksDir(),
                 conf.getMainSession(), conf.getUploadSession());
         final Map<String, String> nodes = conf.getNodesMapping();
@@ -71,10 +72,15 @@ public class ApplicationContextBuilder {
                 nodes.put(nodeId, nodeIPAddress);
             }
 
+            @Override
+            public void finishRequest(HttpRouted routed_info) {
+                dao_factory.closeSessions();
+            }
+
         };
     }
 
-    private DaoFactory createDaoFactory(String currentNodeId, File chunksDir, SqlSessionFactory mainSession, SqlSessionFactory uploadSession) {
+    private DaoFactoryImpl createDaoFactory(String currentNodeId, File chunksDir, SqlSessionFactory mainSession, SqlSessionFactory uploadSession) {
         final ThreadLocal<ChunkDao> weavedChunkDao = new ThreadLocal<>();
         return new DaoFactoryImpl(mainSession, uploadSession) {
             @Override

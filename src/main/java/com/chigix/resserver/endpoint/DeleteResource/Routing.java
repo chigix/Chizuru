@@ -3,7 +3,6 @@ package com.chigix.resserver.endpoint.DeleteResource;
 import com.chigix.resserver.ApplicationContext;
 import com.chigix.resserver.sharablehandlers.Context;
 import com.chigix.resserver.sharablehandlers.ResourceInfoHandler;
-import io.netty.buffer.EmptyByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
@@ -53,8 +52,10 @@ public class Routing extends RoutingConfig.DELETE {
         }, new SimpleChannelInboundHandler<LastHttpContent>() {
             @Override
             protected void messageReceived(ChannelHandlerContext ctx, LastHttpContent msg) throws Exception {
+                Context routing_ctx = ctx.attr(CONTEXT).getAndRemove();
                 application.getDaoFactory().getResourceDao()
-                        .removeResource(ctx.attr(CONTEXT).getAndRemove().getResource());
+                        .removeResource(routing_ctx.getResource());
+                application.finishRequest(routing_ctx.getRoutedInfo());
                 ctx.writeAndFlush(new DefaultFullHttpResponse(HttpVersion.HTTP_1_1,
                         HttpResponseStatus.NO_CONTENT,
                         Unpooled.EMPTY_BUFFER));

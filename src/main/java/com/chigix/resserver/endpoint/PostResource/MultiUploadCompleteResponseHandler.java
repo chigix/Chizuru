@@ -69,6 +69,7 @@ class MultiUploadCompleteResponseHandler extends SimpleChannelInboundHandler<Mul
                     }
                 }
                 );
+        application.finishRequest(msg.getRoutedInfo());
     }
 
 }

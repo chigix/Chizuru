@@ -96,6 +96,7 @@ public class MultiUploadInitHandler extends SimpleChannelInboundHandler<Context>
             sb.append("<Key>").append(routing_ctx.getUpload().getResource().getKey()).append("</Key>");
             sb.append("<UploadId>").append(routing_ctx.getUpload().getUploadId()).append("</UploadId>");
             sb.append("</InitiateMultipartUploadResult>");
+            application.finishRequest(routing_ctx.getRoutedInfo());
             DefaultFullHttpResponse resp = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.copiedBuffer(sb.toString().getBytes(CharsetUtil.UTF_8)));
             resp.headers().set(HttpHeaderNames.CONTENT_TYPE, "application/xml");
             ctx.writeAndFlush(resp);

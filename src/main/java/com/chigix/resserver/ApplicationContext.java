@@ -1,6 +1,7 @@
 package com.chigix.resserver;
 
 import com.chigix.resserver.domain.dao.DaoFactory;
+import io.netty.handler.codec.http.router.HttpRouted;
 import java.io.File;
 import org.joda.time.DateTime;
 
@@ -25,5 +26,7 @@ public interface ApplicationContext {
     DaoFactory getDaoFactory();
 
     void addNode(String nodeId, String nodeIPAddress);
+
+    void finishRequest(HttpRouted routed_info);
 
 }

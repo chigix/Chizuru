@@ -56,9 +56,9 @@ public class MultiDeleteHandler extends ChannelHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         if (msg instanceof HttpRouted) {
-            Context routing_ctx = new Context();
+            Context routing_ctx = new Context((HttpRouted) msg);
             ctx.channel().attr(CONTEXT).set(routing_ctx);
-            handleRoutedInfo(routing_ctx, (HttpRouted) msg);
+            handleRoutedInfo(routing_ctx, routing_ctx.getRoutedInfo());
             ReferenceCountUtil.release(msg);
             return;
         }
@@ -120,6 +120,7 @@ public class MultiDeleteHandler extends ChannelHandlerAdapter {
             LOG.error("Unexpected", ex);
             throw new RuntimeException(ex);
         }
+        application.finishRequest(routing_ctx.getRoutedInfo());
         try {
             ctx.writeAndFlush(new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK,
                     Unpooled.copiedBuffer(response.toString().getBytes("UTF-8"))

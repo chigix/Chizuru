@@ -209,6 +209,7 @@ public class Routing extends RoutingConfig.PUT {
                 } else {
                     application.getDaoFactory().getResourceDao().saveResource(routing_ctx.getResource()); // Individual ChunkedResource
                 }
+                application.finishRequest(routing_ctx.getRoutedInfo());
                 DefaultFullHttpResponse resp = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
                 resp.headers().add(HttpHeaderNames.ETAG, routing_ctx.getResource().getETag());
                 ctx.writeAndFlush(resp);
