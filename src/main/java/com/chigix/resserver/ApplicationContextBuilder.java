@@ -3,7 +3,6 @@ package com.chigix.resserver;
 import com.chigix.resserver.domain.Chunk;
 import com.chigix.resserver.domain.dao.ChunkDao;
 import com.chigix.resserver.domain.dao.DaoFactory;
-import com.chigix.resserver.mybatis.ChunkDaoImpl;
 import com.chigix.resserver.mybatis.DaoFactoryImpl;
 import io.netty.handler.codec.http.router.HttpRouted;
 import java.io.File;
@@ -94,29 +93,28 @@ public class ApplicationContextBuilder {
         return new DaoFactoryImpl(mainSession, uploadSession) {
             @Override
             public ChunkDao getChunkDao() {
-                if (weavedChunkDao.get() == null) {
-                    final ChunkDaoImpl dao = (ChunkDaoImpl) super.getChunkDao();
-                    weavedChunkDao.set((ChunkDao) Proxy.newProxyInstance(dao.getClass().getClassLoader(), dao.getClass().getInterfaces(),
-                            (Object proxy, Method method, Object[] args) -> {
-                                // TODO: check if it possible:  ChunkDao instance = (ChunkDao) proxy;
-                                ChunkDao instance = dao;
-                                if (!method.getName().equals("newChunk")) {
-                                    return method.invoke(instance, args);
-                                }
-
-                                return new Chunk((String) args[0], (int) args[1], currentNodeId) {
-                            @Override
-                            public InputStream getInputStream() throws IOException {
-                                return new GZIPInputStream(new FileInputStream(new File(chunksDir, this.getContentHash())));
+                final ChunkDao to_proxy = super.getChunkDao();
+                if (weavedChunkDao.get() == to_proxy) {
+                    return to_proxy;
+                }
+                weavedChunkDao.set(to_proxy);
+                return (ChunkDao) Proxy.newProxyInstance(to_proxy.getClass().getClassLoader(), to_proxy.getClass().getInterfaces(),
+                        (Object proxy, Method method, Object[] args) -> {
+                            // TODO: check if it possible:  ChunkDao instance = (ChunkDao) proxy;
+                            ChunkDao instance = to_proxy;
+                            if (!method.getName().equals("newChunk")) {
+                                return method.invoke(instance, args);
                             }
 
-                        };
+                            return new Chunk((String) args[0], (int) args[1], currentNodeId) {
+                        @Override
+                        public InputStream getInputStream() throws IOException {
+                            return new GZIPInputStream(new FileInputStream(new File(chunksDir, this.getContentHash())));
+                        }
 
-                            })
-                    );
-                    dao.setAspectForNewChunk(weavedChunkDao.get());
-                }
-                return weavedChunkDao.get();
+                    };
+                        });
+
             }
 
         };
