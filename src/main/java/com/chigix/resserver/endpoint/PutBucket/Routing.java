@@ -46,6 +46,7 @@ public class Routing extends RoutingConfig.PUT {
                 Bucket bucket = application.getDaoFactory().getBucketDao().createBucket((String) msg.decodedParams().get("bucketName"));
                 DefaultFullHttpResponse resp = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
                 resp.headers().add(HttpHeaderNames.LOCATION, "/" + bucket.getName());
+                application.finishRequest(msg);
                 ctx.writeAndFlush(resp);
             }
 
