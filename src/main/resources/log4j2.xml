@@ -14,7 +14,19 @@ file that was distributed with this source code.
         </Console>
     </Appenders>
     <Loggers>
-        <Root level="trace">
+        <Logger name="com.chigix.resserver." level="debug" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="com.chigix.resserver.mybatis" level="info" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="io.netty.handler.codec.http.router" level="debug" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="io.netty.handler.routing" level="debug" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Root level="info">
             <AppenderRef ref="Console"/>
         </Root>
     </Loggers>
