@@ -52,6 +52,7 @@ public class Application {
 
     public static void main(String[] args) throws InterruptedException {
         ApplicationContext app_ctx = initNode();
+        LOG.info(app_ctx.getChizuruVersion());
         LOG.info("NODE ID: " + app_ctx.getCurrentNodeId());
         LOG.info("Created At: " + app_ctx.getCreationDate());
         // @TODO: support Capacity for fixed Thread pool configure from command line.

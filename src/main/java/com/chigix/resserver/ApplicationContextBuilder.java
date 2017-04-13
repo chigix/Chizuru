@@ -77,6 +77,15 @@ public class ApplicationContextBuilder {
                 dao_factory.closeSessions();
             }
 
+            @Override
+            public String getChizuruVersion() {
+                String version = Application.class.getPackage().getImplementationVersion();
+                if (version != null) {
+                    return version;
+                }
+                return "master";
+            }
+
         };
     }
 

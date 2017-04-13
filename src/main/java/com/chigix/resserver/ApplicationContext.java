@@ -11,6 +11,8 @@ import org.joda.time.DateTime;
  */
 public interface ApplicationContext {
 
+    String getChizuruVersion();
+
     File getChunksDir();
 
     DateTime getCreationDate();
