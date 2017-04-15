@@ -35,7 +35,12 @@ public class ExceptionHandler extends SimpleHttpExceptionHandler {
 
     @Override
     protected void messageReceived(ChannelHandlerContext ctx, HttpException msg) throws Exception {
-        LOG.error(msg.getMessage(), msg.getCause());
+        String method = "";
+        try {
+            method = msg.getHttpRequest().method().toString();
+        } catch (Exception e) {
+        }
+        LOG.error(msg.getMessage() + "[" + method + "]", msg.getCause());
         super.messageReceived(ctx, msg);
     }
 
