@@ -229,6 +229,14 @@ public class ResourceListHandler extends SimpleChannelInboundHandler<Context> {
         writer.writeStartElement("StorageClass");
         writer.writeCharacters(res.getStorageClass());
         writer.writeEndElement();//StorageClass
+        writer.writeStartElement("Owner");
+        writer.writeStartElement("DisplayName");
+        writer.writeCharacters("CHIGIX");
+        writer.writeEndElement();//Owner.DisplayName 
+        writer.writeStartElement("ID");
+        writer.writeCharacters("CHIZURU");
+        writer.writeEndElement();//Owner.ID 
+        writer.writeEndElement();//Owner
         writer.writeEndElement();
     }
 
