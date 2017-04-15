@@ -73,7 +73,7 @@ public class Routing extends RoutingConfig.PUT {
 
     @Override
     public String configurePath() {
-        return "/:bucketName/:resource_key";
+        return ResourceInfoHandler.ROUTING_PATH;
     }
 
     @Override

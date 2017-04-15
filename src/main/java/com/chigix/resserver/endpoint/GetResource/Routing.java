@@ -1,6 +1,7 @@
 package com.chigix.resserver.endpoint.GetResource;
 
 import com.chigix.resserver.ApplicationContext;
+import com.chigix.resserver.endpoint.HeadResource.HeadResponseHandler;
 import com.chigix.resserver.sharablehandlers.Context;
 import com.chigix.resserver.sharablehandlers.ResourceInfoHandler;
 import io.netty.channel.ChannelHandlerAdapter;
@@ -38,7 +39,7 @@ public class Routing extends RoutingConfig.GET {
 
     @Override
     public String configurePath() {
-        return "/:bucketName/:resource_key";
+        return ResourceInfoHandler.ROUTING_PATH;
     }
 
     @Override
@@ -69,6 +70,7 @@ public class Routing extends RoutingConfig.GET {
             @Override
             protected void initRouter(ChannelHandlerContext ctx) throws Exception {
                 this.newRouting(ctx, "GET_RESOURCE_CONTENT").addLast(
+                        HeadResponseHandler.getInstance(application),
                         ContentResponseHandler.getInstance(application),
                         new DefaultExceptionForwarder());
                 this.newRouting(ctx, "GET_RESOURCE_ACL").addLast(

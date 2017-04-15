@@ -205,6 +205,7 @@ public class Application {
                 this.newRouting(ctx, new com.chigix.resserver.endpoint.PostBucket.Routing(application));
                 this.newRouting(ctx, new com.chigix.resserver.endpoint.DeleteBucket.Routing(application));
                 this.newRouting(ctx, new com.chigix.resserver.endpoint.GetResource.Routing(application));
+                this.newRouting(ctx, new com.chigix.resserver.endpoint.HeadResource.Routing(application));
                 this.newRouting(ctx, new com.chigix.resserver.endpoint.PutResource.Routing(application));
                 this.newRouting(ctx, new com.chigix.resserver.endpoint.PostResource.Routing(application));
                 this.newRouting(ctx, new com.chigix.resserver.endpoint.DeleteResource.Routing(application));

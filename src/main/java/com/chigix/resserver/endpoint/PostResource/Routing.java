@@ -54,7 +54,7 @@ public class Routing extends RoutingConfig.POST {
 
     @Override
     public String configurePath() {
-        return "/:bucketName/:resource_key";
+        return ResourceInfoHandler.ROUTING_PATH;
     }
 
     @Override

@@ -17,6 +17,8 @@ import io.netty.handler.codec.http.router.HttpRouted;
 @ChannelHandler.Sharable
 public class ResourceInfoHandler extends SimpleChannelInboundHandler<HttpRouted> {
 
+    public static final String ROUTING_PATH = "/:bucketName/:resource_key";
+
     private static ResourceInfoHandler INSTANCE = null;
 
     private final ApplicationContext application;
