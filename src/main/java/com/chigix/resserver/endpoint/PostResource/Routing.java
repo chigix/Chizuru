@@ -61,7 +61,7 @@ public class Routing extends RoutingConfig.POST {
     public void configurePipeline(ChannelPipeline pipeline) {
         final DefaultExceptionForwarder forwarder = new DefaultExceptionForwarder();
         pipeline.addLast(ResourceInfoHandler.getInstance(application),
-                new SimpleCycleRouter<Context, LastHttpContent>() {
+                new SimpleCycleRouter<Context, LastHttpContent>(false, "PostResourceParamRouter") {
             @Override
             protected ChannelPipeline routeBegin(ChannelHandlerContext ctx, Context msg, Map<String, ChannelPipeline> routingPipelines) throws Exception {
                 QueryStringDecoder decoder = new QueryStringDecoder(msg.getRoutedInfo().getRequestMsg().uri());
@@ -78,7 +78,6 @@ public class Routing extends RoutingConfig.POST {
 
             @Override
             protected boolean routeEnd(ChannelHandlerContext ctx, LastHttpContent msg) throws Exception {
-                msg.retain();
                 return true;
             }
 

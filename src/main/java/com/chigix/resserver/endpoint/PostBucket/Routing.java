@@ -37,7 +37,7 @@ public class Routing extends RoutingConfig.POST {
 
     @Override
     public void configurePipeline(ChannelPipeline pipeline) {
-        pipeline.addLast(new SimpleCycleRouter<HttpRouted, LastHttpContent>() {
+        pipeline.addLast(new SimpleCycleRouter<HttpRouted, LastHttpContent>(false, "PostBucketParamRouter") {
 
             @Override
             protected void initRouter(ChannelHandlerContext ctx) throws Exception {

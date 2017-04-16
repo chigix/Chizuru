@@ -6,6 +6,7 @@ import com.chigix.resserver.error.UnwrappedExceptionHandler;
 import com.chigix.resserver.mybatis.ChizuruMapper;
 import com.chigix.resserver.mybatis.dto.ApplicationContextDto;
 import io.netty.bootstrap.ServerBootstrap;
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerAdapter;
@@ -23,6 +24,7 @@ import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseEncoder;
 import io.netty.handler.codec.http.router.FullResponseLengthFixer;
 import io.netty.handler.codec.http.router.HttpRouter;
+import io.netty.util.CharsetUtil;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -67,8 +69,8 @@ public class Application {
                         ch.pipeline().addLast(new ChannelHandlerAdapter() {
                             @Override
                             public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-                                // ByteBuf bytebuf = (ByteBuf) msg;
-                                // System.out.println(bytebuf.toString(CharsetUtil.UTF_8));
+//                                ByteBuf bytebuf = (ByteBuf) msg;
+//                                System.out.println(bytebuf.toString(CharsetUtil.UTF_8));
                                 super.channelRead(ctx, msg);
                             }
 
