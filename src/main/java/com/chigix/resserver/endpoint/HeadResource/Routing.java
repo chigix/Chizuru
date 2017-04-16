@@ -2,6 +2,7 @@ package com.chigix.resserver.endpoint.HeadResource;
 
 import com.chigix.resserver.ApplicationContext;
 import com.chigix.resserver.sharablehandlers.Context;
+import com.chigix.resserver.sharablehandlers.FlushChannelHandler;
 import com.chigix.resserver.sharablehandlers.ResourceInfoHandler;
 import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.channel.ChannelHandlerContext;
@@ -53,7 +54,8 @@ public class Routing extends RoutingConfig.HEAD {
                 super.channelRead(ctx, msg);
             }
 
-        }, HeadResponseHandler.getInstance(application));
+        }, HeadResponseHandler.getInstance(application),
+                FlushChannelHandler.DEFAULT);
     }
 
 }
