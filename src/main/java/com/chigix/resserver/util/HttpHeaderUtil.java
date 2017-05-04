@@ -1,6 +1,5 @@
 package com.chigix.resserver.util;
 
-import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpRequest;
 
 /**
