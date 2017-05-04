@@ -5,8 +5,8 @@ import com.chigix.resserver.error.ExceptionHandler;
 import com.chigix.resserver.error.UnwrappedExceptionHandler;
 import com.chigix.resserver.mybatis.ChizuruMapper;
 import com.chigix.resserver.mybatis.dto.ApplicationContextDto;
+import com.chigix.resserver.util.HttpHeaderNames;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerAdapter;
@@ -17,14 +17,13 @@ import io.netty.channel.ChannelPromise;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpRequestDecoder;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseEncoder;
 import io.netty.handler.codec.http.router.FullResponseLengthFixer;
 import io.netty.handler.codec.http.router.HttpRouter;
-import io.netty.util.CharsetUtil;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -158,7 +157,10 @@ public class Application {
             public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
                 if (msg instanceof HttpResponse) {
                     HttpResponse resp = (HttpResponse) msg;
-                    resp.headers().set(HttpHeaderNames.CONNECTION, ctx.channel().isOpen() ? "open" : "close");
+                    HttpHeaders headers = resp.headers();
+                    if (!headers.contains(HttpHeaderNames.CONNECTION)) {
+                        resp.headers().set(HttpHeaderNames.CONNECTION, ctx.channel().isOpen() ? "open" : "close");
+                    }
                     resp.headers().set(HttpHeaderNames.DATE, new DateTime(DateTimeZone.forID("GMT")).toString("E, dd MMM yyyy HH:mm:ss z", Locale.US));
                     resp.headers().set(HttpHeaderNames.SERVER, "Chizuru");
                 }

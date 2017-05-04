@@ -1,8 +1,8 @@
 package com.chigix.resserver.endpoint.HeadResource;
 
 import com.chigix.resserver.ApplicationContext;
+import com.chigix.resserver.sharablehandlers.CloseChannelInReadHandler;
 import com.chigix.resserver.sharablehandlers.Context;
-import com.chigix.resserver.sharablehandlers.FlushChannelHandler;
 import com.chigix.resserver.sharablehandlers.ResourceInfoHandler;
 import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.channel.ChannelHandlerContext;
@@ -41,6 +41,7 @@ public class Routing extends RoutingConfig.HEAD {
     @Override
     public void configurePipeline(ChannelPipeline pipeline) {
         pipeline.addLast(ResourceInfoHandler.getInstance(application),
+                RespHeaderFixer.DEFAULT,
                 new ChannelHandlerAdapter() {
             @Override
             public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
@@ -54,8 +55,10 @@ public class Routing extends RoutingConfig.HEAD {
                 super.channelRead(ctx, msg);
             }
 
-        }, HeadResponseHandler.getInstance(application),
-                FlushChannelHandler.DEFAULT);
+        },
+                HeadResponseHandler.getInstance(application),
+                CloseChannelInReadHandler.DEFAULT
+        );
     }
 
 }
