@@ -1,17 +1,17 @@
 package com.chigix.resserver.endpoint.GetResource;
 
 import com.chigix.resserver.ApplicationContext;
+import com.chigix.resserver.domain.error.NoSuchKey;
 import com.chigix.resserver.endpoint.HeadResource.HeadResponseHandler;
 import com.chigix.resserver.sharablehandlers.Context;
 import com.chigix.resserver.sharablehandlers.ResourceInfoHandler;
 import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
-import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.handler.codec.http.router.RoutingConfig;
 import io.netty.handler.routing.DefaultExceptionForwarder;
-import io.netty.handler.routing.Router;
+import io.netty.handler.routing.SimpleCycleRouter;
 import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.util.AttributeKey;
 import java.util.List;
@@ -47,24 +47,24 @@ public class Routing extends RoutingConfig.GET {
         final DefaultExceptionForwarder exception_fwd = new DefaultExceptionForwarder();
         pipeline.addLast(new ChunkedWriteHandler(),
                 ResourceInfoHandler.getInstance(application),
-                new SimpleChannelInboundHandler<Context>() {
+                new SimpleCycleRouter<Context, LastHttpContent>(false, "GetResourceParamRouter") {
             @Override
-            protected void messageReceived(ChannelHandlerContext ctx, Context msg) throws Exception {
-                ctx.attr(ROUTING_CTX).set(msg);
-            }
-        }, new Router(true, "GET_RESOURCE_ROUTER") {
-            @Override
-            protected void route(ChannelHandlerContext ctx, Object msg, Map<String, ChannelPipeline> routingPipelines) throws Exception {
-                if (!(msg instanceof LastHttpContent)) {
-                    return;
+            protected ChannelPipeline routeBegin(ChannelHandlerContext ctx, Context routing_ctx, Map<String, ChannelPipeline> routingPipelines) throws Exception {
+                if (routing_ctx.getResource() instanceof Context.UnpersistedResource) {
+                    routing_ctx.getRoutedInfo().deny();
+                    throw new NoSuchKey(routing_ctx.getResource().getKey());
                 }
-                Context routing_ctx = ctx.attr(ROUTING_CTX).getAndRemove();
                 Map<String, List<String>> queries = routing_ctx.getQueryDecoder().parameters();
                 if (queries.get("acl") != null) {
-                    pipelineForward(routingPipelines.get("GET_RESOURCE_ACL"), routing_ctx);
+                    return routingPipelines.get("GET_RESOURCE_ACL");
                 } else {
-                    pipelineForward(routingPipelines.get("GET_RESOURCE_CONTENT"), routing_ctx);
+                    return routingPipelines.get("GET_RESOURCE_CONTENT");
                 }
+            }
+
+            @Override
+            protected boolean routeEnd(ChannelHandlerContext ctx, LastHttpContent msg) throws Exception {
+                return true;
             }
 
             @Override
@@ -83,7 +83,7 @@ public class Routing extends RoutingConfig.GET {
                 pipeline.addLast(new ChannelHandlerAdapter() {
                     @Override
                     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-                        exception_fwd.channelRead(ctx, msg);
+                        exception_fwd.exceptionCaught(ctx, (Throwable) msg);
                     }
 
                 });

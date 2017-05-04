@@ -2,6 +2,7 @@ package com.chigix.resserver.endpoint.GetResource;
 
 import com.chigix.resserver.ApplicationContext;
 import com.chigix.resserver.sharablehandlers.Context;
+import com.chigix.resserver.util.HttpHeaderNames;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -49,9 +50,11 @@ public class AclHandler extends SimpleChannelInboundHandler<Context> {
                 .append("</Grantee>")
                 .append("<Permission>FULL_CONTROL</Permission></Grant></AccessControlList>");
         sb.append("</AccessControlPolicy>");
-        ctx.writeAndFlush(new DefaultFullHttpResponse(
+        DefaultFullHttpResponse resp = new DefaultFullHttpResponse(
                 HttpVersion.HTTP_1_1, HttpResponseStatus.OK,
-                Unpooled.copiedBuffer(sb.toString().getBytes(CharsetUtil.UTF_8))));
+                Unpooled.copiedBuffer(sb.toString().getBytes(CharsetUtil.UTF_8)));
+        resp.headers().set(HttpHeaderNames.CONTENT_TYPE, "application/xml");
+        ctx.writeAndFlush(resp);
     }
 
 }
