@@ -9,6 +9,7 @@ import io.netty.handler.codec.http.router.HttpRouted;
 import java.security.InvalidParameterException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  *
@@ -28,6 +29,8 @@ public class Context {
 
     private final QueryStringDecoder queryDecoder;
 
+    private final AtomicInteger chunkCounter;
+
     public Context(HttpRouted routedInfo, Resource resource) {
         try {
             this.etagDigest = MessageDigest.getInstance("MD5");
@@ -42,6 +45,7 @@ public class Context {
         this.routedInfo = routedInfo;
         this.resource = resource;
         this.queryDecoder = new QueryStringDecoder(routedInfo.getRequestMsg().uri());
+        chunkCounter = new AtomicInteger();
         String content_type = routedInfo.getRequestMsg().headers().getAndConvert(HttpHeaderNames.CONTENT_TYPE);
         if (content_type != null) {
             resource.setMetaData("Content-Type", content_type);
@@ -94,6 +98,10 @@ public class Context {
 
     public void setCachingChunkBuf(ByteBuf cachingChunkBuf) {
         this.cachingChunkBuf = cachingChunkBuf;
+    }
+
+    public AtomicInteger getChunkCounter() {
+        return chunkCounter;
     }
 
     public void copyTo(Context target) {

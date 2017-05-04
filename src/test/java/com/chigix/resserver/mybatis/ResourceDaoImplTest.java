@@ -238,7 +238,7 @@ public class ResourceDaoImplTest {
     }
 
     /**
-     * Test of appendChunk method, of class ResourceDaoImpl.
+     * Test of putChunk method, of class ResourceDaoImpl.
      */
     @Ignore
     @Test
@@ -247,7 +247,7 @@ public class ResourceDaoImplTest {
         ChunkedResource r = null;
         Chunk c = null;
         ResourceDaoImpl instance = null;
-        instance.appendChunk(r, c);
+        instance.putChunk(r, c, 0);
         // TODO review the generated test code and remove the default call to fail.
         fail("The test case is a prototype.");
     }

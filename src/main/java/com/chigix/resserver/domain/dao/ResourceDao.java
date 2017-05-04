@@ -26,6 +26,6 @@ public interface ResourceDao {
 
     void removeResource(Resource resource) throws NoSuchKey, NoSuchBucket;
 
-    void appendChunk(ChunkedResource r, Chunk c);
+    void putChunk(ChunkedResource r, Chunk c, int chunkIndex);
 
 }

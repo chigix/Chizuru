@@ -174,8 +174,10 @@ public class InputResourceRouting {
                     CHUNK_IN_WRITING.remove(chunk_hash);
                 }
             }
-            application.getDaoFactory().getResourceDao().appendChunk((ChunkedResource) routing_ctx.getResource(), chunk);
-
+            application.getDaoFactory().getResourceDao().putChunk(
+                    (ChunkedResource) routing_ctx.getResource(),
+                    chunk,
+                    routing_ctx.getChunkCounter().incrementAndGet() - 1);
         }
     }
 

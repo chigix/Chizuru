@@ -176,9 +176,9 @@ public class ResourceDaoImpl implements ResourceDao {
     }
 
     @Override
-    public void appendChunk(ChunkedResource r, Chunk c) {
+    public void putChunk(ChunkedResource r, Chunk c, int chunkIndex) {
         r.setSize(new BigInteger(r.getSize()).add(new BigInteger(c.getSize() + "")).toString());
-        chunkMapper.appendChunkToVersion(r.getVersionId(), c);
+        chunkMapper.putChunkToVersion(r.getVersionId(), c, chunkIndex);
     }
 
 }

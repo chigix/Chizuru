@@ -52,14 +52,14 @@ public class ChunkMapperTest {
     }
 
     /**
-     * Test of appendChunkToVersion method, of class ChunkMapper.
+     * Test of putChunkToVersion method, of class ChunkMapper.
      */
     @Test
     public void testAppendChunkToVersion() {
         System.out.println("appendChunkToVersion");
         ChunkedResource r = new ChunkedResourceBean("TEST_KEY", "KEY_HASH");
         Chunk c = new Chunk("BANKAI", 1234, "LOCATION_ID");
-        mapper.appendChunkToVersion(r.getVersionId(), c);
+        mapper.putChunkToVersion(r.getVersionId(), c, 0);
         assertEquals(1, mapper.selectAll().size());
     }
 
@@ -72,8 +72,8 @@ public class ChunkMapperTest {
         ChunkedResource r_1 = new ChunkedResourceBean("TEST_KEY", "KEY_HASH");
         ChunkedResource r_2 = new ChunkedResourceBean("TEST_KEY", "KEY_HASH");
         Chunk c = new Chunk("CONTENT_HASH", 1234, UUID.randomUUID().toString().replace("-", ""));
-        mapper.appendChunkToVersion(r_1.getVersionId(), c);
-        mapper.appendChunkToVersion(r_2.getVersionId(), c);
+        mapper.putChunkToVersion(r_1.getVersionId(), c, 0);
+        mapper.putChunkToVersion(r_2.getVersionId(), c, 1);
         assertEquals(r_1.getVersionId(), mapper.selectFirstChunkReference("CONTENT_HASH").get("PARENT_VERSION_ID"));
     }
 
@@ -110,7 +110,7 @@ public class ChunkMapperTest {
                     for (int j = 0; j < chunks.length; j++) {
                         Chunk chunk = new Chunk(UUID.randomUUID().toString().replace("-", ""), i, location_id);
                         chunks[j] = chunk;
-                        mapper.appendChunkToVersion(resource.getVersionId(), chunk);
+                        mapper.putChunkToVersion(resource.getVersionId(), chunk, j);
                     }
                     signal_1.countDown();
                 }
@@ -127,8 +127,8 @@ public class ChunkMapperTest {
                             resources[j].getKeyHash());
                     resources[j] = resource;
                     Chunk[] chunks = resourceChunks.get(resource.getKey());
-                    for (Chunk chunk : chunks) {
-                        mapper.appendChunkToVersion(resource.getVersionId(), chunk);
+                    for (int chunk_index = 0; chunk_index < chunks.length; chunk_index++) {
+                        mapper.putChunkToVersion(resource.getVersionId(), chunks[chunk_index], chunk_index);
                     }
                     signal_2.countDown();
                 }

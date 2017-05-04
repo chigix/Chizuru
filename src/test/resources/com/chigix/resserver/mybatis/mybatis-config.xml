@@ -8,7 +8,7 @@
         <property name="username" value="Chizuru" />
     </properties>
     <typeAliases>
-        <typeAlias alias="Bucket" type="com.chigix.resserver.entity.Bucket" />
+        <typeAlias alias="Bucket" type="com.chigix.resserver.domain.Bucket" />
     </typeAliases>
     <environments default="chizuru">
         <environment id="chizuru">

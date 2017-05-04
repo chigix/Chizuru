@@ -11,7 +11,7 @@ import org.apache.ibatis.annotations.Param;
  */
 public interface ChunkMapper {
 
-    int appendChunkToVersion(@Param("versionId") String versionId, @Param("chunk") Chunk c);
+    int putChunkToVersion(@Param("versionId") String versionId, @Param("chunk") Chunk c, @Param("chunkIndex") int chunkIndex);
 
     Map<String, String> selectFirstChunkReference(@Param("contentHash") String contentHash);
 

@@ -6,9 +6,10 @@
     <select id="selectAll" resultType="java.util.Map" resultSetType="FORWARD_ONLY">
         SELECT * FROM CHUNK;
     </select>
-    <insert id="appendChunkToVersion">
-        INSERT INTO CHUNK (CONTENT_HASH, "SIZE", LOCATION_ID, PARENT_VERSION_ID) 
-        VALUES (#{ chunk.contentHash }, #{ chunk.size }, #{ chunk.locationId }, #{ versionId })
+    <insert id="putChunkToVersion">
+        MERGE INTO CHUNK (CONTENT_HASH, "SIZE", LOCATION_ID, PARENT_VERSION_ID, INDEX_IN_PARENT) 
+        KEY(PARENT_VERSION_ID, INDEX_IN_PARENT)
+        VALUES (#{ chunk.contentHash }, #{ chunk.size }, #{ chunk.locationId }, #{ versionId }, #{ chunkIndex })
     </insert>
     <select id="selectFirstChunkReference" resultType="java.util.Map">
         SELECT * FROM CHUNK WHERE CONTENT_HASH=#{contentHash} LIMIT 1;
