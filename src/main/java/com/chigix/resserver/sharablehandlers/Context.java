@@ -2,8 +2,8 @@ package com.chigix.resserver.sharablehandlers;
 
 import com.chigix.resserver.domain.Bucket;
 import com.chigix.resserver.domain.Resource;
+import com.chigix.resserver.util.HttpHeaderNames;
 import io.netty.buffer.ByteBuf;
-import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import io.netty.handler.codec.http.router.HttpRouted;
 import java.security.InvalidParameterException;

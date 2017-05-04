@@ -2,11 +2,11 @@ package com.chigix.resserver.endpoint.GetService;
 
 import com.chigix.resserver.ApplicationContext;
 import com.chigix.resserver.domain.Bucket;
+import com.chigix.resserver.util.HttpHeaderNames;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.DefaultHttpResponse;
 import io.netty.handler.codec.http.HttpChunkedInput;
-import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
