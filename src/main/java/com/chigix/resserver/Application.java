@@ -4,6 +4,7 @@ import com.chigix.resserver.error.DaoExceptionHandler;
 import com.chigix.resserver.error.ExceptionHandler;
 import com.chigix.resserver.error.UnwrappedExceptionHandler;
 import com.chigix.resserver.mybatis.ChizuruMapper;
+import com.chigix.resserver.mybatis.DaoFactoryImpl;
 import com.chigix.resserver.mybatis.dto.ApplicationContextDto;
 import com.chigix.resserver.util.HttpHeaderNames;
 import io.netty.bootstrap.ServerBootstrap;
@@ -170,6 +171,11 @@ public class Application {
             @Override
             public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
                 if (msg instanceof HttpRequest) {
+                    //@TODO Here may be performance problem, if the previous request 
+                    // in this thread have also invoked ApplicationContext#finishRequest()
+                    // Because it seems that H2Database Sql Session's commit and flush could only 
+                    // have effect in the later sessions. 
+                    ((DaoFactoryImpl) application.getDaoFactory()).closeSessions();
                     ((HttpRequest) msg).headers().add(application.getRequestIdHeaderName(), UUID.randomUUID().toString());
                 }
                 super.channelRead(ctx, msg);
