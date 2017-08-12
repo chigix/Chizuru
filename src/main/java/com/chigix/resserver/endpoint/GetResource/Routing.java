@@ -2,9 +2,10 @@ package com.chigix.resserver.endpoint.GetResource;
 
 import com.chigix.resserver.ApplicationContext;
 import com.chigix.resserver.domain.error.NoSuchKey;
-import com.chigix.resserver.endpoint.HeadResource.HeadResponseHandler;
 import com.chigix.resserver.sharablehandlers.Context;
+import com.chigix.resserver.sharablehandlers.ExtractGetResponseHandler;
 import com.chigix.resserver.sharablehandlers.ResourceInfoHandler;
+import com.chigix.resserver.sharablehandlers.ResourceRespEncoder;
 import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
@@ -46,6 +47,8 @@ public class Routing extends RoutingConfig.GET {
     public void configurePipeline(ChannelPipeline pipeline) {
         final DefaultExceptionForwarder exception_fwd = new DefaultExceptionForwarder();
         pipeline.addLast(new ChunkedWriteHandler(),
+                ResourceRespEncoder.getInstance(),
+                ExtractGetResponseHandler.getInstance(),
                 ResourceInfoHandler.getInstance(application),
                 new SimpleCycleRouter<Context, LastHttpContent>(false, "GetResourceParamRouter") {
             @Override
@@ -70,8 +73,8 @@ public class Routing extends RoutingConfig.GET {
             @Override
             protected void initRouter(ChannelHandlerContext ctx) throws Exception {
                 this.newRouting(ctx, "GET_RESOURCE_CONTENT").addLast(
-                        HeadResponseHandler.getInstance(application),
-                        ContentResponseHandler.getInstance(application),
+                        ContentRespHeaderBuildingHandler.getInstance(application),
+                        ContentStreamingHandler.getInstance(application),
                         new DefaultExceptionForwarder());
                 this.newRouting(ctx, "GET_RESOURCE_ACL").addLast(
                         AclHandler.getInstance(application),

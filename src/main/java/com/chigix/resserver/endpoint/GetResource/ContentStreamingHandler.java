@@ -21,25 +21,26 @@ import java.security.InvalidParameterException;
  * @author Richard Lea <chigix@zoho.com>
  */
 @ChannelHandler.Sharable
-public class ContentResponseHandler extends SimpleChannelInboundHandler<Context> {
+public class ContentStreamingHandler extends SimpleChannelInboundHandler<Context> {
 
-    private static ContentResponseHandler instance = null;
+    private static ContentStreamingHandler instance = null;
 
     public static final ChannelHandler getInstance(ApplicationContext app) {
         if (instance == null) {
-            instance = new ContentResponseHandler(app);
+            instance = new ContentStreamingHandler(app);
         }
         return instance;
     }
 
     private final ApplicationContext application;
 
-    public ContentResponseHandler(ApplicationContext application) {
+    public ContentStreamingHandler(ApplicationContext application) {
         this.application = application;
     }
 
     @Override
     protected void messageReceived(ChannelHandlerContext ctx, Context routing) throws Exception {
+        ctx.writeAndFlush(routing);
         ctx.write(new ChunkedStream(wrapToInputStream(routing.getResource())))
                 .addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
         ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT).addListener(ChannelFutureListener.CLOSE);

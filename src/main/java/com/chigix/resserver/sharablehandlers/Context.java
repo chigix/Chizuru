@@ -4,6 +4,10 @@ import com.chigix.resserver.domain.Bucket;
 import com.chigix.resserver.domain.Resource;
 import com.chigix.resserver.util.HttpHeaderNames;
 import io.netty.buffer.ByteBuf;
+import io.netty.handler.codec.http.DefaultHttpResponse;
+import io.netty.handler.codec.http.HttpResponse;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import io.netty.handler.codec.http.router.HttpRouted;
 import java.security.InvalidParameterException;
@@ -16,6 +20,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author Richard Lea <chigix@zoho.com>
  */
 public class Context {
+
+    private final HttpResponse resourceResp;
 
     private final HttpRouted routedInfo;
 
@@ -62,6 +68,7 @@ public class Context {
         if (content_enc != null) {
             resource.setMetaData("Content-Encoding", content_enc);
         }
+        resourceResp = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
         //@TODO: discuss later whether content-length is needed to extract.
     }
 
@@ -102,6 +109,10 @@ public class Context {
 
     public AtomicInteger getChunkCounter() {
         return chunkCounter;
+    }
+
+    public HttpResponse getResourceResp() {
+        return resourceResp;
     }
 
     public void copyTo(Context target) {
