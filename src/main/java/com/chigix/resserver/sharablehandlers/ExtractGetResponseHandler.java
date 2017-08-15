@@ -3,10 +3,11 @@ package com.chigix.resserver.sharablehandlers;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.handler.codec.http.router.HttpRouted;
 import io.netty.util.AttributeKey;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -15,6 +16,13 @@ import java.util.UUID;
  */
 @ChannelHandler.Sharable
 public class ExtractGetResponseHandler extends ChannelHandlerAdapter {
+
+    private static final Map<String, Object> SUPPORTED_METHODS = new HashMap<>();
+
+    static {
+        SUPPORTED_METHODS.put("GET", "GET");
+        SUPPORTED_METHODS.put("HEAD", "HEAD");
+    }
 
     private static ExtractGetResponseHandler instance = null;
 
@@ -30,7 +38,8 @@ public class ExtractGetResponseHandler extends ChannelHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        if (msg instanceof HttpRouted && ((HttpRouted) msg).getRequestMsg().method().equals(HttpMethod.GET)) {
+        if (msg instanceof HttpRouted && SUPPORTED_METHODS.get(
+                ((HttpRouted) msg).getRequestMsg().method().toString()) != null) {
             ctx.attr(EXTRACTED_ROUTED_INFO).set((HttpRouted) msg);
             return;
         }

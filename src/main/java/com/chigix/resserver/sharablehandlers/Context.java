@@ -37,7 +37,7 @@ public class Context {
 
     private final AtomicInteger chunkCounter;
 
-    public Context(HttpRouted routedInfo, Resource resource) {
+    private Context(HttpRouted routedInfo, Resource resource, HttpResponse httpresp) {
         try {
             this.etagDigest = MessageDigest.getInstance("MD5");
         } catch (NoSuchAlgorithmException ex) {
@@ -68,11 +68,20 @@ public class Context {
         if (content_enc != null) {
             resource.setMetaData("Content-Encoding", content_enc);
         }
-        resourceResp = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
+        resourceResp = httpresp;
         //@TODO: discuss later whether content-length is needed to extract.
     }
 
-    public HttpRouted getRoutedInfo() {
+    public Context(HttpRouted routedInfo, Resource resource) {
+        this(routedInfo, resource, new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK));
+    }
+
+    public Context(Context src) {
+        this(src.routedInfo, src.resource, src.getResourceResp());
+        this.cachingChunkBuf = src.cachingChunkBuf;
+    }
+
+    public final HttpRouted getRoutedInfo() {
         return routedInfo;
     }
 
@@ -84,7 +93,13 @@ public class Context {
         return resource;
     }
 
-    public void setResource(Resource resource) {
+    /**
+     * @todo remove all reference on this method and use the new decorating
+     * constructor.
+     * @deprecated
+     * @param resource
+     */
+    public final void setResource(Resource resource) {
         if (resource == null) {
             throw new InvalidParameterException();
         }
@@ -103,7 +118,7 @@ public class Context {
         return cachingChunkBuf;
     }
 
-    public void setCachingChunkBuf(ByteBuf cachingChunkBuf) {
+    public final void setCachingChunkBuf(ByteBuf cachingChunkBuf) {
         this.cachingChunkBuf = cachingChunkBuf;
     }
 
@@ -116,8 +131,8 @@ public class Context {
     }
 
     public void copyTo(Context target) {
-        target.setCachingChunkBuf(cachingChunkBuf);
-        target.setResource(resource);
+        target.cachingChunkBuf = this.cachingChunkBuf;
+        target.resource = this.resource;
     }
 
     public static class UnpersistedResource extends Resource {
