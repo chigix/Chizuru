@@ -31,4 +31,30 @@ public class AmassedInputStream extends IteratorInputStream<ChunkedResource> {
         return app.getTransferBufferSize();
     }
 
+    @Override
+    public long skip(long n) throws IOException {
+        if (n <= 0) {
+            return 0;
+        }
+        long nr = 0;
+        nr += skipCurrent(n);
+        if (nr >= n) {
+            return n;
+        }
+        ChunkedResource c;
+        while ((c = next()) != null) {
+            long chunkedResource_size = Long.valueOf(c.getSize());
+            if (chunkedResource_size < (n - nr)) {
+                nr += chunkedResource_size;
+            } else {
+                break;
+            }
+        }
+        long remainingBytes = n - nr;
+        if (remainingBytes > 0) {
+            return skipCurrent(remainingBytes);
+        }
+        return 0;
+    }
+
 }

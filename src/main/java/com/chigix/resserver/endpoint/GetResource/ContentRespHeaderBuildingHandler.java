@@ -1,7 +1,6 @@
 package com.chigix.resserver.endpoint.GetResource;
 
 import com.chigix.resserver.ApplicationContext;
-import com.chigix.resserver.domain.ChunkedResource;
 import com.chigix.resserver.domain.error.NoSuchKey;
 import com.chigix.resserver.error.InvalidRange;
 import com.chigix.resserver.sharablehandlers.Context;
@@ -60,20 +59,18 @@ public class ContentRespHeaderBuildingHandler extends SimpleChannelInboundHandle
         resp.headers().set(HttpHeaderNames.CONTENT_LENGTH, routing.getResource().getSize());
         resp.headers().set(HttpHeaderNames.LAST_MODIFIED, routing.getResource().getLastModified().toString("E, dd MMM yyyy HH:mm:ss 'GMT'", Locale.US));
         resp.headers().set(HttpHeaderNames.ETAG, "\"" + routing.getResource().getETag() + "\"");
-        if (routing.getResource() instanceof ChunkedResource) {
-            resp.headers().set(HttpHeaderNames.ACCEPT_RANGES, HttpHeaderValues.BYTES);
-            if (resource_routing.getRange() != null) {
-                resp.setStatus(HttpResponseStatus.PARTIAL_CONTENT);
-                resp.headers().set(HttpHeaderNames.CONTENT_RANGE,
-                        MessageFormat.format("bytes {0}-{1}/{2}",
-                                resource_routing.getRange().start,
-                                resource_routing.getRange().end,
-                                resource_routing.getResource().getSize()));
-                resp.headers().set(HttpHeaderNames.CONTENT_LENGTH,
-                        new BigInteger(resource_routing.getRange().end)
-                                .subtract(new BigInteger(resource_routing.getRange().start))
-                                .add(BigInteger.ONE).toString());
-            }
+        resp.headers().set(HttpHeaderNames.ACCEPT_RANGES, HttpHeaderValues.BYTES);
+        if (resource_routing.getRange() != null) {
+            resp.setStatus(HttpResponseStatus.PARTIAL_CONTENT);
+            resp.headers().set(HttpHeaderNames.CONTENT_RANGE,
+                    MessageFormat.format("bytes {0}-{1}/{2}",
+                            resource_routing.getRange().start,
+                            resource_routing.getRange().end,
+                            resource_routing.getResource().getSize()));
+            resp.headers().set(HttpHeaderNames.CONTENT_LENGTH,
+                    new BigInteger(resource_routing.getRange().end)
+                            .subtract(new BigInteger(resource_routing.getRange().start))
+                            .add(BigInteger.ONE).toString());
         }
         // resp.headers().set("x-amz-version-id", msg.getResource().getVersionId());
         ctx.fireChannelRead(resource_routing);
