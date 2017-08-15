@@ -1,13 +1,20 @@
 package com.chigix.resserver.endpoint.GetResource;
 
 import com.chigix.resserver.ApplicationContext;
+import com.chigix.resserver.domain.ChunkedResource;
 import com.chigix.resserver.domain.error.NoSuchKey;
+import com.chigix.resserver.error.InvalidRange;
 import com.chigix.resserver.sharablehandlers.Context;
 import com.chigix.resserver.util.HttpHeaderNames;
+import com.chigix.resserver.util.HttpHeaderUtil;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.HttpResponse;
+import io.netty.handler.codec.http.HttpHeaderValues;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import java.math.BigInteger;
+import java.text.MessageFormat;
 import java.util.Locale;
 
 /**
@@ -39,14 +46,37 @@ public class ContentRespHeaderBuildingHandler extends SimpleChannelInboundHandle
             throw new NoSuchKey(routing.getResource().getKey());
         }
         routing.getRoutedInfo().allow();
-        HttpResponse resp = routing.getResourceResp();
+        final ResourceContext resource_routing;
+        try {
+            resource_routing = new ResourceContext(routing);
+        } catch (HttpHeaderUtil.InvalidRangeHeader invalidRangeHeader) {
+            throw new InvalidRange(routing.getRoutedInfo(),
+                    invalidRangeHeader.getRawRangeHeader(), routing.getResource().getSize());
+        }
+        HttpResponse resp = resource_routing.getResourceResp();
         routing.getResource().snapshotMetaData().forEach((name, value) -> {
             resp.headers().set(name, value);
         });
         resp.headers().set(HttpHeaderNames.CONTENT_LENGTH, routing.getResource().getSize());
         resp.headers().set(HttpHeaderNames.LAST_MODIFIED, routing.getResource().getLastModified().toString("E, dd MMM yyyy HH:mm:ss 'GMT'", Locale.US));
+        resp.headers().set(HttpHeaderNames.ETAG, "\"" + routing.getResource().getETag() + "\"");
+        if (routing.getResource() instanceof ChunkedResource) {
+            resp.headers().set(HttpHeaderNames.ACCEPT_RANGES, HttpHeaderValues.BYTES);
+            if (resource_routing.getRange() != null) {
+                resp.setStatus(HttpResponseStatus.PARTIAL_CONTENT);
+                resp.headers().set(HttpHeaderNames.CONTENT_RANGE,
+                        MessageFormat.format("bytes {0}-{1}/{2}",
+                                resource_routing.getRange().start,
+                                resource_routing.getRange().end,
+                                resource_routing.getResource().getSize()));
+                resp.headers().set(HttpHeaderNames.CONTENT_LENGTH,
+                        new BigInteger(resource_routing.getRange().end)
+                                .subtract(new BigInteger(resource_routing.getRange().start))
+                                .add(BigInteger.ONE).toString());
+            }
+        }
         // resp.headers().set("x-amz-version-id", msg.getResource().getVersionId());
-        ctx.fireChannelRead(routing);
+        ctx.fireChannelRead(resource_routing);
     }
 
 }

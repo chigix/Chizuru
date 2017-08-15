@@ -1,6 +1,7 @@
 package com.chigix.resserver.error;
 
 import com.chigix.resserver.ApplicationContext;
+import com.chigix.resserver.util.XPathNode;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -43,6 +44,11 @@ public class RESTErrorHandler extends SimpleChannelInboundHandler<RESTError> {
             xml_writer.writeStartElement("Message");
             xml_writer.writeCharacters(msg.getMessage());
             xml_writer.writeEndElement();//Error.Message
+            for (XPathNode extraMessage : msg.getExtraMessage()) {
+                xml_writer.writeStartElement(extraMessage.getLocalName());
+                xml_writer.writeCharacters(extraMessage.getContentText());
+                xml_writer.writeEndElement();
+            }
             xml_writer.writeStartElement("RequestId");
             xml_writer.writeCharacters(msg.getHttpRequest().headers().get(application.getRequestIdHeaderName()).toString());
             xml_writer.writeEndElement();//Error.RequestId

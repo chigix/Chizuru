@@ -1,5 +1,6 @@
 package com.chigix.resserver.error;
 
+import com.chigix.resserver.util.XPathNode;
 import io.netty.handler.codec.http.HttpRequest;
 
 /**
@@ -13,5 +14,7 @@ public interface RESTError {
     String getMessage();
 
     HttpRequest getHttpRequest();
+
+    XPathNode[] getExtraMessage();
 
 }

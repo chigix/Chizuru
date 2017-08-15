@@ -46,4 +46,10 @@ public class HttpHeaderNames {
     //http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.3
     public static final String ACCEPT_ENCODING = "Accept-Encoding";
 
+    //http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.35
+    public static final String ACCEPT_RANGES = "Accept-Ranges";
+    
+    //http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.16
+    public static final String CONTENT_RANGE = "Content-Range";
+
 }

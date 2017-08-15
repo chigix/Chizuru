@@ -4,15 +4,18 @@ import com.chigix.resserver.ApplicationContext;
 import com.chigix.resserver.domain.AmassedResource;
 import com.chigix.resserver.domain.ChunkedResource;
 import com.chigix.resserver.domain.Resource;
-import com.chigix.resserver.sharablehandlers.Context;
+import com.chigix.resserver.util.HttpHeaderNames;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.handler.stream.ChunkedStream;
 import java.io.InputStream;
+import java.math.BigInteger;
 import java.security.InvalidParameterException;
+import org.apache.commons.io.input.BoundedInputStream;
 
 /**
  * GET Resource
@@ -21,7 +24,7 @@ import java.security.InvalidParameterException;
  * @author Richard Lea <chigix@zoho.com>
  */
 @ChannelHandler.Sharable
-public class ContentStreamingHandler extends SimpleChannelInboundHandler<Context> {
+public class ContentStreamingHandler extends SimpleChannelInboundHandler<ResourceContext> {
 
     private static ContentStreamingHandler instance = null;
 
@@ -39,10 +42,16 @@ public class ContentStreamingHandler extends SimpleChannelInboundHandler<Context
     }
 
     @Override
-    protected void messageReceived(ChannelHandlerContext ctx, Context routing) throws Exception {
+    protected void messageReceived(ChannelHandlerContext ctx, ResourceContext routing) throws Exception {
         ctx.writeAndFlush(routing);
-        ctx.write(new ChunkedStream(wrapToInputStream(routing.getResource())))
-                .addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
+        InputStream in = wrapToInputStream(routing.getResource());
+        if (routing.getResourceResp().status().equals(HttpResponseStatus.PARTIAL_CONTENT)
+                && routing.getRange() != null) {
+            in.skip(BigInteger.ZERO.max(new BigInteger(routing.getRange().start)).longValue());
+            in = new BoundedInputStream(in,
+                    routing.getResourceResp().headers().getLong(HttpHeaderNames.CONTENT_LENGTH));
+        }
+        ctx.write(new ChunkedStream(in)).addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
         ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT).addListener(ChannelFutureListener.CLOSE);
     }
 

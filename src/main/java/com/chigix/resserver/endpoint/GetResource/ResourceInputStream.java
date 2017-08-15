@@ -41,6 +41,28 @@ public class ResourceInputStream extends IteratorInputStream<Chunk> {
     }
 
     @Override
+    public long skip(long n) throws IOException {
+        if (n <= 0) {
+            return 0;
+        }
+        long nr = 0;
+        nr += skipCurrent(n);
+        long skipChunks = (n - nr) / this.app.getMaxChunkSize();
+        for (int i = 0; i < skipChunks; i++) {
+            Chunk c = discardNext();
+            if (c != null) {
+                nr += c.getSize();
+            }
+        }
+        long remainingBytes = n - nr;
+        if (remainingBytes > 0 && read() > -1) {
+            remainingBytes = remainingBytes - 1;
+            return skipCurrent(remainingBytes);
+        }
+        return 0;
+    }
+
+    @Override
     public int available() throws IOException {
         return app.getTransferBufferSize();
     }

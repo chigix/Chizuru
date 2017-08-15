@@ -11,6 +11,8 @@ public class XPathNode {
 
     private final String localName;
 
+    private String contentText = null;
+
     private XPathNode parent = null;
 
     HashMap<String, ArrayList<XPathNode>> localNameMapping = new HashMap<>();
@@ -44,6 +46,14 @@ public class XPathNode {
 
     public String getLocalName() {
         return localName;
+    }
+
+    public void setContentText(String contentText) {
+        this.contentText = contentText;
+    }
+
+    public String getContentText() {
+        return contentText;
     }
 
 }
