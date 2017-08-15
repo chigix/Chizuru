@@ -52,7 +52,7 @@ public class ResourceContext extends Context {
                 continue;
             }
             if (raw_start.subtract(last_end).compareTo(BigInteger.ONE) <= 0) {
-                last.end = raw_range.end;
+                last.end = raw_end.toString();
                 continue;
             }
             Range updated_raw_range = new Range();

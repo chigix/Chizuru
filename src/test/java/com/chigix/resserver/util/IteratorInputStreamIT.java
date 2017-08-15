@@ -52,7 +52,7 @@ public class IteratorInputStreamIT {
         }
         IteratorInputStream instance = new IteratorInputStream<String>(strings.iterator()) {
             @Override
-            protected InputStream next(String item) throws NoSuchElementException {
+            protected InputStream inputStreamProvider(String item) throws NoSuchElementException {
                 return new ByteArrayInputStream(item.getBytes());
             }
         };
@@ -77,7 +77,7 @@ public class IteratorInputStreamIT {
         }
         IteratorInputStream instance = new IteratorInputStream<String>(strings.iterator()) {
             @Override
-            protected InputStream next(String item) throws NoSuchElementException {
+            protected InputStream inputStreamProvider(String item) throws NoSuchElementException {
                 return new ByteArrayInputStream(item.getBytes());
             }
         };
@@ -102,7 +102,7 @@ public class IteratorInputStreamIT {
         }
         IteratorInputStream instance = new IteratorInputStream<String>(strings.iterator()) {
             @Override
-            protected InputStream next(String item) throws NoSuchElementException {
+            protected InputStream inputStreamProvider(String item) throws NoSuchElementException {
                 return new ByteArrayInputStream(item.getBytes());
             }
         };

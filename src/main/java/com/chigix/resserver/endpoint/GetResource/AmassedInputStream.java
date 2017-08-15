@@ -22,7 +22,7 @@ public class AmassedInputStream extends IteratorInputStream<ChunkedResource> {
     }
 
     @Override
-    protected InputStream next(ChunkedResource item) throws NoSuchElementException {
+    protected InputStream inputStreamProvider(ChunkedResource item) throws NoSuchElementException {
         return new ResourceInputStream(item.getChunks(), app);
     }
 

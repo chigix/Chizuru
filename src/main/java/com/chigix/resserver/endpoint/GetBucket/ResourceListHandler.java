@@ -107,7 +107,7 @@ public class ResourceListHandler extends SimpleChannelInboundHandler<Context> {
         },
                 new SequenceInputStream(new IteratorInputStream<Resource>(application.getDaoFactory().getResourceDao().listResources(route_ctx.getTargetBucket())) {
                     @Override
-                    protected InputStream next(Resource item) throws NoSuchElementException {
+                    protected InputStream inputStreamProvider(Resource item) throws NoSuchElementException {
                         final ByteArrayOutputStream result = new ByteArrayOutputStream();
                         byte_stream.setStream(result);
                         try {

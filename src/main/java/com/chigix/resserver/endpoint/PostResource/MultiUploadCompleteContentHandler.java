@@ -194,7 +194,7 @@ class MultiUploadCompleteContentHandler extends MultiUploadCompleteHandler.Conte
             // proxy fetching database lazily.
             chunkReaders.add(new ReadStreamTaskHooker(new IteratorInputStream<Chunk>(r.getChunks()) {
                 @Override
-                protected InputStream next(Chunk item) throws NoSuchElementException {
+                protected InputStream inputStreamProvider(Chunk item) throws NoSuchElementException {
                     try {
                         return item.getInputStream();
                     } catch (IOException ex) {

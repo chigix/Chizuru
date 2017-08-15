@@ -14,6 +14,8 @@ public abstract class IteratorInputStream<T> extends InputStream {
 
     private final Iterator<T> it;
 
+    private T flashElement = null;
+
     private InputStream currentStream = null;
 
     public IteratorInputStream(Iterator<T> source) {
@@ -30,11 +32,16 @@ public abstract class IteratorInputStream<T> extends InputStream {
             currentStream.close();
             currentStream = null;
         }
+        if (flashElement != null) {
+            currentStream = inputStreamProvider(flashElement);
+            flashElement = null;
+            return read();
+        }
         if (!it.hasNext()) {
             return -1;
         }
         try {
-            currentStream = next(it.next());
+            currentStream = inputStreamProvider(it.next());
         } catch (NoSuchElementException noSuchElementException) {
             currentStream = null;
         }
@@ -42,7 +49,7 @@ public abstract class IteratorInputStream<T> extends InputStream {
     }
 
     @Override
-    public int read(byte[] b) throws IOException {
+    public final int read(byte[] b) throws IOException {
         if (currentStream != null) {
             final int read = currentStream.read(b);
             if (read < 0) {
@@ -52,11 +59,16 @@ public abstract class IteratorInputStream<T> extends InputStream {
             }
             return read;
         }
+        if (flashElement != null) {
+            currentStream = inputStreamProvider(flashElement);
+            flashElement = null;
+            return read(b);
+        }
         if (!it.hasNext()) {
             return -1;
         }
         try {
-            currentStream = next(it.next());
+            currentStream = inputStreamProvider(it.next());
         } catch (NoSuchElementException noSuchElementException) {
             currentStream = null;
         }
@@ -64,7 +76,7 @@ public abstract class IteratorInputStream<T> extends InputStream {
     }
 
     @Override
-    public int read(final byte[] b, final int off, final int len) throws IOException {
+    public final int read(final byte[] b, final int off, final int len) throws IOException {
         if (currentStream != null) {
             final int read = currentStream.read(b, off, len);
             if (read < 0) {
@@ -74,11 +86,16 @@ public abstract class IteratorInputStream<T> extends InputStream {
             }
             return read;
         }
+        if (flashElement != null) {
+            currentStream = inputStreamProvider(flashElement);
+            flashElement = null;
+            return read(b, off, len);
+        }
         if (!it.hasNext()) {
             return -1;
         }
         try {
-            currentStream = next(it.next());
+            currentStream = inputStreamProvider(it.next());
         } catch (NoSuchElementException noSuchElementException) {
             currentStream = null;
         }
@@ -102,22 +119,37 @@ public abstract class IteratorInputStream<T> extends InputStream {
      * other I/O error occurs.
      */
     protected final long skipCurrent(long n) throws IOException {
-        if (currentStream == null) {
-            return 0;
+        if (currentStream != null) {
+            return currentStream.skip(n);
         }
-        return currentStream.skip(n);
+        if (flashElement != null) {
+            currentStream = inputStreamProvider(flashElement);
+            flashElement = null;
+            return currentStream.skip(n);
+        }
+        return 0;
     }
 
-    protected final T discardNext() throws NoSuchElementException {
-        return it.next();
+    protected final T next() {
+        InputStream closingStream = currentStream;
+        currentStream = null;
+        try {
+            closingStream.close();
+        } catch (IOException | NullPointerException ex) {
+        }
+        flashElement = it.next();
+        return flashElement;
     }
 
-    protected abstract InputStream next(T item) throws NoSuchElementException;
+    protected abstract InputStream inputStreamProvider(T item) throws NoSuchElementException;
 
     @Override
     public void close() throws IOException {
-        if (currentStream != null) {
+        try {
             currentStream.close();
+        } catch (NullPointerException nullException) {
+        } catch (IOException iOException) {
+            throw iOException;
         }
     }
 

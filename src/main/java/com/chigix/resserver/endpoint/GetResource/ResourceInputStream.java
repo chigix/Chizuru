@@ -27,7 +27,7 @@ public class ResourceInputStream extends IteratorInputStream<Chunk> {
     }
 
     @Override
-    protected InputStream next(Chunk item) throws NoSuchElementException {
+    protected InputStream inputStreamProvider(Chunk item) throws NoSuchElementException {
         try {
             return item.getInputStream();
         } catch (FileNotFoundException ex) {
@@ -49,14 +49,14 @@ public class ResourceInputStream extends IteratorInputStream<Chunk> {
         nr += skipCurrent(n);
         long skipChunks = (n - nr) / this.app.getMaxChunkSize();
         for (int i = 0; i < skipChunks; i++) {
-            Chunk c = discardNext();
+            Chunk c = next();
             if (c != null) {
                 nr += c.getSize();
             }
         }
+        next();
         long remainingBytes = n - nr;
-        if (remainingBytes > 0 && read() > -1) {
-            remainingBytes = remainingBytes - 1;
+        if (remainingBytes > 0) {
             return skipCurrent(remainingBytes);
         }
         return 0;

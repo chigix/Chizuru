@@ -57,7 +57,7 @@ public class ListUploadsHandler extends SimpleChannelInboundHandler<Context> {
                                 new IteratorInputStream<MultipartUpload>(
                                         applicationContext.getDaoFactory().getUploadDao().listUploadsByBucket(msg.getTargetBucket())) {
                             @Override
-                            protected InputStream next(MultipartUpload upload) throws NoSuchElementException {
+                            protected InputStream inputStreamProvider(MultipartUpload upload) throws NoSuchElementException {
                                 StringBuilder sb = new StringBuilder("<Upload>");
                                 sb.append("<Key>").append(upload.getResource().getKey()).append("</Key>");
                                 sb.append("<UploadId>").append(upload.getUploadId()).append("</UploadId>");
