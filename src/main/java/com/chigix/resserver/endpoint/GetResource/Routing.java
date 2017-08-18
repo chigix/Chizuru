@@ -12,7 +12,7 @@ import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.handler.codec.http.router.RoutingConfig;
 import io.netty.handler.routing.DefaultExceptionForwarder;
-import io.netty.handler.routing.SimpleCycleRouter;
+import io.netty.handler.routing.SimpleIntervalRouter;
 import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.util.AttributeKey;
 import java.util.List;
@@ -50,7 +50,7 @@ public class Routing extends RoutingConfig.GET {
                 ResourceRespEncoder.getInstance(),
                 ExtractGetResponseHandler.getInstance(),
                 ResourceInfoHandler.getInstance(application),
-                new SimpleCycleRouter<Context, LastHttpContent>(false, "GetResourceParamRouter") {
+                new SimpleIntervalRouter<Context, LastHttpContent>(false, "GetResourceParamRouter") {
             @Override
             protected ChannelPipeline routeBegin(ChannelHandlerContext ctx, Context routing_ctx, Map<String, ChannelPipeline> routingPipelines) throws Exception {
                 if (routing_ctx.getResource() instanceof Context.UnpersistedResource) {

@@ -9,7 +9,7 @@ import io.netty.handler.codec.http.router.HttpRouted;
 import io.netty.handler.codec.http.router.RoutingConfig;
 import io.netty.handler.codec.http.router.exceptions.NotFoundException;
 import io.netty.handler.routing.DefaultExceptionForwarder;
-import io.netty.handler.routing.SimpleCycleRouter;
+import io.netty.handler.routing.SimpleIntervalRouter;
 import java.util.List;
 import java.util.Map;
 
@@ -37,7 +37,7 @@ public class Routing extends RoutingConfig.POST {
 
     @Override
     public void configurePipeline(ChannelPipeline pipeline) {
-        pipeline.addLast(new SimpleCycleRouter<HttpRouted, LastHttpContent>(false, "PostBucketParamRouter") {
+        pipeline.addLast(new SimpleIntervalRouter<HttpRouted, LastHttpContent>(false, "PostBucketParamRouter") {
 
             @Override
             protected void initRouter(ChannelHandlerContext ctx) throws Exception {

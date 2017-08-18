@@ -12,7 +12,7 @@ import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.handler.codec.http.router.RoutingConfig;
 import io.netty.handler.routing.DefaultExceptionForwarder;
-import io.netty.handler.routing.SimpleCycleRouter;
+import io.netty.handler.routing.SimpleIntervalRouter;
 import java.util.Map;
 
 /**
@@ -49,7 +49,7 @@ public class Routing extends RoutingConfig.PUT {
         final DefaultExceptionForwarder forwarder = new DefaultExceptionForwarder();
         pipeline.addLast(ResourceInfoHandler.getInstance(application),
                 PutResourceContextBuildHandler.getInstance(application),
-                new SimpleCycleRouter<Context, LastHttpContent>(false, "PutResourceParamRouter") {
+                new SimpleIntervalRouter<Context, LastHttpContent>(false, "PutResourceParamRouter") {
             @Override
             protected ChannelPipeline routeBegin(ChannelHandlerContext ctx, Context msg, Map<String, ChannelPipeline> routingPipelines) throws Exception {
                 HttpHeaders headers = msg.getRoutedInfo().getRequestMsg().headers();

@@ -12,7 +12,7 @@ import io.netty.handler.codec.http.router.RoutingConfig;
 import io.netty.handler.codec.http.router.exceptions.NotFoundException;
 import io.netty.handler.routing.DefaultExceptionForwarder;
 import io.netty.handler.routing.Router;
-import io.netty.handler.routing.SimpleCycleRouter;
+import io.netty.handler.routing.SimpleIntervalRouter;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,7 +61,7 @@ public class Routing extends RoutingConfig.POST {
     public void configurePipeline(ChannelPipeline pipeline) {
         final DefaultExceptionForwarder forwarder = new DefaultExceptionForwarder();
         pipeline.addLast(ResourceInfoHandler.getInstance(application),
-                new SimpleCycleRouter<Context, LastHttpContent>(false, "PostResourceParamRouter") {
+                new SimpleIntervalRouter<Context, LastHttpContent>(false, "PostResourceParamRouter") {
             @Override
             protected ChannelPipeline routeBegin(ChannelHandlerContext ctx, Context msg, Map<String, ChannelPipeline> routingPipelines) throws Exception {
                 QueryStringDecoder decoder = new QueryStringDecoder(msg.getRoutedInfo().getRequestMsg().uri());
