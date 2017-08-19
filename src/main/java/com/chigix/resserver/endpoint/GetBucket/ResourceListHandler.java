@@ -3,6 +3,7 @@ package com.chigix.resserver.endpoint.GetBucket;
 import com.chigix.resserver.ApplicationContext;
 import com.chigix.resserver.domain.Bucket;
 import com.chigix.resserver.domain.Resource;
+import com.chigix.resserver.domain.error.NoSuchBucket;
 import com.chigix.resserver.util.HttpHeaderNames;
 import com.chigix.resserver.util.HttpHeaderUtil;
 import com.chigix.resserver.util.InputStreamProxy;
@@ -112,21 +113,47 @@ public class ResourceListHandler extends SimpleChannelInboundHandler<Context> {
             }
 
         },
-                new SequenceInputStream(new IteratorInputStream<Resource>(application.getDaoFactory().getResourceDao().listResources(route_ctx.getTargetBucket())) {
+                new SequenceInputStream(new InputStreamProxy() {
                     @Override
-                    protected InputStream inputStreamProvider(Resource item) throws NoSuchElementException {
-                        if (listCtx.keyCountTotal >= listCtx.maxKeys) {
-                            listCtx.isTruncated = true;
-                            return new ClosedInputStream();
-                        }
-                        byte_charging.setStream(new ByteArrayOutputStream());
+                    public int read() throws IOException {
                         try {
-                            xmlWriteResourceContent(xml_writer, item, listCtx);
-                        } catch (XMLStreamException ex) {
-                            throw new RuntimeException("Unexpected!! stringwriter closed", ex);
+                            return super.read();
+                        } catch (NullPointerException e) {
+                            if (getStream() != null) {
+                                throw e;
+                            }
                         }
-                        return new ByteArrayInputStream(byte_charging.getStream().toByteArray());
+                        final Iterator<Resource> resources;
+                        try {
+                            if (listCtx.continuationToken == null) {
+                                resources = application.getDaoFactory().getResourceDao().listResources(route_ctx.getTargetBucket(), listCtx.maxKeys + 1);
+                            } else {
+                                resources = application.getDaoFactory().getResourceDao().listResources(route_ctx.getTargetBucket(), listCtx.nextContinuationToken, listCtx.maxKeys + 1);
+                            }
+                        } catch (NoSuchBucket ex) {
+                            setStream(new ClosedInputStream());
+                            return super.read();
+                        }
+                        setStream(new IteratorInputStream<Resource>(resources) {
+                            @Override
+                            protected InputStream inputStreamProvider(Resource item) throws NoSuchElementException {
+                                if (listCtx.keyCountTotal >= listCtx.maxKeys) {
+                                    listCtx.isTruncated = true;
+                                    listCtx.nextContinuationToken = item.getVersionId();
+                                    return new ClosedInputStream();
+                                }
+                                byte_charging.setStream(new ByteArrayOutputStream());
+                                try {
+                                    xmlWriteResourceContent(xml_writer, item, listCtx);
+                                } catch (XMLStreamException ex) {
+                                    throw new RuntimeException("Unexpected!! stringwriter closed", ex);
+                                }
+                                return new ByteArrayInputStream(byte_charging.getStream().toByteArray());
+                            }
+                        });
+                        return super.read();
                     }
+
                 }, new InputStreamProxy() {
                     @Override
                     public int read() throws IOException {
@@ -201,6 +228,11 @@ public class ResourceListHandler extends SimpleChannelInboundHandler<Context> {
             xml_writer.writeCharacters(resp_ctx.prefix);
         }
         xml_writer.writeEndElement();//ListBucketResult.Prefix
+        if (resp_ctx.continuationToken != null) {
+            xml_writer.writeStartElement("ContinuationToken");
+            xml_writer.writeCharacters(resp_ctx.continuationToken);
+            xml_writer.writeEndElement();
+        }
         XMLResponseUtil.xmlWriteMaxKeys(xml_writer, "" + resp_ctx.maxKeys);//ListBucketResult.MaxKeys
         if (resp_ctx.delimiter != null) {
             xml_writer.writeStartElement("Delimiter");
@@ -210,6 +242,11 @@ public class ResourceListHandler extends SimpleChannelInboundHandler<Context> {
     }
 
     private void generateDocumentEnd(XMLStreamWriter xml_writer, ListResponseContext resp) throws XMLStreamException {
+        if (resp.nextContinuationToken != null) {
+            xml_writer.writeStartElement("NextContinuationToken");
+            xml_writer.writeCharacters(resp.nextContinuationToken);
+            xml_writer.writeEndElement();
+        }
         xml_writer.writeStartElement("IsTruncated");
         xml_writer.writeCharacters(resp.isTruncated ? "true" : "false");
         xml_writer.writeEndElement();//ListBucketResult.IsTruncated

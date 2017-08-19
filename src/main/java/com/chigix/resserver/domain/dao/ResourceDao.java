@@ -20,9 +20,9 @@ public interface ResourceDao {
 
     Resource saveResource(Resource resource) throws NoSuchBucket;
 
-    Iterator<Resource> listResources(Bucket bucket) throws NoSuchBucket;
+    Iterator<Resource> listResources(Bucket bucket, int limit) throws NoSuchBucket;
 
-    Iterator<Resource> listResources(Bucket bucket, String continuation);
+    Iterator<Resource> listResources(Bucket bucket, String continuation, int limit);
 
     void removeResource(Resource resource) throws NoSuchKey, NoSuchBucket;
 

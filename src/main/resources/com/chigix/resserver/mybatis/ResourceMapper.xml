@@ -24,7 +24,7 @@
         select * from resource
         WHERE "bucket_uuid" = (SELECT bucket.UUID FROM bucket  WHERE bucket."NAME" =  #{bucketName} LIMIT 1)
         <if test="_parameter.containsKey('continuation')">
-            AND "ID" >= (SELECT RESOURCE.ID FROM RESOURCE WHERE RESOURCE."keyhash" = #{continuation} LIMIT 1)
+            AND "ID" >= (SELECT RESOURCE.ID FROM RESOURCE WHERE RESOURCE."version_id" = #{continuation} LIMIT 1)
         </if>
         LIMIT #{limit}
     </select>

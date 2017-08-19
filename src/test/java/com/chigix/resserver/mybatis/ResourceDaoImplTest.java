@@ -213,7 +213,7 @@ public class ResourceDaoImplTest {
             resources[i].setBucket(bb);
             resourceMapper.insertResource(new ResourceDto(resources[i], bb));
         }
-        Iterator<Resource> it = resourceDao.listResources(bb);
+        Iterator<Resource> it = resourceDao.listResources(bb, 100);
         for (ChunkedResourceBean resource : resources) {
             assertEquals(resource.getVersionId(), it.next().getVersionId());
         }

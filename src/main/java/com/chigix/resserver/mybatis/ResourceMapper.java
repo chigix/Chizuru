@@ -19,7 +19,7 @@ public interface ResourceMapper {
      *
      * @param bucketName
      * @param limit
-     * @param continuation Resource's Keyhash is used as continuation.
+     * @param continuation Resource's VersionId is used as continuation.
      * @return
      */
     List<ResourceBuilder> selectAllByBucketName(@Param("bucketName") String bucketName, @Param("limit") int limit, @Param("continuation") String continuation);

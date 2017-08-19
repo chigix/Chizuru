@@ -56,7 +56,7 @@ public class ResourceMapperTest {
     /**
      * Test of selectAllByBucketName method, of class ResourceMapper.
      *
-     * @throws com.chigix.resserver.entity.error.NoSuchBucket
+     * @throws com.chigix.resserver.domain.error.NoSuchBucket
      */
     @Test
     public void testSelectAllByBucketName() throws NoSuchBucket {
@@ -77,13 +77,13 @@ public class ResourceMapperTest {
         r_3.setBucket(bb);
         mapper.insertResource(new ResourceDto(r_3));
         assertEquals(3, mapper.selectAllByBucketName("TEST_BUCKET", 1000).size());
-        assertEquals(2, mapper.selectAllByBucketName("TEST_BUCKET", 1000, r_2.getKeyHash()).size());
+        assertEquals(2, mapper.selectAllByBucketName("TEST_BUCKET", 1000, r_2.getVersionId()).size());
     }
 
     /**
      * Test of selectByKeyhash method, of class ResourceMapper.
      *
-     * @throws com.chigix.resserver.entity.error.NoSuchBucket
+     * @throws com.chigix.resserver.domain.error.NoSuchBucket
      * @throws java.lang.ReflectiveOperationException
      */
     @Test
@@ -119,7 +119,7 @@ public class ResourceMapperTest {
     /**
      * Test of selectByBucketName_Key method, of class ResourceMapper.
      *
-     * @throws com.chigix.resserver.entity.error.NoSuchBucket
+     * @throws com.chigix.resserver.domain.error.NoSuchBucket
      */
     @Test
     public void testSelectByBucketName_Key() throws NoSuchBucket {
@@ -208,7 +208,6 @@ public class ResourceMapperTest {
      * Test of insert method, of class ResourceMapper.
      *
      * @throws java.lang.Exception
-     * @throws com.chigix.resserver.entity.error.NoSuchBucket
      */
     @Test
     public void testInsertResource() throws Exception {
@@ -238,7 +237,7 @@ public class ResourceMapperTest {
     /**
      * Test of update method, of class ResourceMapper.
      *
-     * @throws com.chigix.resserver.entity.error.NoSuchBucket
+     * @throws com.chigix.resserver.domain.error.NoSuchBucket
      */
     @Test
     public void testUpdate() throws NoSuchBucket {
@@ -255,7 +254,7 @@ public class ResourceMapperTest {
     /**
      * Test of delete method, of class ResourceMapper.
      *
-     * @throws com.chigix.resserver.entity.error.NoSuchBucket
+     * @throws com.chigix.resserver.domain.error.NoSuchBucket
      */
     @Test
     public void testDelete() throws NoSuchBucket {
@@ -275,7 +274,7 @@ public class ResourceMapperTest {
     /**
      * Test of deleteByKeyhash method, of class ResourceMapper.
      *
-     * @throws com.chigix.resserver.entity.error.NoSuchBucket
+     * @throws com.chigix.resserver.domain.error.NoSuchBucket
      */
     @Test
     public void testDeleteByKeyhash() throws NoSuchBucket {
@@ -290,7 +289,7 @@ public class ResourceMapperTest {
     /**
      * Test of merge method, of class ResourceMapper.
      *
-     * @throws com.chigix.resserver.entity.error.NoSuchBucket
+     * @throws com.chigix.resserver.domain.error.NoSuchBucket
      */
     @Test
     public void testMergeResource() throws NoSuchBucket {

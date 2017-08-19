@@ -100,19 +100,19 @@ public class ResourceDaoImpl implements ResourceDao {
     }
 
     @Override
-    public Iterator<Resource> listResources(Bucket bucket) throws NoSuchBucket {
-        return listResources(bucket, null);
+    public Iterator<Resource> listResources(Bucket bucket, int limit) throws NoSuchBucket {
+        return listResources(bucket, null, limit);
     }
 
     @Override
-    public Iterator<Resource> listResources(Bucket bucket, String con_token) {
+    public Iterator<Resource> listResources(Bucket bucket, String con_token, int limit) {
         final ResourceDaoImpl self_dao = this;
         final AtomicReference<String> continuation = new AtomicReference<>(con_token);
         final IteratorConcater<ResourceBuilder> builders = new IteratorConcater<ResourceBuilder>() {
             @Override
             protected Iterator<ResourceBuilder> nextIterator() {
                 if (continuation.get() == null) {
-                    return resourceMapper.selectAllByBucketName(bucket.getName(), 1000).iterator();
+                    return resourceMapper.selectAllByBucketName(bucket.getName(), limit).iterator();
                 }
                 return Collections.emptyIterator();
             }
