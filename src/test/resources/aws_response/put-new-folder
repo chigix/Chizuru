@@ -1,0 +1,17 @@
+PUT /new-folder/ HTTP/1.1
+User-Agent: Minio (windows; amd64) minio-go/2.0.2 mc/2016-12-09T18:23:19Z
+Authorization: AWS4-HMAC-SHA256 Credential=**REDACTED**/20170818/ap-northeast-1/s3/aws4_request, SignedHeaders=expect;host;x-amz-content-sha256;x-amz-date, Signature=**REDACTED**
+Expect: 100-continue
+X-Amz-Content-Sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+X-Amz-Date: 20170818T160358Z
+Content-Length: 0
+Host: oos-for-learning.s3-ap-northeast-1.amazonaws.com
+Content-Type: application/json
+
+HTTP/1.1 200 OK
+x-amz-id-2: PioZ9O1M74a3/1xdTK7IQlAXuoL+XHN+xD7snFC5H0hNjVW6T55zNDbMrmWXsRcvExBXoZz7LhY=
+x-amz-request-id: 853DB3249F67C6C0
+Date: Fri, 18 Aug 2017 16:04:18 GMT
+ETag: "d41d8cd98f00b204e9800998ecf8427e"
+Content-Length: 0
+Server: AmazonS3

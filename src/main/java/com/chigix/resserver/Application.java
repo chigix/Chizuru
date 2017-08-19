@@ -1,5 +1,6 @@
 package com.chigix.resserver;
 
+import com.chigix.resserver.domain.error.DaoException;
 import com.chigix.resserver.error.DaoExceptionHandler;
 import com.chigix.resserver.error.ExceptionHandler;
 import com.chigix.resserver.error.UnwrappedExceptionHandler;
@@ -24,6 +25,8 @@ import io.netty.handler.codec.http.HttpRequestDecoder;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseEncoder;
 import io.netty.handler.codec.http.router.FullResponseLengthFixer;
+import io.netty.handler.codec.http.router.HttpException;
+import io.netty.handler.codec.http.router.HttpRouted;
 import io.netty.handler.codec.http.router.HttpRouter;
 import java.io.File;
 import java.io.IOException;
@@ -200,7 +203,44 @@ public class Application {
         return new HttpRouter() {
             @Override
             protected void initExceptionRouting(ChannelPipeline pipeline) {
-                pipeline.addLast(new UnwrappedExceptionHandler(),
+                pipeline.addLast(new UnwrappedExceptionHandler() {
+                    @Override
+                    protected void handleDecoderException(ChannelHandlerContext ctx, HttpException httpexc) throws Exception {
+                        handleUnwrappedException(ctx, new HttpException(httpexc.getCause().getCause()) {
+                            @Override
+                            public HttpRequest getHttpRequest() {
+                                return httpexc.getHttpRequest();
+                            }
+
+                            @Override
+                            public HttpRouted getHttpRouted() {
+                                return httpexc.getHttpRouted();
+                            }
+                        });
+                    }
+
+                    @Override
+                    protected void handleUnwrappedException(ChannelHandlerContext ctx, HttpException httpexc) throws Exception {
+                        final Throwable innerException = httpexc.getCause();
+                        // httpexc.getCause() --> NullPointerException
+                        if (innerException instanceof DaoException) {
+                            super.channelRead(ctx, new HttpException(innerException) {
+                                @Override
+                                public HttpRequest getHttpRequest() {
+                                    return httpexc.getHttpRequest();
+                                }
+
+                                @Override
+                                public HttpRouted getHttpRouted() {
+                                    return httpexc.getHttpRouted();
+                                }
+                            });
+                        } else {
+                            super.handleUnwrappedException(ctx, httpexc);
+                        }
+                    }
+
+                },
                         DaoExceptionHandler.getInstance(application),
                         ExceptionHandler.getInstance(application)
                 );
