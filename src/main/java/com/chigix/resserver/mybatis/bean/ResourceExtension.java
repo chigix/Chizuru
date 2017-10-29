@@ -1,8 +1,11 @@
 package com.chigix.resserver.mybatis.bean;
 
+import com.chigix.resserver.domain.Resource;
+import com.chigix.resserver.domain.error.NoSuchBucket;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.MessageFormat;
+import java.util.Map;
 
 /**
  *
@@ -10,13 +13,17 @@ import java.text.MessageFormat;
  */
 public interface ResourceExtension {
 
-    Integer getId();
-
-    void setId(Integer id);
-
     String getKeyHash();
 
     void setBucket(BucketBean bucket);
+
+    BucketBean getBucket() throws NoSuchBucket;
+
+    default void setMetaData(Map<String, String> mapping) {
+        mapping.entrySet().forEach((entry) -> {
+            ((Resource) this).setMetaData(entry.getKey(), entry.getValue());
+        });
+    }
 
     public static String hashKey(String bucket_uuid, String resource_key) {
         String keytohash = MessageFormat.format("[bucket: {0}, key: {1}]", bucket_uuid, resource_key);
@@ -34,4 +41,5 @@ public interface ResourceExtension {
         }
         return sb.toString();
     }
+
 }

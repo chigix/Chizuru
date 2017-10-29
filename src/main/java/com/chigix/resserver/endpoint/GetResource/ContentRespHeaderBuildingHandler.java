@@ -1,6 +1,7 @@
 package com.chigix.resserver.endpoint.GetResource;
 
 import com.chigix.resserver.ApplicationContext;
+import com.chigix.resserver.domain.Lifecycle;
 import com.chigix.resserver.domain.error.NoSuchKey;
 import com.chigix.resserver.error.InvalidRange;
 import com.chigix.resserver.sharablehandlers.Context;
@@ -40,7 +41,7 @@ public class ContentRespHeaderBuildingHandler extends SimpleChannelInboundHandle
 
     @Override
     protected void messageReceived(ChannelHandlerContext ctx, Context routing) throws Exception {
-        if (routing.getResource() instanceof Context.UnpersistedResource) {
+        if (application.getDaoFactory().getEntityState(routing.getResource()) == Lifecycle.NEW) {
             routing.getRoutedInfo().deny();
             throw new NoSuchKey(routing.getResource().getKey());
         }

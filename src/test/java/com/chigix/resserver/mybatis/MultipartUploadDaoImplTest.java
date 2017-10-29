@@ -6,35 +6,66 @@ import com.chigix.resserver.domain.Chunk;
 import com.chigix.resserver.domain.ChunkedResource;
 import com.chigix.resserver.domain.MultipartUpload;
 import com.chigix.resserver.domain.error.NoSuchBucket;
+import com.chigix.resserver.domain.error.NoSuchUpload;
+import com.chigix.resserver.mybatis.bean.AmassedResourceBean;
 import com.chigix.resserver.mybatis.bean.BucketBean;
-import com.chigix.resserver.mybatis.dto.MultipartUploadDto;
-import com.chigix.resserver.mybatis.dto.ResourceDto;
+import com.chigix.resserver.mybatis.dao.MultipartUploadMapper;
+import com.chigix.resserver.mybatis.dao.ResourceMapper;
+import com.chigix.resserver.mybatis.dao.SubresourceMapper;
+import com.chigix.resserver.mybatis.mapstruct.MultipartUploadBeanMapper;
+import com.chigix.resserver.mybatis.mapstruct.UploadingResourceBeanMapper;
+import com.chigix.resserver.mybatis.mapstruct.UploadingSubresourceBeanMapper;
+import com.chigix.resserver.mybatis.record.MultipartUploadExample;
+import com.chigix.resserver.mybatis.record.Subresource;
+import com.chigix.resserver.mybatis.record.SubresourceExample;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Function;
-import org.apache.ibatis.session.SqlSession;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.transaction.TransactionConfiguration;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  *
  * @author Richard Lea <chigix@zoho.com>
+ * @TODO Rename to MultipartUploadRepositoryImplTest
  */
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations = "classpath:appContext.xml")
+@Transactional
+@TransactionConfiguration(transactionManager = "transactionManager_Upload")
 public class MultipartUploadDaoImplTest {
 
-    private SqlSession uploadingSession;
-    private SqlSession mainSession;
+    @Autowired
+    private UploadingSubresourceBeanMapper uploadingSubresourceBeanMapper;
+    @Autowired
+    private UploadingResourceBeanMapper uploadingResourceBeanMapper;
+    @Autowired
+    private MultipartUploadBeanMapper uploadBeanMapper;
 
-    private ResourceMapper uploadingResourceMapper;
-    private MultipartUploadMapper uploadMapper;
-    private BucketDaoImpl bucketDao;
-    private MultipartUploadDaoImpl uploadDao;
+    @Autowired
+    @Qualifier("uploadingResourceMapper")
+    private ResourceMapper uploadingResourceDao;
+    @Autowired
+    @Qualifier("uploadingSubResourceMapper")
+    private SubresourceMapper uploadingSubresourceDao;
+    @Autowired
+    private MultipartUploadMapper uploadDao;
+    @Autowired
+    private BucketRepositoryExtend bucketRepository;
+    @Autowired
+    private MultipartUploadDaoImpl uploadRepository;
 
     public MultipartUploadDaoImplTest() {
     }
@@ -49,40 +80,10 @@ public class MultipartUploadDaoImplTest {
 
     @Before
     public void setUp() throws IOException {
-        mainSession = TestUtils.setUpDatabase("chizuru");
-        uploadingSession = TestUtils.setUpDatabase("upload");
-        mainSession.update("com.chigix.resserver.mybatis.DbInitMapper.createBucketTable");
-        mainSession.update("com.chigix.resserver.mybatis.DbInitMapper.createResourceTable");
-        mainSession.update("com.chigix.resserver.mybatis.DbInitMapper.createChunkTable");
-        uploadingSession.update("com.chigix.resserver.mybatis.MultipartUploadMapper.createUploadTable");
-        uploadMapper = uploadingSession.getMapper(MultipartUploadMapper.class);
-        BucketMapper bucketMapper = mainSession.getMapper(BucketMapper.class);
-        uploadingResourceMapper = uploadingSession.getMapper(ResourceMapper.class);
-        uploadMapper = uploadingSession.getMapper(MultipartUploadMapper.class);
-        bucketDao = new BucketDaoImpl(bucketMapper);
-        uploadDao = new MultipartUploadDaoImpl(uploadMapper,
-                new ChunkDaoImpl(mainSession.getMapper(ChunkMapper.class)),
-                uploadingResourceMapper);
     }
 
     @After
     public void tearDown() {
-        mainSession.update("com.chigix.resserver.mybatis.DbInitMapper.deleteBucketTable");
-        mainSession.update("com.chigix.resserver.mybatis.DbInitMapper.deleteResourceTable");
-        mainSession.update("com.chigix.resserver.mybatis.DbInitMapper.deleteChunkTable");
-        uploadingSession.update("com.chigix.resserver.mybatis.DbInitMapper.deleteUploadTable");
-    }
-
-    private List<Map<String, String>> selectAllUploadRows() {
-        return uploadingSession.selectList("com.chigix.resserver.mybatis.MultipartUploadMapper.selectAll");
-    }
-
-    private List<Map<String, String>> selectAllResourceRows(SqlSession session) {
-        return session.selectList("com.chigix.resserver.mybatis.ResourceMapper.selectAll");
-    }
-
-    private List<Map<String, String>> selectAllSubResourceRows(SqlSession session) {
-        return session.selectList("com.chigix.resserver.mybatis.ResourceMapper.selectAllSubResources");
     }
 
     /**
@@ -93,7 +94,7 @@ public class MultipartUploadDaoImplTest {
     @Test
     public void testInitiateUpload() throws Exception {
         System.out.println("initiateUpload");
-        final BucketBean bb = bucketDao.createBucket("TEST_BUCKET");
+        final BucketBean bb = bucketRepository.createBucket("TEST_BUCKET");
         AmassedResource r = new AmassedResource("TEST_AMASSEDRESOURCE") {
             @Override
             public Iterator<ChunkedResource> getSubResources() {
@@ -105,9 +106,9 @@ public class MultipartUploadDaoImplTest {
                 return bb;
             }
         };
-        uploadDao.initiateUpload(r);
-        List<Map<String, String>> uploads = selectAllUploadRows();
-        assertEquals(r.getVersionId(), uploads.get(0).get("resource_version"));
+        uploadRepository.initiateUpload(r);
+        List<com.chigix.resserver.mybatis.record.MultipartUpload> records = uploadDao.selectByExample(new MultipartUploadExample());
+        assertEquals(r.getVersionId(), records.get(0).getResourceVersion());
     }
 
     /**
@@ -119,7 +120,7 @@ public class MultipartUploadDaoImplTest {
     public void testFindUpload() throws Exception {
         System.out.println("findUpload");
         final MultipartUpload upload;
-        final BucketBean bb = bucketDao.createBucket("TEST_BUCKET");
+        final BucketBean bb = bucketRepository.createBucket("TEST_BUCKET");
         AmassedResource r = new AmassedResource("TEST_AMASSEDRESOURCE") {
             @Override
             public Iterator<ChunkedResource> getSubResources() {
@@ -131,14 +132,14 @@ public class MultipartUploadDaoImplTest {
                 return bb;
             }
         };
-        uploadDao.initiateUpload(r);
-        upload = uploadDao.initiateUpload(r);
-        uploadDao.initiateUpload(r);
-        uploadDao.initiateUpload(r);
-        uploadDao.initiateUpload(r);
-        uploadDao.initiateUpload(r);
+        uploadRepository.initiateUpload(r);
+        upload = uploadRepository.initiateUpload(r);
+        uploadRepository.initiateUpload(r);
+        uploadRepository.initiateUpload(r);
+        uploadRepository.initiateUpload(r);
+        uploadRepository.initiateUpload(r);
         assertEquals(upload.getInitiated().toString(),
-                uploadDao.findUpload(upload.getUploadId()).getInitiated().toString());
+                uploadRepository.findUpload(upload.getUploadId()).getInitiated().toString());
     }
 
     /**
@@ -150,7 +151,7 @@ public class MultipartUploadDaoImplTest {
     public void testFindUploadPart() throws Exception {
         System.out.println("findUploadPart");
         final MultipartUpload upload;
-        final BucketBean bb = bucketDao.createBucket("TEST_BUCKET");
+        final BucketBean bb = bucketRepository.createBucket("TEST_BUCKET");
         AmassedResource r = new AmassedResource("TEST_AMASSEDRESOURCE") {
             @Override
             public Iterator<ChunkedResource> getSubResources() {
@@ -162,7 +163,7 @@ public class MultipartUploadDaoImplTest {
                 return bb;
             }
         };
-        upload = uploadDao.initiateUpload(r);
+        upload = uploadRepository.initiateUpload(r);
         ChunkedResource ch = new ChunkedResource("KEY_SHOULD_NOT_BE_USED") {
             @Override
             public Iterator<Chunk> getChunks() {
@@ -174,11 +175,11 @@ public class MultipartUploadDaoImplTest {
                 throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
             }
         };
-        uploadDao.appendChunkedResource(upload, ch, "123");
-        uploadDao.appendChunkedResource(upload, ch, "123");
-        uploadDao.appendChunkedResource(upload, ch, "123");
+        uploadRepository.appendChunkedResource(upload, ch, "123");
+        uploadRepository.appendChunkedResource(upload, ch, "123");
+        uploadRepository.appendChunkedResource(upload, ch, "123");
         assertEquals(ch.getVersionId(),
-                uploadDao.findUploadPart(upload, "123", ch.getETag()).getVersionId());
+                uploadRepository.findUploadPart(upload, "123", ch.getETag()).getVersionId());
     }
 
     /**
@@ -190,27 +191,31 @@ public class MultipartUploadDaoImplTest {
     public void testRemoveUpload() throws Exception {
         System.out.println("removeUpload");
         final BucketBean bb = new BucketBean("TEST_BUCKET");
-        AmassedResource r = new AmassedResource("TEST_AMASSED") {
-            @Override
-            public Iterator<ChunkedResource> getSubResources() {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
-
-            @Override
-            public Bucket getBucket() throws NoSuchBucket {
-                return bb;
-            }
-        };
         MultipartUpload[] uploads = new MultipartUpload[10];
+        // @TODO Add Test into UploadBeanMapper for the case of AmassedResource 
+        // Domain Object, which should throw NotBeanException.
         for (int i = 0; i < uploads.length; i++) {
-            uploads[i] = new MultipartUpload(r);
+            uploads[i] = new MultipartUpload(
+                    new AmassedResourceBean("TEST_AMASSED", "TEST_KEYHASH") {
+                @Override
+                public BucketBean getBucket() throws NoSuchBucket {
+                    return bb;
+                }
+            });
         }
         for (MultipartUpload upload : uploads) {
-            uploadMapper.insert(new MultipartUploadDto(upload));
-            uploadingResourceMapper.mergeUploadingResource(new ResourceDto(r, bb), new MultipartUploadDto(upload));
+            uploadDao.insert(uploadBeanMapper.toRecord(upload));
+            uploadingResourceDao.mergeUploadingResource(uploadingResourceBeanMapper.toRecord(upload.getResource()));
         }
-        uploadDao.removeUpload(uploads[4]);
-        uploadMapper.selectAllByBucketUuid(bb.getUuid());
+        uploadRepository.removeUpload(uploads[4]);
+        final MultipartUploadExample byBucketUuid = new MultipartUploadExample();
+        byBucketUuid.createCriteria().andBucketUuidEqualTo(bb.getUuid());
+        assertEquals(9, uploadDao.selectByExample(byBucketUuid).size());
+        try {
+            uploadRepository.removeUpload(uploads[4]);
+            fail("NoSuchUpload Is not thrown.");
+        } catch (NoSuchUpload noSuchUpload) {
+        }
     }
 
     /**
@@ -221,10 +226,10 @@ public class MultipartUploadDaoImplTest {
     @Test
     public void testListUploadsByBucket() throws Exception {
         System.out.println("listUploadsByBucket");
-        final BucketBean bb = bucketDao.createBucket("TEST_BUCKET");
+        final BucketBean bb = bucketRepository.createBucket("TEST_BUCKET");
         MultipartUpload[] uploads = new MultipartUpload[6];
         for (int i = 0; i < uploads.length; i++) {
-            uploads[i] = uploadDao.initiateUpload(new AmassedResource("TEST_AMASSEDRESOURCE") {
+            uploads[i] = uploadRepository.initiateUpload(new AmassedResource("TEST_AMASSEDRESOURCE") {
                 @Override
                 public Iterator<ChunkedResource> getSubResources() {
                     throw new UnsupportedOperationException("Not supported yet.");
@@ -236,9 +241,9 @@ public class MultipartUploadDaoImplTest {
                 }
             });
         }
-        Iterator<MultipartUpload> list = uploadDao.listUploadsByBucket(bb);
+        Iterator<MultipartUpload> list = uploadRepository.listUploadsByBucket(bb);
         for (MultipartUpload upload : uploads) {
-            list.next();
+            assertEquals(upload.getUploadId(), list.next().getUploadId());
         }
     }
 
@@ -251,7 +256,7 @@ public class MultipartUploadDaoImplTest {
     public void testAppendChunkedResource() throws Exception {
         System.out.println("appendChunkedResource");
         final MultipartUpload upload;
-        final BucketBean bb = bucketDao.createBucket("TEST_BUCKET");
+        final BucketBean bb = bucketRepository.createBucket("TEST_BUCKET");
         AmassedResource r = new AmassedResource("TEST_AMASSEDRESOURCE") {
             @Override
             public Iterator<ChunkedResource> getSubResources() {
@@ -274,17 +279,17 @@ public class MultipartUploadDaoImplTest {
                 throw new UnsupportedOperationException("Not supported yet.");
             }
         };
-        upload = uploadDao.initiateUpload(r);
-        uploadDao.appendChunkedResource(upload, create.apply(null), "123");
-        uploadDao.appendChunkedResource(upload, create.apply(null), "512345678901234567890123456789012");
-        uploadDao.appendChunkedResource(upload, create.apply(null), "612345678901234567890123456789012");
-        List<Map<String, String>> rows = selectAllSubResourceRows(uploadingSession);
-        assertEquals(3, rows.size());
-        assertEquals("123", rows.get(0).get("key"));
-        assertEquals(r.getVersionId(), rows.get(0).get("parent_version_id"));
-        assertEquals("ChunkedResource", rows.get(0).get("type"));
-        assertEquals("12345678901234567890123456789012", rows.get(1).get("key"));
-        assertEquals("12345678901234567890123456789012", rows.get(2).get("key"));
+        upload = uploadRepository.initiateUpload(r);
+        uploadRepository.appendChunkedResource(upload, create.apply(null), "123");
+        uploadRepository.appendChunkedResource(upload, create.apply(null), "512345678901234567890123456789012");
+        uploadRepository.appendChunkedResource(upload, create.apply(null), "612345678901234567890123456789012");
+        List<Subresource> records = uploadingSubresourceDao.selectByExample(new SubresourceExample());
+        assertEquals(3, records.size());
+        assertEquals("123", records.get(0).getKey());
+        assertEquals(r.getVersionId(), records.get(0).getParentVersionId());
+        assertEquals("ChunkedResource", records.get(0).getType());
+        assertEquals("12345678901234567890123456789012", records.get(1).getKey());
+        assertEquals("12345678901234567890123456789012", records.get(2).getKey());
     }
 
 }

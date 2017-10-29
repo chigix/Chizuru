@@ -16,6 +16,6 @@ public abstract class AmassedResource extends Resource {
         super(key, versionId);
     }
 
-    public abstract Iterator<ChunkedResource> getSubResources();
+    public abstract <T extends ChunkedResource> Iterator<T> getSubResources();
 
 }

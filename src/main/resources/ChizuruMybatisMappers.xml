@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:util="http://www.springframework.org/schema/util"
+
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+          http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.2.xsd
+          http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.2.xsd
+          http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.2.xsd
+          http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.2.xsd
+">
+    <bean id="sqlSessionFactory_Chizuru" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="datasource-chizuru" />
+        <property name="mapperLocations">
+            <list>
+                <value>com/chigix/resserver/mybatis/BucketMapper.xml</value>
+                <value>com/chigix/resserver/mybatis/ResourceMapper.xml</value>
+                <value>com/chigix/resserver/mybatis/ChunkMapper.xml</value>
+                <value>com/chigix/resserver/mybatis/ChizuruMapper.xml</value>
+                <value>com/chigix/resserver/mybatis/SubresourceMapper.xml</value>
+            </list>
+        </property>
+    </bean>
+    
+    <bean id="bucketMapper" class="org.mybatis.spring.mapper.MapperFactoryBean">
+        <property name="mapperInterface" value="com.chigix.resserver.mybatis.dao.BucketMapper" />
+        <property name="sqlSessionFactory" ref="sqlSessionFactory_Chizuru" />
+    </bean>
+    <bean id="BucketRepository" class="com.chigix.resserver.mybatis.BucketDaoImpl">
+        <constructor-arg ref="bucketMapper" />
+    </bean>
+    <bean id="resourceMapper" class="org.mybatis.spring.mapper.MapperFactoryBean" primary="true">
+        <property name="mapperInterface" value="com.chigix.resserver.mybatis.dao.ResourceMapper" />
+        <property name="sqlSessionFactory" ref="sqlSessionFactory_Chizuru" />
+    </bean>
+    <bean id="ResourceRepository" class="com.chigix.resserver.mybatis.ResourceDaoImpl" primary="true">
+        <constructor-arg ref="resourceMapper" />
+        <constructor-arg ref="chunkMapper" />
+        <constructor-arg ref="bucketMapper" />
+        <constructor-arg ref="subResourceMapper" />
+    </bean>
+    <bean id="subResourceMapper" class="org.mybatis.spring.mapper.MapperFactoryBean" primary="true">
+        <property name="mapperInterface" value="com.chigix.resserver.mybatis.dao.SubresourceMapper" />
+        <property name="sqlSessionFactory" ref="sqlSessionFactory_Chizuru" />
+    </bean>
+    <bean id="chunkMapper" class="org.mybatis.spring.mapper.MapperFactoryBean">
+        <property name="mapperInterface" value="com.chigix.resserver.mybatis.dao.ChunkMapper" />
+        <property name="sqlSessionFactory" ref="sqlSessionFactory_Chizuru" />
+    </bean>
+    <bean id="ChunkRepository" class="com.chigix.resserver.mybatis.ChunkDaoImpl">
+        <constructor-arg ref="chunkMapper" />
+    </bean>
+    <bean id="chizuruMapper" class="org.mybatis.spring.mapper.MapperFactoryBean">
+        <property name="mapperInterface" value="com.chigix.resserver.mybatis.dao.ChizuruMapper" />
+        <property name="sqlSessionFactory" ref="sqlSessionFactory_Chizuru" />
+    </bean>
+</beans>

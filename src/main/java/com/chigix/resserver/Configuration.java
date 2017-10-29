@@ -3,7 +3,7 @@ package com.chigix.resserver;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.ibatis.session.SqlSessionFactory;
+import java.util.UUID;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -19,17 +19,14 @@ public class Configuration {
 
     private int transferBufferSize = 2 * 1024 * 1024;
 
+    @Deprecated
     private File chunksDir;
 
-    private final String currentNodeId;
+    private String currentNodeId = UUID.randomUUID().toString();
 
     private DateTime creationDate = new DateTime(DateTimeZone.forID("GMT"));
 
-    private SqlSessionFactory mainSession;
-
-    private SqlSessionFactory uploadSession;
-
-    public Configuration(String currentNodeId) {
+    public void setCurrentNodeId(String currentNodeId) {
         this.currentNodeId = currentNodeId;
     }
 
@@ -37,22 +34,7 @@ public class Configuration {
         return currentNodeId;
     }
 
-    public SqlSessionFactory getMainSession() {
-        return mainSession;
-    }
-
-    public void setMainSession(SqlSessionFactory sessionFactory) {
-        this.mainSession = sessionFactory;
-    }
-
-    public SqlSessionFactory getUploadSession() {
-        return uploadSession;
-    }
-
-    public void setUploadSession(SqlSessionFactory uploadSession) {
-        this.uploadSession = uploadSession;
-    }
-
+    @Deprecated
     public File getChunksDir() {
         if (chunksDir == null) {
             throw new NullPointerException("There is no File Directory configured.");
@@ -60,6 +42,7 @@ public class Configuration {
         return chunksDir;
     }
 
+    @Deprecated
     public void setChunksDir(File chunksDir) {
         this.chunksDir = chunksDir;
     }

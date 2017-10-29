@@ -3,6 +3,7 @@ package com.chigix.resserver.sharablehandlers;
 import com.chigix.resserver.ApplicationContext;
 import com.chigix.resserver.domain.Bucket;
 import com.chigix.resserver.domain.Resource;
+import com.chigix.resserver.domain.error.NoSuchBucket;
 import com.chigix.resserver.domain.error.NoSuchKey;
 import static com.chigix.resserver.sharablehandlers.ResourceInfoHandler.ROUTING_PATH_PARAM.BUCKET_NAME;
 import io.netty.channel.ChannelHandler;
@@ -37,7 +38,7 @@ public class ResourceInfoHandler extends SimpleChannelInboundHandler<HttpRouted>
 
     @Override
     protected void messageReceived(ChannelHandlerContext ctx, HttpRouted msg) throws Exception {
-        Bucket b = application.getDaoFactory().getBucketDao().findBucketByName((String) msg.decodedParams().get(BUCKET_NAME));
+        final Bucket b = application.getDaoFactory().getBucketDao().findBucketByName((String) msg.decodedParams().get(BUCKET_NAME));
         Resource r;
         try {
             r = application.getDaoFactory().getResourceDao().findResource(
@@ -45,8 +46,15 @@ public class ResourceInfoHandler extends SimpleChannelInboundHandler<HttpRouted>
                     QueryStringDecoder.decodeComponent((String) msg.decodedParams().get(ROUTING_PATH_PARAM.RESOURCE_KEY))
             );
         } catch (NoSuchKey noSuchKey) {
-            r = new Context.UnpersistedResource(b,
-                    QueryStringDecoder.decodeComponent((String) msg.decodedParams().get(ROUTING_PATH_PARAM.RESOURCE_KEY)));
+            r = new Resource(QueryStringDecoder.decodeComponent((String) msg.decodedParams().get(ROUTING_PATH_PARAM.RESOURCE_KEY))) {
+                @Override
+                public Bucket getBucket() throws NoSuchBucket {
+                    return b;
+                }
+            };
+        } catch (NoSuchBucket ex) {
+            msg.deny();
+            throw ex;
         } catch (Exception ex) {
             msg.deny();
             throw ex;

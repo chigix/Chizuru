@@ -1,6 +1,5 @@
 package com.chigix.resserver.sharablehandlers;
 
-import com.chigix.resserver.domain.Bucket;
 import com.chigix.resserver.domain.Resource;
 import com.chigix.resserver.util.HttpHeaderNames;
 import io.netty.buffer.ByteBuf;
@@ -133,27 +132,6 @@ public class Context {
     public void copyTo(Context target) {
         target.cachingChunkBuf = this.cachingChunkBuf;
         target.resource = this.resource;
-    }
-
-    public static class UnpersistedResource extends Resource {
-
-        private final Bucket bucket;
-
-        public UnpersistedResource(Bucket bucket, String key) {
-            super(key);
-            this.bucket = bucket;
-        }
-
-        public UnpersistedResource(Bucket bucket, String key, String versionId) {
-            super(key, versionId);
-            this.bucket = bucket;
-        }
-
-        @Override
-        public Bucket getBucket() {
-            return bucket;
-        }
-
     }
 
 }

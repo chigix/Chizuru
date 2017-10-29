@@ -1,49 +1,60 @@
 package com.chigix.resserver.mybatis;
 
+import com.chigix.resserver.domain.Bucket;
 import com.chigix.resserver.domain.Chunk;
-import java.io.IOException;
-import org.apache.ibatis.session.SqlSession;
+import com.chigix.resserver.domain.ChunkedResource;
+import com.chigix.resserver.domain.error.NoSuchBucket;
+import com.chigix.resserver.mybatis.dao.ChunkMapper;
+import com.chigix.resserver.util.Authorization;
+import java.util.Iterator;
+import java.util.UUID;
 import org.junit.After;
 import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.transaction.TransactionConfiguration;
+import org.springframework.transaction.annotation.Transactional;
+import com.chigix.resserver.domain.dao.ChunkDao;
 
 /**
  *
  * @author Richard Lea <chigix@zoho.com>
  */
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations = "classpath:appContext.xml")
+@Transactional
+@TransactionConfiguration(transactionManager = "transactionManager_Chizuru")
 public class ChunkDaoImplTest {
 
-    private ChunkDaoImpl chunkDao;
+    @Autowired
+    private ChunkDao chunkRepository;
 
-    private ChunkMapper chunkMapper;
-
-    private SqlSession session;
+    @Autowired
+    private ChunkMapper chunkDao;
 
     public ChunkDaoImplTest() {
     }
 
     @BeforeClass
-    public static void setUpClass() {
+    public static void setUpClass() throws Exception {
     }
 
     @AfterClass
-    public static void tearDownClass() {
+    public static void tearDownClass() throws Exception {
     }
 
     @Before
-    public void setUp() throws IOException {
-        session = TestUtils.setUpDatabase("chizuru");
-        session.update("com.chigix.resserver.mybatis.DbInitMapper.createChunkTable");
-        chunkMapper = session.getMapper(ChunkMapper.class);
-        chunkDao = new ChunkDaoImpl(chunkMapper);
+    public void setUp() throws Exception {
     }
 
     @After
-    public void tearDown() {
-        session.update("com.chigix.resserver.mybatis.DbInitMapper.deleteChunkTable");
+    public void tearDown() throws Exception {
     }
 
     /**
@@ -60,8 +71,43 @@ public class ChunkDaoImplTest {
     @Test
     public void testSaveChunkIfAbsent() {
         System.out.println("saveChunkIfAbsent");
-        assertNull(chunkDao.saveChunkIfAbsent(new Chunk("AAAAAA", 0, "TEST_LOCATION")));
-        assertNotNull(chunkDao.saveChunkIfAbsent(new Chunk("AAAAAA", 0, "TEST_LOCATION")));
+        assertNull(chunkRepository.saveChunkIfAbsent(new Chunk("AAAAAA", 0, "TEST_LOCATION")));
+        assertNotNull(chunkRepository.saveChunkIfAbsent(new Chunk("AAAAAA", 0, "TEST_LOCATION")));
+    }
+
+    /**
+     * Test of listChunksByResource method, of class ChunkDaoImpl.
+     */
+    @Test
+    public void testListChunksByResource() {
+        System.out.println("listChunksByResource");
+        final ChunkedResource r = new ChunkedResource("TEST RESOURCE") {
+            @Override
+            public Iterator<Chunk> getChunks() {
+                throw new UnsupportedOperationException("Not supported yet.");
+            }
+
+            @Override
+            public Bucket getBucket() throws NoSuchBucket {
+                throw new UnsupportedOperationException("Not supported yet.");
+            }
+        };
+        for (int i = 0; i < 1000; i++) {
+            final com.chigix.resserver.mybatis.record.Chunk record = new com.chigix.resserver.mybatis.record.Chunk();
+            record.setContentHash(Authorization.HexEncode(
+                    Authorization.SHA256(
+                            UUID.randomUUID().toString().getBytes())));
+            record.setIndexInParent(i + "");
+            record.setLocationId("TEST_LOCATION");
+            record.setParentVersionId(r.getVersionId());
+            record.setSize(2048);
+            chunkDao.insert(record);
+        }
+        ChunkDaoImpl repository = (ChunkDaoImpl) chunkRepository;
+        Iterator<Chunk> chunks = repository.listChunksByResource(r);
+        for (int i = 0; i < 1000; i++) {
+            assertNotNull(chunks.next());
+        }
     }
 
 }

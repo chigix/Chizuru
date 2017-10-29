@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration
+  PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+  "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+
+<generatorConfiguration>
+
+    <context id="Chizuru_DB" targetRuntime="MyBatis3">
+        <plugin type="org.mybatis.generator.plugins.RowBoundsPlugin"></plugin>
+        <jdbcConnection driverClass="org.h2.Driver"
+                        connectionURL="jdbc:h2:./data/Chizuru"
+                        userId="Chizuru"
+                        password="">
+        </jdbcConnection>
+
+        <javaTypeResolver>
+            <property name="forceBigDecimals" value="false" />
+        </javaTypeResolver>
+
+        <javaModelGenerator targetPackage="com.chigix.resserver.mybatis.record" targetProject="./src/main/java">
+            <property name="enableSubPackages" value="true" />
+            <property name="trimStrings" value="true" />
+        </javaModelGenerator>
+
+        <sqlMapGenerator targetPackage="com.chigix.resserver.mybatis"  targetProject="./src/main/resources">
+            <property name="enableSubPackages" value="true" />
+        </sqlMapGenerator>
+
+        <javaClientGenerator type="XMLMAPPER" targetPackage="com.chigix.resserver.mybatis.dao"  targetProject="./src/main/java">
+            <property name="enableSubPackages" value="true" />
+        </javaClientGenerator>
+
+        <table tableName="BUCKET" enableSelectByPrimaryKey="false" modelType="flat" alias="table_a">
+            <property name="useActualColumnNames" value="false"/>
+            <generatedKey column="ID" sqlStatement="JDBC" />
+            <columnOverride column="CREATION_TIME" jdbcType="CHAR" javaType="org.joda.time.DateTime" typeHandler="com.chigix.resserver.mybatis.type.DatetimeTypeHandler" />
+            <!--<columnOverride column="CREATION_TIME" property="creationTime" />-->
+            <!--<ignoreColumn column="FRED" />-->
+            <!--<columnOverride column="LONG_VARCHAR_FIELD" jdbcType="VARCHAR" />-->
+        </table>
+        <table tableName="CHIZURU" enableSelectByPrimaryKey="false" delimitAllColumns="true">
+            <property name="useActualColumnNames" value="false"/>
+            <generatedKey column="ID" sqlStatement="JDBC" />
+        </table>
+        <table tableName="CHUNK" enableSelectByPrimaryKey="false" alias="table_a">
+            <property name="useActualColumnNames" value="false"/>
+            <generatedKey column="ID" sqlStatement="JDBC" />
+        </table>
+        <table tableName="RESOURCE" enableSelectByPrimaryKey="false" delimitAllColumns="true" alias="table_a">
+            <property name="useActualColumnNames" value="false"/>
+            <property name="rootInterface" value="com.chigix.resserver.mybatis.dao.ResourceMapperExtending" />
+            <generatedKey column="ID" sqlStatement="JDBC" />
+            <columnOverride column="last_modified" jdbcType="CHAR" javaType="org.joda.time.DateTime" typeHandler="com.chigix.resserver.mybatis.type.DatetimeTypeHandler" />
+        </table>
+        <table tableName="SUBRESOURCE" enableSelectByPrimaryKey="false" delimitAllColumns="true" alias="table_a">
+            <property name="useActualColumnNames" value="false"/>
+            <generatedKey column="ID" sqlStatement="JDBC" />
+            <columnOverride column="last_modified" jdbcType="CHAR" javaType="org.joda.time.DateTime" typeHandler="com.chigix.resserver.mybatis.type.DatetimeTypeHandler" />
+        </table>
+    </context>
+    <context id="Uploading_DB" targetRuntime="MyBatis3">
+        <plugin type="org.mybatis.generator.plugins.RowBoundsPlugin"></plugin>
+        <jdbcConnection driverClass="org.h2.Driver"
+                        connectionURL="jdbc:h2:./data/Uploading"
+                        userId="Chizuru"
+                        password="">
+        </jdbcConnection>
+
+        <javaTypeResolver >
+            <property name="forceBigDecimals" value="false" />
+        </javaTypeResolver>
+
+        <javaModelGenerator targetPackage="com.chigix.resserver.mybatis.record" targetProject="./src/main/java">
+            <property name="enableSubPackages" value="true" />
+            <property name="trimStrings" value="true" />
+        </javaModelGenerator>
+
+        <sqlMapGenerator targetPackage="com.chigix.resserver.mybatis"  targetProject="./src/main/resources">
+            <property name="enableSubPackages" value="true" />
+        </sqlMapGenerator>
+
+        <javaClientGenerator type="XMLMAPPER" targetPackage="com.chigix.resserver.mybatis.dao"  targetProject="./src/main/java">
+            <property name="enableSubPackages" value="true" />
+        </javaClientGenerator>
+
+        <table tableName="MULTIPART_UPLOAD" enableSelectByPrimaryKey="false" delimitAllColumns="true" alias="table_a">
+            <property name="useActualColumnNames" value="false"/>
+            <generatedKey column="ID" sqlStatement="JDBC" />
+            <columnOverride column="initiated_at" jdbcType="CHAR" javaType="org.joda.time.DateTime" typeHandler="com.chigix.resserver.mybatis.type.DatetimeTypeHandler" />
+        </table>
+    </context>
+</generatorConfiguration>

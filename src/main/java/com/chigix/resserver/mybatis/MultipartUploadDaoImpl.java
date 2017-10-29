@@ -4,40 +4,63 @@ import com.chigix.resserver.domain.AmassedResource;
 import com.chigix.resserver.domain.Bucket;
 import com.chigix.resserver.domain.ChunkedResource;
 import com.chigix.resserver.domain.MultipartUpload;
-import com.chigix.resserver.domain.dao.MultipartUploadDao;
 import com.chigix.resserver.domain.error.InvalidPart;
 import com.chigix.resserver.domain.error.NoSuchBucket;
 import com.chigix.resserver.domain.error.NoSuchUpload;
+import com.chigix.resserver.domain.error.UnexpectedLifecycleException;
 import com.chigix.resserver.mybatis.bean.AmassedResourceBean;
 import com.chigix.resserver.mybatis.bean.BucketBean;
 import com.chigix.resserver.mybatis.bean.ChunkedResourceBean;
-import com.chigix.resserver.mybatis.dto.MultipartUploadDto;
-import com.chigix.resserver.mybatis.dto.ResourceBuilder;
-import com.chigix.resserver.mybatis.dto.ResourceDto;
 import java.security.InvalidParameterException;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import com.chigix.resserver.mybatis.dao.ChunkMapper;
+import com.chigix.resserver.mybatis.dao.MultipartUploadMapper;
+import com.chigix.resserver.mybatis.dao.ResourceMapper;
+import com.chigix.resserver.mybatis.dao.SubresourceMapper;
+import com.chigix.resserver.mybatis.mapstruct.MultipartUploadBeanMapper;
+import com.chigix.resserver.mybatis.mapstruct.UploadingResourceBeanMapper;
+import com.chigix.resserver.mybatis.mapstruct.UploadingSubresourceBeanMapper;
+import com.chigix.resserver.mybatis.record.MultipartUploadExample;
+import com.chigix.resserver.mybatis.record.Resource;
+import com.chigix.resserver.mybatis.record.ResourceExample;
+import com.chigix.resserver.mybatis.record.Subresource;
+import com.chigix.resserver.mybatis.record.SubresourceExample;
+import com.chigix.resserver.mybatis.record.Util;
+import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import com.chigix.resserver.domain.dao.MultipartUploadDao;
 
 /**
  *
  * @author Richard Lea <chigix@zoho.com>
+ * @TODO Rename to MultipartUploadRepositoryImpl
  */
 public class MultipartUploadDaoImpl implements MultipartUploadDao {
 
     private final MultipartUploadMapper uploadMapper;
 
-    private final ChunkDaoImpl chunkdao;
-    private final ResourceMapper uploadingResourceMapper;
+    private final ResourceMapper uploadingResourceDao;
+    private final SubresourceMapper uploadingSubResourceDao;
+
+    @Autowired
+    private MultipartUploadBeanMapper multipartUploadBeanMapper;
+
+    @Autowired
+    private UploadingResourceBeanMapper resourceBeanMapper;
+
+    @Autowired
+    private UploadingSubresourceBeanMapper subResourceBeanMapper;
 
     public MultipartUploadDaoImpl(MultipartUploadMapper uploadMapper,
-            ChunkDaoImpl chunkdao,
-            ResourceMapper uploadingResourceMapper) {
+            ChunkMapper chunkMapper,
+            ResourceMapper uploadingResourceMapper,
+            SubresourceMapper uploadingSubResourceMapper) {
         this.uploadMapper = uploadMapper;
-        this.uploadingResourceMapper = uploadingResourceMapper;
-        this.chunkdao = chunkdao;
+        this.uploadingResourceDao = uploadingResourceMapper;
+        this.uploadingSubResourceDao = uploadingSubResourceMapper;
     }
 
     @Override
@@ -57,37 +80,40 @@ public class MultipartUploadDaoImpl implements MultipartUploadDao {
             }
 
         };
-        uploadingResourceMapper.mergeUploadingResource(new ResourceDto(resource, bb), new MultipartUploadDto(u));
-        ResourceBuilder b = uploadingResourceMapper
-                .selectByUploadId(u.getUploadId());
-        AmassedResourceBean resource_bean;
-        try {
-            resource_bean = (AmassedResourceBean) b.build(null, chunkdao, null);
-        } catch (NullPointerException e) {
-            if (b == null) {
-                throw new RuntimeException("Unexpected!!! AmassedResource have "
-                        + "been removed while belonged upload is still initiating. : ["
-                        + resource.getKey() + "]");
-            }
-            throw e;
-        }
+        Resource record = resourceBeanMapper.toRecord(resource);
+        uploadingResourceDao.mergeUploadingResource(record);
+        AmassedResourceBean resource_bean = (AmassedResourceBean) resourceBeanMapper.fromRecord(record);
         resource_bean.setBucket(bb);
         resource_ref.set(resource_bean);
-        uploadMapper.insert(new MultipartUploadDto(u));
+        uploadMapper.insert(multipartUploadBeanMapper.toRecord(u));
         return u;
     }
 
     @Override
     public MultipartUpload findUpload(String uploadId) throws NoSuchUpload {
-        Map<String, String> row = uploadMapper.selectByUuid(uploadId);
-        ResourceBuilder b = uploadingResourceMapper.selectByUploadId(uploadId);
-        if (b == null) {
+        MultipartUploadExample upload_example = new MultipartUploadExample();
+        upload_example.createCriteria().andUuidEqualTo(uploadId);
+        com.chigix.resserver.mybatis.record.MultipartUpload upload_record;
+        try {
+            upload_record = uploadMapper.selectByExampleWithRowbounds(upload_example, Util.ONE_ROWBOUND).get(0);
+        } catch (IndexOutOfBoundsException e) {
             throw new NoSuchUpload();
         }
-        AmassedResourceBean resource_bean = (AmassedResourceBean) b.build(null, chunkdao, null);
-        resource_bean.setBucket(new BucketBean(row.get("bucket_name"),
-                new DateTime(DateTimeZone.UTC), row.get("bucket_uuid")));
-        MultipartUpload u = new MultipartUpload(resource_bean, uploadId, DateTime.parse(row.get("initiated_at")));
+        ResourceExample resource_example = new ResourceExample();
+        resource_example.createCriteria()
+                .andKeyhashEqualTo(upload_record.getResourceKeyhash())
+                .andVersionIdEqualTo(upload_record.getResourceVersion());
+        Resource b = uploadingResourceDao.selectByExampleWithBLOBsWithRowbounds(resource_example, Util.ONE_ROWBOUND).get(0);
+        if (b == null) {
+            MultipartUploadExample delete_by_uuid = new MultipartUploadExample();
+            delete_by_uuid.createCriteria().andUuidEqualTo(upload_record.getUuid());
+            uploadMapper.deleteByExample(delete_by_uuid);
+            throw new NoSuchUpload();
+        }
+        AmassedResourceBean resource_bean = (AmassedResourceBean) resourceBeanMapper.fromRecord(b);
+        resource_bean.setBucket(new BucketBean(upload_record.getBucketName(),
+                new DateTime(DateTimeZone.UTC), upload_record.getBucketUuid()));
+        MultipartUpload u = new MultipartUpload(resource_bean, uploadId, upload_record.getInitiatedAt());
         return u;
     }
 
@@ -97,12 +123,13 @@ public class MultipartUploadDaoImpl implements MultipartUploadDao {
         if (key.length() > 32) {
             key = key.substring(key.length() - 32);
         }
-        ResourceBuilder b = uploadingResourceMapper.selectSubResourceByKeyEtagParent(
-                key, upload.getResource().getVersionId(), etag);
-        if (b == null) {
+        SubresourceExample example = new SubresourceExample();
+        example.createCriteria().andKeyEqualTo(key).andParentVersionIdEqualTo(upload.getResource().getVersionId()).andEtagEqualTo(etag);
+        List<Subresource> records = uploadingSubResourceDao.selectByExampleWithRowbounds(example, Util.ONE_ROWBOUND);
+        if (records.size() < 1) {
             throw new InvalidPart();
         }
-        ChunkedResourceBean resource_bean = (ChunkedResourceBean) b.build(null, chunkdao, null);
+        ChunkedResourceBean resource_bean = subResourceBeanMapper.fromRecord(records.get(0));
         try {
             resource_bean.setBucket((BucketBean) upload.getResource().getBucket());
         } catch (NoSuchBucket ex) {
@@ -114,8 +141,12 @@ public class MultipartUploadDaoImpl implements MultipartUploadDao {
 
     @Override
     public void removeUpload(MultipartUpload upload) throws NoSuchUpload {
-        int upload_count = uploadMapper.deleteByUuid(upload.getUploadId());
-        int resource_count = uploadingResourceMapper.deleteByUploadId(upload.getUploadId());
+        MultipartUploadExample upload_example = new MultipartUploadExample();
+        upload_example.createCriteria().andUuidEqualTo(upload.getUploadId());
+        int upload_count = uploadMapper.deleteByExample(upload_example);
+        ResourceExample example = new ResourceExample();
+        example.createCriteria().andVersionIdEqualTo(upload.getResource().getVersionId());
+        int resource_count = uploadingResourceDao.deleteByExample(example);
         if (upload_count < 1 || resource_count < 1) {
             throw new NoSuchUpload();
         }
@@ -127,9 +158,12 @@ public class MultipartUploadDaoImpl implements MultipartUploadDao {
         if (b instanceof BucketBean) {
             bb = (BucketBean) b;
         } else {
-            throw new InvalidParameterException("Parameter of Bucket is expected to be persisted bean object.");
+            throw new UnexpectedLifecycleException("Bucket for this query is expected as a persisted bean.");
         }
-        final Iterator<Map<String, String>> rows = uploadMapper.selectAllByBucketUuid(bb.getUuid()).iterator();
+        MultipartUploadExample example = new MultipartUploadExample();
+        example.createCriteria().andBucketUuidEqualTo(bb.getUuid());
+        // @TODO should use RowBounds in select.
+        final Iterator<com.chigix.resserver.mybatis.record.MultipartUpload> rows = uploadMapper.selectByExample(example).iterator();
         return new Iterator<MultipartUpload>() {
             @Override
             public boolean hasNext() {
@@ -138,15 +172,19 @@ public class MultipartUploadDaoImpl implements MultipartUploadDao {
 
             @Override
             public MultipartUpload next() {
-                Map<String, String> row = rows.next();
-                ResourceBuilder b = uploadingResourceMapper.selectByUploadId(row.get("uuid"));
+                com.chigix.resserver.mybatis.record.MultipartUpload row = rows.next();
+                ResourceExample example = new ResourceExample();
+                example.createCriteria().andVersionIdEqualTo(row.getResourceVersion());
+                Resource b = uploadingResourceDao.selectByExampleWithBLOBsWithRowbounds(example, Util.ONE_ROWBOUND).get(0);
                 if (b == null) {
-                    uploadMapper.deleteByUuid(row.get("uuid"));
+                    MultipartUploadExample delete_by_uuid = new MultipartUploadExample();
+                    delete_by_uuid.createCriteria().andUuidEqualTo(row.getUuid());
+                    uploadMapper.deleteByExample(delete_by_uuid);
                     return next();
                 }
-                AmassedResourceBean resource_bean = (AmassedResourceBean) b.build(null, chunkdao, null);
-                resource_bean.setBucket(new BucketBean(row.get("bucket_name"), new DateTime(DateTimeZone.UTC), row.get("bucket_uuid")));
-                return new MultipartUpload(resource_bean, row.get("uuid"), DateTime.parse(row.get("initiated_at")));
+                AmassedResourceBean resource_bean = (AmassedResourceBean) resourceBeanMapper.fromRecord(b);
+                resource_bean.setBucket(new BucketBean(row.getBucketName(), new DateTime(DateTimeZone.UTC), row.getBucketUuid()));
+                return new MultipartUpload(resource_bean, row.getUuid(), row.getInitiatedAt());
             }
         };
     }
@@ -161,14 +199,11 @@ public class MultipartUploadDaoImpl implements MultipartUploadDao {
         if (key.length() > 32) {
             key = key.substring(key.length() - 32);
         }
-        ResourceBuilder chunked_resource_builder = ResourceBuilder.createFrom(
-                new ResourceDto(r, amassed_resource.getBucket()));
-        chunked_resource_builder.setResourceKey(key);
-        ChunkedResourceBean chunk_bean
-                = (ChunkedResourceBean) chunked_resource_builder.build(null, chunkdao, null);
-        chunk_bean.setParentResource(amassed_resource);
-        uploadingResourceMapper.insertSubResource(new ResourceDto(chunk_bean,
-                amassed_resource.getBucket()));
+        Subresource record = subResourceBeanMapper.toRecord(r);
+        record.setKey(key);
+        record.setParentVersionId(amassed_resource.getVersionId());
+        // @TODO: Involve Merge support.
+        uploadingSubResourceDao.insert(record);
     }
 
 }

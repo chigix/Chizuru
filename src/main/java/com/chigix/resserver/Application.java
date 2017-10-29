@@ -4,9 +4,7 @@ import com.chigix.resserver.domain.error.DaoException;
 import com.chigix.resserver.error.DaoExceptionHandler;
 import com.chigix.resserver.error.ExceptionHandler;
 import com.chigix.resserver.error.UnwrappedExceptionHandler;
-import com.chigix.resserver.mybatis.ChizuruMapper;
-import com.chigix.resserver.mybatis.DaoFactoryImpl;
-import com.chigix.resserver.mybatis.dto.ApplicationContextDto;
+import com.chigix.resserver.mybatis.EntityManagerImpl;
 import com.chigix.resserver.util.HttpHeaderNames;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
@@ -28,22 +26,16 @@ import io.netty.handler.codec.http.router.FullResponseLengthFixer;
 import io.netty.handler.codec.http.router.HttpException;
 import io.netty.handler.codec.http.router.HttpRouted;
 import io.netty.handler.codec.http.router.HttpRouter;
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Locale;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import org.apache.ibatis.io.Resources;
-import org.apache.ibatis.session.SqlSession;
-import org.apache.ibatis.session.SqlSessionFactory;
-import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.support.GenericXmlApplicationContext;
 
 /**
  *
@@ -56,7 +48,8 @@ public class Application {
     public static ExecutorService amassedResourceFileReadingPool;
 
     public static void main(String[] args) throws InterruptedException {
-        ApplicationContext app_ctx = initNode();
+        org.springframework.context.ApplicationContext springContext = new GenericXmlApplicationContext("appContext.xml");
+        ApplicationContext app_ctx = springContext.getBean(ApplicationContext.class);
         LOG.info(app_ctx.getChizuruVersion());
         LOG.info("NODE ID: " + app_ctx.getCurrentNodeId());
         LOG.info("Created At: " + app_ctx.getCreationDate());
@@ -93,67 +86,6 @@ public class Application {
         }
     }
 
-    public static SqlSessionFactory initMyBatis(String env) {
-        InputStream in;
-        try {
-            in = Resources.getResourceAsStream("com/chigix/resserver/mybatis/mybatis-config.xml");
-        } catch (IOException ex) {
-            LOG.error("Unexpected.", ex);
-            throw new RuntimeException("Unexpected.");
-        }
-        return new SqlSessionFactoryBuilder().build(in, env);
-    }
-
-    public static ApplicationContext initNode() {
-        SqlSessionFactory session_factory = initMyBatis("chizuru");
-        ApplicationContext result;
-        try (SqlSession settings_session = session_factory.openSession(true)) {
-            ChizuruMapper chizuru = settings_session.getMapper(ChizuruMapper.class);
-            Map<String, String> settings = ChizuruMapper.SETTINGS_MAP.apply(chizuru.selectChizuruSettings());
-            final Configuration config;
-            if (settings.get("NODE_ID") == null) {
-                config = new Configuration(UUID.randomUUID().toString());
-            } else {
-                config = new Configuration(settings.get("NODE_ID"));
-            }
-            config.setMainSession(session_factory);
-            File uploadDbFile_1 = new File("./data/Uploading.mv.db");
-            File uploadDbFile_2 = new File("./data/Uploading.trace.db");
-            if (uploadDbFile_1.exists()) {
-                uploadDbFile_1.delete();
-            }
-            if (uploadDbFile_2.exists()) {
-                uploadDbFile_2.delete();
-            }
-            config.setUploadSession(initMyBatis("upload"));
-            try (SqlSession upload_session = config.getUploadSession().openSession(true)) {
-                upload_session.update("com.chigix.resserver.mybatis.MultipartUploadMapper.createUploadTable");
-            }
-            if (settings.get("CREATION_DATE") == null) {
-                config.setCreationDate(new DateTime(DateTimeZone.forID("GMT")));
-            } else {
-                config.setCreationDate(DateTime.parse(settings.get("CREATION_DATE")));
-            }
-            if (settings.get("MAX_CHUNKSIZE") != null) {
-                config.setMaxChunkSize(Integer.valueOf(settings.get("MAX_CHUNKSIZE")));
-            }
-            if (settings.get("TRANSFER_BUFFERSIZE") != null) {
-                config.setTransferBufferSize(Integer.valueOf(settings.get("TRANSFER_BUFFERSIZE")));
-            }
-            File chunks_dir = new File("./data/chunks");
-            if (!chunks_dir.exists()) {
-                chunks_dir.mkdirs();
-            }
-            if (!chunks_dir.isDirectory()) {
-                throw new RuntimeException("Unable to have chunks directory.");
-            }
-            config.setChunksDir(new File("./data/chunks"));
-            result = new ApplicationContextBuilder().build(config);
-            chizuru.updateChizuruSettings(new ApplicationContextDto(result));
-        }
-        return result;
-    }
-
     public static ChannelHandlerAdapter headerFixer(ApplicationContext application) {
         return new ChannelHandlerAdapter() {
 
@@ -178,7 +110,9 @@ public class Application {
                     // in this thread have also invoked ApplicationContext#finishRequest()
                     // Because it seems that H2Database Sql Session's commit and flush could only 
                     // have effect in the later sessions. 
-                    ((DaoFactoryImpl) application.getDaoFactory()).closeSessions();
+                    // -- This problem may be solved automatically with the
+                    //    support from newly involved Spring Framework.
+                    ((EntityManagerImpl) application.getDaoFactory()).close();
                     ((HttpRequest) msg).headers().add(application.getRequestIdHeaderName(), UUID.randomUUID().toString());
                 }
                 super.channelRead(ctx, msg);

@@ -2,17 +2,22 @@ package com.chigix.resserver.mybatis;
 
 import com.chigix.resserver.domain.Chunk;
 import com.chigix.resserver.domain.ChunkedResource;
-import com.chigix.resserver.domain.dao.ChunkDao;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collections;
 import java.util.Iterator;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
+import com.chigix.resserver.mybatis.dao.ChunkMapper;
+import com.chigix.resserver.mybatis.record.ChunkExample;
+import com.chigix.resserver.mybatis.record.ChunkExampleExtending;
+import com.chigix.resserver.mybatis.record.Util;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import org.apache.ibatis.session.RowBounds;
+import com.chigix.resserver.domain.dao.ChunkDao;
 
 /**
  *
  * @author Richard Lea <chigix@zoho.com>
+ * @TODO Rename to ChunkRepositoryImpl
  */
 public class ChunkDaoImpl implements ChunkDao {
 
@@ -24,6 +29,13 @@ public class ChunkDaoImpl implements ChunkDao {
         this.chunkMapper = dbMapper;
     }
 
+    /**
+     * @TODO: This method is also a confusing design. But now there is no
+     * solution to work around Filesystem support into Database Implementation
+     * class in my head.
+     *
+     * @param aspectForNewChunk
+     */
     public void setAspectForNewChunk(ChunkDao aspectForNewChunk) {
         this.aspectForNewChunk = aspectForNewChunk;
     }
@@ -48,30 +60,41 @@ public class ChunkDaoImpl implements ChunkDao {
 
     @Override
     public Chunk saveChunkIfAbsent(Chunk chunk) {
-        if (chunkMapper.selectFirstChunkReference(chunk.getContentHash()) == null) {
-            return null;
-        } else {
+        ChunkExample example = new ChunkExample();
+        example.createCriteria().andContentHashEqualTo(chunk.getContentHash());
+        if (chunkMapper.selectByExampleWithRowbounds(example, Util.ONE_ROWBOUND).size() > 0) {
             return chunk;
+        } else {
+            return null;
         }
     }
 
+    /**
+     * @TODO: expose to ChunkRepository Domain interface.
+     *
+     * @param r
+     * @return
+     */
     public Iterator<Chunk> listChunksByResource(final ChunkedResource r) {
-        final AtomicReference<String> continuation = new AtomicReference<>();
-        final IteratorConcater<Map<String, String>> rows = new IteratorConcater<Map<String, String>>() {
-            @Override
-            protected Iterator<Map<String, String>> nextIterator() {
-                if (continuation.get() == null) {
-                    return chunkMapper.selectByVersion(r.getVersionId()).iterator();
-                }
-                Iterator<Map<String, String>> new_it = chunkMapper.selectByVersion(r.getVersionId(), continuation.get()).iterator();
-                if (continuation.get().equals(new_it.next().get("CONTENT_HASH"))) {
-                    return Collections.emptyIterator();
-                }
-                return new_it;
-            }
-        }.addListener((e) -> {
-            continuation.set(e.get("CONTENT_HASH"));
-        });
+        final AtomicInteger continuation_index = new AtomicInteger(0);
+        final AtomicBoolean continuation_include = new AtomicBoolean(true);
+        final IteratorConcater<com.chigix.resserver.mybatis.record.Chunk> rows
+                = new IteratorConcater<com.chigix.resserver.mybatis.record.Chunk>() {
+                    @Override
+                    protected Iterator<com.chigix.resserver.mybatis.record.Chunk> nextIterator() {
+                        ChunkExample example = new ChunkExample();
+                        ChunkExample.Criteria criteria = example.createCriteria()
+                                .andParentVersionIdEqualTo(r.getVersionId());
+                        criteria.getCriteria().add(
+                                new ChunkExampleExtending.OffsetIndexInParent(
+                                        continuation_index.get(),
+                                        r.getVersionId(),
+                                        continuation_include.getAndSet(false)));
+                        return chunkMapper.selectByExampleWithRowbounds(example, new RowBounds(0, 100)).iterator();
+                    }
+                }.addListener((e) -> {
+                    continuation_index.set(Integer.valueOf(e.getIndexInParent()));
+                });
         return new Iterator<Chunk>() {
             @Override
             public boolean hasNext() {
@@ -80,9 +103,8 @@ public class ChunkDaoImpl implements ChunkDao {
 
             @Override
             public Chunk next() {
-                Map<String, String> row = rows.next();
-                Object i = row.get("SIZE");
-                return newChunk(row.get("CONTENT_HASH"), Integer.parseInt(i.toString()));
+                com.chigix.resserver.mybatis.record.Chunk record = rows.next();
+                return newChunk(record.getContentHash(), record.getSize());
             }
         };
     }
