@@ -6,34 +6,17 @@ import com.chigix.resserver.domain.model.multiupload.MultipartUploadRepository;
 import com.chigix.resserver.domain.model.resource.ResourceRepository;
 
 /**
- * @TODO rename to EntityManager
  *
  * @author Richard Lea <chigix@zoho.com>
  */
-public interface DaoFactory {
+public interface EntityManager {
 
-    /**
-     *
-     * @return
-     */
     BucketRepository getBucketRepository();
 
-    /**
-     *
-     * @return
-     */
     ChunkRepository getChunkRepository();
 
-    /**
-     *
-     * @return
-     */
     ResourceRepository getResourceRepository();
 
-    /**
-     *
-     * @return
-     */
     MultipartUploadRepository getUploadRepository();
 
     void close();

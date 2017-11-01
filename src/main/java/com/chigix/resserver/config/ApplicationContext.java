@@ -3,7 +3,7 @@ package com.chigix.resserver.config;
 import io.netty.handler.codec.http.router.HttpRouted;
 import java.io.File;
 import org.joda.time.DateTime;
-import com.chigix.resserver.domain.DaoFactory;
+import com.chigix.resserver.domain.EntityManager;
 
 /**
  *
@@ -25,7 +25,7 @@ public interface ApplicationContext {
 
     String getRequestIdHeaderName();
 
-    DaoFactory getEntityManager();
+    EntityManager getEntityManager();
 
     void addNode(String nodeId, String nodeIPAddress);
 

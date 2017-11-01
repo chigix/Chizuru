@@ -18,7 +18,7 @@ import java.util.zip.GZIPInputStream;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import com.chigix.resserver.domain.DaoFactory;
+import com.chigix.resserver.domain.EntityManager;
 
 /**
  * BeanFactory that enables injection of configured {@link ApplicationContext}.
@@ -35,7 +35,7 @@ public class ApplicationContextFactoryBean implements FactoryBean<ApplicationCon
     private ChizuruMapper chizuruDao;
 
     @Autowired
-    private DaoFactory entityManager;
+    private EntityManager entityManager;
 
     public ApplicationContextFactoryBean() {
         // intentionally empty
@@ -139,7 +139,7 @@ public class ApplicationContextFactoryBean implements FactoryBean<ApplicationCon
             }
 
             @Override
-            public DaoFactory getEntityManager() {
+            public EntityManager getEntityManager() {
                 return entityManager;
             }
 

@@ -7,13 +7,13 @@ import com.chigix.resserver.domain.model.bucket.BucketRepository;
 import com.chigix.resserver.domain.model.chunk.ChunkRepository;
 import com.chigix.resserver.domain.model.multiupload.MultipartUploadRepository;
 import com.chigix.resserver.domain.model.resource.ResourceRepository;
-import com.chigix.resserver.domain.DaoFactory;
+import com.chigix.resserver.domain.EntityManager;
 
 /**
  *
  * @author Richard Lea <chigix@zoho.com>
  */
-public class EntityManagerImpl implements DaoFactory {
+public class EntityManagerImpl implements EntityManager {
 
     @Autowired
     private BucketRepository bucketRepository;
