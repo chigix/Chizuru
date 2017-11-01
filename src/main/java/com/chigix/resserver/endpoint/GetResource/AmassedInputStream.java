@@ -1,8 +1,8 @@
 package com.chigix.resserver.endpoint.GetResource;
 
-import com.chigix.resserver.ApplicationContext;
-import com.chigix.resserver.domain.ChunkedResource;
-import com.chigix.resserver.util.IteratorInputStream;
+import com.chigix.resserver.config.ApplicationContext;
+import com.chigix.resserver.domain.model.resource.ChunkedResource;
+import com.chigix.resserver.interfaces.io.IteratorInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;

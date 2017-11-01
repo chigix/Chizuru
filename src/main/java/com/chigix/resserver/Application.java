@@ -1,11 +1,12 @@
 package com.chigix.resserver;
 
+import com.chigix.resserver.config.ApplicationContext;
 import com.chigix.resserver.domain.error.DaoException;
 import com.chigix.resserver.error.DaoExceptionHandler;
 import com.chigix.resserver.error.ExceptionHandler;
 import com.chigix.resserver.error.UnwrappedExceptionHandler;
 import com.chigix.resserver.mybatis.EntityManagerImpl;
-import com.chigix.resserver.util.HttpHeaderNames;
+import com.chigix.resserver.interfaces.handling.http.HttpHeaderNames;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -112,7 +113,7 @@ public class Application {
                     // have effect in the later sessions. 
                     // -- This problem may be solved automatically with the
                     //    support from newly involved Spring Framework.
-                    ((EntityManagerImpl) application.getDaoFactory()).close();
+                    ((EntityManagerImpl) application.getEntityManager()).close();
                     ((HttpRequest) msg).headers().add(application.getRequestIdHeaderName(), UUID.randomUUID().toString());
                 }
                 super.channelRead(ctx, msg);

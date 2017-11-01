@@ -1,9 +1,9 @@
 package com.chigix.resserver.endpoint.PostResource;
 
-import com.chigix.resserver.ApplicationContext;
-import com.chigix.resserver.domain.MultipartUpload;
+import com.chigix.resserver.config.ApplicationContext;
+import com.chigix.resserver.domain.model.multiupload.MultipartUpload;
 import com.chigix.resserver.domain.error.NoSuchUpload;
-import com.chigix.resserver.sharablehandlers.Context;
+import com.chigix.resserver.application.Context;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 
@@ -31,7 +31,7 @@ public class MultiUploadCompleteBeginHandler extends MultiUploadCompleteHandler.
         final MultipartUpload upload;
         try {
             if (uploadId.length() > 5) {
-                upload = application.getDaoFactory().getUploadDao().findUpload(msg.getQueryDecoder().parameters().get("uploadId").get(0));
+                upload = application.getEntityManager().getUploadRepository().findUpload(msg.getQueryDecoder().parameters().get("uploadId").get(0));
             } else {
                 throw new NoSuchUpload();
             }

@@ -1,10 +1,10 @@
 package com.chigix.resserver.endpoint.GetResource;
 
-import com.chigix.resserver.ApplicationContext;
-import com.chigix.resserver.domain.AmassedResource;
-import com.chigix.resserver.domain.ChunkedResource;
-import com.chigix.resserver.domain.Resource;
-import com.chigix.resserver.util.HttpHeaderNames;
+import com.chigix.resserver.config.ApplicationContext;
+import com.chigix.resserver.domain.model.resource.AmassedResource;
+import com.chigix.resserver.domain.model.resource.ChunkedResource;
+import com.chigix.resserver.domain.model.resource.Resource;
+import com.chigix.resserver.interfaces.handling.http.HttpHeaderNames;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;

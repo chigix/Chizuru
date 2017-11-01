@@ -1,7 +1,7 @@
 package com.chigix.resserver.endpoint.GetBucket;
 
-import com.chigix.resserver.ApplicationContext;
-import com.chigix.resserver.sharablehandlers.ExtractGetResponseHandler;
+import com.chigix.resserver.config.ApplicationContext;
+import com.chigix.resserver.application.ExtractGetResponseHandler;
 import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;

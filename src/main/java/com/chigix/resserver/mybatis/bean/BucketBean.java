@@ -1,6 +1,6 @@
 package com.chigix.resserver.mybatis.bean;
 
-import com.chigix.resserver.domain.Bucket;
+import com.chigix.resserver.domain.model.bucket.Bucket;
 import com.chigix.resserver.domain.Lifecycle;
 import com.chigix.resserver.mybatis.EntityManagerImpl;
 import java.util.UUID;

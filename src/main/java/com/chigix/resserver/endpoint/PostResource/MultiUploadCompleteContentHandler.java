@@ -1,17 +1,15 @@
 package com.chigix.resserver.endpoint.PostResource;
 
 import com.chigix.resserver.Application;
-import com.chigix.resserver.ApplicationContext;
-import com.chigix.resserver.domain.AmassedResource;
-import com.chigix.resserver.domain.Chunk;
-import com.chigix.resserver.domain.ChunkedResource;
-import com.chigix.resserver.domain.dao.MultipartUploadDao;
-import com.chigix.resserver.domain.dao.ResourceDao;
+import com.chigix.resserver.config.ApplicationContext;
+import com.chigix.resserver.domain.model.resource.AmassedResource;
+import com.chigix.resserver.domain.model.chunk.Chunk;
+import com.chigix.resserver.domain.model.resource.ChunkedResource;
 import com.chigix.resserver.domain.error.InvalidPart;
 import com.chigix.resserver.domain.error.NoSuchBucket;
 import com.chigix.resserver.scheduledtask.ReadStreamTaskHooker;
-import com.chigix.resserver.util.IteratorInputStream;
-import com.chigix.resserver.util.XPathNode;
+import com.chigix.resserver.interfaces.io.IteratorInputStream;
+import com.chigix.resserver.interfaces.xml.XPathNode;
 import com.fasterxml.aalto.AsyncXMLStreamReader;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler;
@@ -27,6 +25,8 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.chigix.resserver.domain.model.multiupload.MultipartUploadRepository;
+import com.chigix.resserver.domain.model.resource.ResourceRepository;
 
 /**
  *
@@ -76,8 +76,8 @@ class MultiUploadCompleteContentHandler extends MultiUploadCompleteHandler.Conte
                         continue;
                     } else if (tryAppendChunkResourceReading(
                             node.getSimplePath(), routing_ctx,
-                            application.getDaoFactory().getUploadDao(),
-                            application.getDaoFactory().getResourceDao())) {
+                            application.getEntityManager().getUploadRepository(),
+                            application.getEntityManager().getResourceRepository())) {
                         continue;
                     } else if (tryExecuteCalculator(node.getSimplePath(), routing_ctx)) {
                         continue;
@@ -94,7 +94,7 @@ class MultiUploadCompleteContentHandler extends MultiUploadCompleteHandler.Conte
                     LOG.warn("SPACE is not handled in MultiUploadCompleteContentHandler.");
                     continue;
                 case XMLStreamConstants.START_DOCUMENT:
-                    // @TODO: application.getDaoFactory().getResourceDao()
+                    // @TODO: application.getEntityManager().getResourceRepository()
                     //        .removeSubResource(routing_ctx.getResource());
                     routing_ctx.getCurrentEtagCalculator().onFinished = (Callable) () -> {
                         ctx.fireChannelRead(routing_ctx);
@@ -133,7 +133,7 @@ class MultiUploadCompleteContentHandler extends MultiUploadCompleteHandler.Conte
         return false;
     }
 
-    private boolean tryAppendChunkResourceReading(String xpath, MultipartUploadContext ctx, MultipartUploadDao uploaddao, ResourceDao resourcedao) throws InvalidPart, NoSuchBucket {
+    private boolean tryAppendChunkResourceReading(String xpath, MultipartUploadContext ctx, MultipartUploadRepository uploaddao, ResourceRepository resourcedao) throws InvalidPart, NoSuchBucket {
         if ("/CompleteMultipartUpload/Part".equals(xpath)) {
             final AmassedResource amassed_resource = ctx.getResource();
             final MultipartUploadContext.CompleteMultipartUploadPart part = ctx.getCurrentXmlStreamUploadPart();

@@ -1,14 +1,14 @@
 package com.chigix.resserver.endpoint.GetBucket;
 
-import com.chigix.resserver.ApplicationContext;
-import com.chigix.resserver.domain.Bucket;
-import com.chigix.resserver.domain.Resource;
+import com.chigix.resserver.config.ApplicationContext;
+import com.chigix.resserver.domain.model.bucket.Bucket;
+import com.chigix.resserver.domain.model.resource.Resource;
 import com.chigix.resserver.domain.error.NoSuchBucket;
-import com.chigix.resserver.util.HttpHeaderNames;
-import com.chigix.resserver.util.HttpHeaderUtil;
-import com.chigix.resserver.util.InputStreamProxy;
-import com.chigix.resserver.util.IteratorInputStream;
-import com.chigix.resserver.util.OutputStreamProxy;
+import com.chigix.resserver.interfaces.handling.http.HttpHeaderNames;
+import com.chigix.resserver.interfaces.handling.http.HttpHeaderUtil;
+import com.chigix.resserver.interfaces.io.InputStreamProxy;
+import com.chigix.resserver.interfaces.io.IteratorInputStream;
+import com.chigix.resserver.interfaces.io.OutputStreamProxy;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -126,9 +126,9 @@ public class ResourceListHandler extends SimpleChannelInboundHandler<Context> {
                         final Iterator<Resource> resources;
                         try {
                             if (listCtx.continuationToken == null) {
-                                resources = application.getDaoFactory().getResourceDao().listResources(route_ctx.getTargetBucket(), listCtx.maxKeys + 1);
+                                resources = application.getEntityManager().getResourceRepository().listResources(route_ctx.getTargetBucket(), listCtx.maxKeys + 1);
                             } else {
-                                resources = application.getDaoFactory().getResourceDao().listResources(route_ctx.getTargetBucket(), listCtx.nextContinuationToken, listCtx.maxKeys + 1);
+                                resources = application.getEntityManager().getResourceRepository().listResources(route_ctx.getTargetBucket(), listCtx.nextContinuationToken, listCtx.maxKeys + 1);
                             }
                         } catch (NoSuchBucket ex) {
                             setStream(new ClosedInputStream());

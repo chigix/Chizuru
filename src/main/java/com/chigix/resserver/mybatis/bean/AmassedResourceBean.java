@@ -1,6 +1,6 @@
 package com.chigix.resserver.mybatis.bean;
 
-import com.chigix.resserver.domain.AmassedResource;
+import com.chigix.resserver.domain.model.resource.AmassedResource;
 import com.chigix.resserver.domain.Lifecycle;
 import com.chigix.resserver.domain.error.NoSuchBucket;
 import com.chigix.resserver.mybatis.EntityManagerImpl;

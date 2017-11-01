@@ -1,8 +1,8 @@
 package com.chigix.resserver.endpoint.GetResource;
 
 import com.chigix.resserver.mybatis.bean.ChunkedResourceBean;
-import com.chigix.resserver.sharablehandlers.Context;
-import com.chigix.resserver.util.HttpHeaderUtil.InvalidRangeHeader;
+import com.chigix.resserver.application.Context;
+import com.chigix.resserver.interfaces.handling.http.HttpHeaderUtil.InvalidRangeHeader;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.DefaultFullHttpRequest;
 import io.netty.handler.codec.http.DefaultHttpRequest;

@@ -1,6 +1,6 @@
 package com.chigix.resserver.error;
 
-import com.chigix.resserver.ApplicationContext;
+import com.chigix.resserver.config.ApplicationContext;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.router.HttpException;

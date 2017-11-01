@@ -1,6 +1,6 @@
 package com.chigix.resserver.mybatis.specification;
 
-import com.chigix.resserver.domain.AmassedResource;
+import com.chigix.resserver.domain.model.resource.AmassedResource;
 import com.chigix.resserver.mybatis.record.SubresourceExample;
 
 /**

@@ -1,7 +1,7 @@
 package com.chigix.resserver.endpoint.DeleteResource;
 
-import com.chigix.resserver.domain.Bucket;
-import com.chigix.resserver.domain.Resource;
+import com.chigix.resserver.domain.model.bucket.Bucket;
+import com.chigix.resserver.domain.model.resource.Resource;
 import io.netty.handler.codec.http.router.HttpRouted;
 import java.util.ArrayList;
 import java.util.List;

@@ -1,10 +1,10 @@
 package com.chigix.resserver.endpoint.HeadResource;
 
-import com.chigix.resserver.ApplicationContext;
+import com.chigix.resserver.config.ApplicationContext;
 import com.chigix.resserver.endpoint.GetResource.ContentRespHeaderBuildingHandler;
-import com.chigix.resserver.sharablehandlers.ExtractGetResponseHandler;
-import com.chigix.resserver.sharablehandlers.ResourceInfoHandler;
-import com.chigix.resserver.sharablehandlers.ResourceRespEncoder;
+import com.chigix.resserver.application.ExtractGetResponseHandler;
+import com.chigix.resserver.application.ResourceInfoHandler;
+import com.chigix.resserver.application.ResourceRespEncoder;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.http.router.RoutingConfig;
 

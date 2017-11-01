@@ -1,6 +1,6 @@
 package com.chigix.resserver.mybatis.mapstruct;
 
-import com.chigix.resserver.domain.Chunk;
+import com.chigix.resserver.domain.model.chunk.Chunk;
 import com.chigix.resserver.mybatis.IteratorConcater;
 import com.chigix.resserver.mybatis.bean.ChunkedResourceBean;
 import com.chigix.resserver.mybatis.dao.ChunkMapper;

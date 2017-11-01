@@ -27,7 +27,7 @@ public abstract class MultipartUploadBeanMapper {
     @Qualifier("uploadingResourceMapper")
     private ResourceMapper resourceDao;
 
-    public com.chigix.resserver.domain.MultipartUpload fromRecord(MultipartUpload record) {
+    public com.chigix.resserver.domain.model.multiupload.MultipartUpload fromRecord(MultipartUpload record) {
         ResourceExample example = new ResourceExample();
         example.createCriteria().andVersionIdEqualTo(record.getResourceVersion());
         AmassedResourceBean resource;
@@ -38,13 +38,13 @@ public abstract class MultipartUploadBeanMapper {
         } catch (IndexOutOfBoundsException e) {
             resource = null;
         }
-        com.chigix.resserver.domain.MultipartUpload upload
-                = new com.chigix.resserver.domain.MultipartUpload(
+        com.chigix.resserver.domain.model.multiupload.MultipartUpload upload
+                = new com.chigix.resserver.domain.model.multiupload.MultipartUpload(
                         resource, record.getUuid(), record.getInitiatedAt());
         return upload;
     }
 
-    public MultipartUpload toRecord(com.chigix.resserver.domain.MultipartUpload bean) throws NoSuchBucket {
+    public MultipartUpload toRecord(com.chigix.resserver.domain.model.multiupload.MultipartUpload bean) throws NoSuchBucket {
         MultipartUpload record = new MultipartUpload();
         ResourceExtension resource_bean;
         try {

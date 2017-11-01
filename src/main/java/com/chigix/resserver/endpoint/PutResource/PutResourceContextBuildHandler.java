@@ -1,12 +1,13 @@
 package com.chigix.resserver.endpoint.PutResource;
 
-import com.chigix.resserver.ApplicationContext;
-import com.chigix.resserver.domain.Bucket;
-import com.chigix.resserver.domain.Chunk;
-import com.chigix.resserver.domain.ChunkedResource;
-import com.chigix.resserver.domain.Resource;
+import com.chigix.resserver.config.ApplicationContext;
+import com.chigix.resserver.domain.model.bucket.Bucket;
+import com.chigix.resserver.domain.model.chunk.Chunk;
+import com.chigix.resserver.domain.model.resource.ChunkedResource;
+import com.chigix.resserver.domain.model.resource.Resource;
 import com.chigix.resserver.domain.error.NoSuchBucket;
-import com.chigix.resserver.sharablehandlers.Context;
+import com.chigix.resserver.application.Context;
+import com.chigix.resserver.application.ResourceInfoHandler;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -15,6 +16,8 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
+ * Replace the {@link Resource} in {@link Context} from
+ * {@link ResourceInfoHandler} with a newly created {@link ChunkedResource}.
  *
  * @author Richard Lea <chigix@zoho.com>
  */
@@ -52,7 +55,7 @@ public class PutResourceContextBuildHandler extends SimpleChannelInboundHandler<
                     msg.getRoutedInfo(),
                     null);
             msg.copyTo(multi_ctx);
-            multi_ctx.setMultipartUpload(application.getDaoFactory().getUploadDao().findUpload(parameter_upload_id.get(0)));
+            multi_ctx.setMultipartUpload(application.getEntityManager().getUploadRepository().findUpload(parameter_upload_id.get(0)));
             multi_ctx.setPartNumber(Integer.valueOf(parameter_upload_number.get(0)));
             routing_ctx = multi_ctx;
         }

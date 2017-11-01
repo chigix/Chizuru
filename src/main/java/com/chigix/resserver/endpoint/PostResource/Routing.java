@@ -1,8 +1,8 @@
 package com.chigix.resserver.endpoint.PostResource;
 
-import com.chigix.resserver.ApplicationContext;
-import com.chigix.resserver.sharablehandlers.Context;
-import com.chigix.resserver.sharablehandlers.ResourceInfoHandler;
+import com.chigix.resserver.config.ApplicationContext;
+import com.chigix.resserver.application.Context;
+import com.chigix.resserver.application.ResourceInfoHandler;
 import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;

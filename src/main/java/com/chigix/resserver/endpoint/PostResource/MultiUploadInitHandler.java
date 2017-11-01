@@ -1,13 +1,13 @@
 package com.chigix.resserver.endpoint.PostResource;
 
-import com.chigix.resserver.ApplicationContext;
-import com.chigix.resserver.domain.AmassedResource;
-import com.chigix.resserver.domain.Bucket;
-import com.chigix.resserver.domain.ChunkedResource;
-import com.chigix.resserver.domain.MultipartUpload;
+import com.chigix.resserver.config.ApplicationContext;
+import com.chigix.resserver.domain.model.resource.AmassedResource;
+import com.chigix.resserver.domain.model.bucket.Bucket;
+import com.chigix.resserver.domain.model.resource.ChunkedResource;
+import com.chigix.resserver.domain.model.multiupload.MultipartUpload;
 import com.chigix.resserver.domain.error.NoSuchBucket;
-import com.chigix.resserver.sharablehandlers.Context;
-import com.chigix.resserver.util.HttpHeaderNames;
+import com.chigix.resserver.application.Context;
+import com.chigix.resserver.interfaces.handling.http.HttpHeaderNames;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -71,7 +71,7 @@ public class MultiUploadInitHandler extends SimpleChannelInboundHandler<Context>
         msg.getResource().snapshotMetaData().entrySet().forEach((entry) -> {
             r.setMetaData(entry.getKey(), entry.getValue());
         });
-        final MultipartUpload upload = application.getDaoFactory().getUploadDao().initiateUpload(r);
+        final MultipartUpload upload = application.getEntityManager().getUploadRepository().initiateUpload(r);
         final MultipartUploadContext routing_ctx = new MultipartUploadContext(msg.getRoutedInfo(), upload.getResource());
         routing_ctx.setUpload(upload);
         ctx.channel().attr(ROUTING_CTX).set(routing_ctx);

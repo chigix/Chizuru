@@ -1,6 +1,6 @@
 package com.chigix.resserver.mybatis.mapstruct;
 
-import com.chigix.resserver.domain.ChunkedResource;
+import com.chigix.resserver.domain.model.resource.ChunkedResource;
 import com.chigix.resserver.domain.error.NoSuchBucket;
 import com.chigix.resserver.mybatis.bean.ChunkedResourceBean;
 import com.chigix.resserver.mybatis.dao.ResourceMapper;

@@ -1,9 +1,9 @@
 package com.chigix.resserver.endpoint.PostResource;
 
-import com.chigix.resserver.ApplicationContext;
-import com.chigix.resserver.domain.AmassedResource;
+import com.chigix.resserver.config.ApplicationContext;
+import com.chigix.resserver.domain.model.resource.AmassedResource;
 import com.chigix.resserver.domain.error.NoSuchUpload;
-import com.chigix.resserver.util.Authorization;
+import com.chigix.resserver.application.util.Authorization;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -34,7 +34,7 @@ class MultiUploadCompleteResponseHandler extends SimpleChannelInboundHandler<Mul
     protected void messageReceived(ChannelHandlerContext ctx, MultipartUploadContext msg) throws Exception {
         final AmassedResource r = msg.getResource();
         r.setETag(Authorization.HexEncode(msg.getEtagDigest().digest()));
-        application.getDaoFactory().getResourceDao().saveResource(r); // AmassedResource
+        application.getEntityManager().getResourceRepository().saveResource(r); // AmassedResource
         StringBuilder sb = new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
         sb.append("<CompleteMultipartUploadResult xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\">");
         sb.append("<Location>http://Example-Bucket.s3.amazonaws.com/")
@@ -54,7 +54,7 @@ class MultiUploadCompleteResponseHandler extends SimpleChannelInboundHandler<Mul
                                 msg.getUpload().getResource().getKey(),
                                 r.getVersionId());
                         try {
-                            application.getDaoFactory().getUploadDao().removeUpload(msg.getUpload());
+                            application.getEntityManager().getUploadRepository().removeUpload(msg.getUpload());
                         } catch (NoSuchUpload noSuchUpload) {
                             // No problem because the resource have been saved
                             // successfully code could be executed till here.

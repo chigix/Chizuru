@@ -1,9 +1,9 @@
 package com.chigix.resserver.endpoint.PostResource;
 
-import com.chigix.resserver.domain.AmassedResource;
-import com.chigix.resserver.domain.MultipartUpload;
-import com.chigix.resserver.sharablehandlers.Context;
-import com.chigix.resserver.util.XPathNode;
+import com.chigix.resserver.domain.model.resource.AmassedResource;
+import com.chigix.resserver.domain.model.multiupload.MultipartUpload;
+import com.chigix.resserver.application.Context;
+import com.chigix.resserver.interfaces.xml.XPathNode;
 import com.fasterxml.aalto.AsyncByteArrayFeeder;
 import com.fasterxml.aalto.AsyncXMLStreamReader;
 import com.fasterxml.aalto.stax.InputFactoryImpl;

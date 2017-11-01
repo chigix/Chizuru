@@ -1,15 +1,15 @@
 package com.chigix.resserver.endpoint.PutResource;
 
-import com.chigix.resserver.ApplicationContext;
-import com.chigix.resserver.domain.AmassedResource;
-import com.chigix.resserver.domain.Bucket;
-import com.chigix.resserver.domain.Chunk;
-import com.chigix.resserver.domain.ChunkedResource;
-import com.chigix.resserver.domain.Resource;
+import com.chigix.resserver.config.ApplicationContext;
+import com.chigix.resserver.domain.model.resource.AmassedResource;
+import com.chigix.resserver.domain.model.bucket.Bucket;
+import com.chigix.resserver.domain.model.chunk.Chunk;
+import com.chigix.resserver.domain.model.resource.ChunkedResource;
+import com.chigix.resserver.domain.model.resource.Resource;
 import com.chigix.resserver.domain.error.NoSuchBucket;
 import com.chigix.resserver.domain.error.NoSuchKey;
-import com.chigix.resserver.sharablehandlers.Context;
-import com.chigix.resserver.util.HttpHeaderNames;
+import com.chigix.resserver.application.Context;
+import com.chigix.resserver.interfaces.handling.http.HttpHeaderNames;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -91,7 +91,7 @@ public class CopyResourceRouting {
                     key_to_copy = segs[1];
                 }
             }
-            final Resource resource_to_copy = application.getDaoFactory().getResourceDao().findResource(segs[0], segs[1]);
+            final Resource resource_to_copy = application.getEntityManager().getResourceRepository().findResource(segs[0], segs[1]);
             final Resource resource_to_save;
             if (resource_to_copy instanceof ChunkedResource) {
                 resource_to_save = new ChunkedResource(resource_ctx.getResource().getKey(),
@@ -133,7 +133,7 @@ public class CopyResourceRouting {
             resource_ctx.getResource().snapshotMetaData().forEach((k, v) -> {
                 resource_to_save.setMetaData(k, v);
             });
-            application.getDaoFactory().getResourceDao().saveResource(resource_to_save);
+            application.getEntityManager().getResourceRepository().saveResource(resource_to_save);
             StringBuilder return_sb = new StringBuilder("<CopyObjectResult><LastModified>");
             return_sb.append(resource_to_save.getLastModified().toString(ISODateTimeFormat.dateHourMinuteSecond()));
             return_sb.append("</LastModified><ETag>\"");

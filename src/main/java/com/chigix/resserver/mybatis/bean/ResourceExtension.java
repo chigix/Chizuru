@@ -1,6 +1,6 @@
 package com.chigix.resserver.mybatis.bean;
 
-import com.chigix.resserver.domain.Resource;
+import com.chigix.resserver.domain.model.resource.Resource;
 import com.chigix.resserver.domain.error.NoSuchBucket;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;

@@ -1,9 +1,9 @@
 package com.chigix.resserver.endpoint.GetBucket;
 
-import com.chigix.resserver.ApplicationContext;
-import com.chigix.resserver.domain.MultipartUpload;
-import com.chigix.resserver.util.HttpHeaderNames;
-import com.chigix.resserver.util.IteratorInputStream;
+import com.chigix.resserver.config.ApplicationContext;
+import com.chigix.resserver.domain.model.multiupload.MultipartUpload;
+import com.chigix.resserver.interfaces.handling.http.HttpHeaderNames;
+import com.chigix.resserver.interfaces.io.IteratorInputStream;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -55,7 +55,7 @@ public class ListUploadsHandler extends SimpleChannelInboundHandler<Context> {
                         new ByteArrayInputStream(generateDocumentStart(msg).getBytes(CharsetUtil.UTF_8)),
                         new SequenceInputStream(
                                 new IteratorInputStream<MultipartUpload>(
-                                        applicationContext.getDaoFactory().getUploadDao().listUploadsByBucket(msg.getTargetBucket())) {
+                                        applicationContext.getEntityManager().getUploadRepository().listUploadsByBucket(msg.getTargetBucket())) {
                             @Override
                             protected InputStream inputStreamProvider(MultipartUpload upload) throws NoSuchElementException {
                                 StringBuilder sb = new StringBuilder("<Upload>");

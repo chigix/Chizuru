@@ -1,8 +1,8 @@
 package com.chigix.resserver.endpoint.PutResource;
 
-import com.chigix.resserver.domain.MultipartUpload;
-import com.chigix.resserver.domain.Resource;
-import com.chigix.resserver.sharablehandlers.Context;
+import com.chigix.resserver.domain.model.multiupload.MultipartUpload;
+import com.chigix.resserver.domain.model.resource.Resource;
+import com.chigix.resserver.application.Context;
 import io.netty.handler.codec.http.router.HttpRouted;
 
 /**

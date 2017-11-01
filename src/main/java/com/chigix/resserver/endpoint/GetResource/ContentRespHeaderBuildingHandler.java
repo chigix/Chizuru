@@ -1,12 +1,12 @@
 package com.chigix.resserver.endpoint.GetResource;
 
-import com.chigix.resserver.ApplicationContext;
+import com.chigix.resserver.config.ApplicationContext;
 import com.chigix.resserver.domain.Lifecycle;
 import com.chigix.resserver.domain.error.NoSuchKey;
 import com.chigix.resserver.error.InvalidRange;
-import com.chigix.resserver.sharablehandlers.Context;
-import com.chigix.resserver.util.HttpHeaderNames;
-import com.chigix.resserver.util.HttpHeaderUtil;
+import com.chigix.resserver.application.Context;
+import com.chigix.resserver.interfaces.handling.http.HttpHeaderNames;
+import com.chigix.resserver.interfaces.handling.http.HttpHeaderUtil;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -41,7 +41,7 @@ public class ContentRespHeaderBuildingHandler extends SimpleChannelInboundHandle
 
     @Override
     protected void messageReceived(ChannelHandlerContext ctx, Context routing) throws Exception {
-        if (application.getDaoFactory().getEntityState(routing.getResource()) == Lifecycle.NEW) {
+        if (application.getEntityManager().getEntityState(routing.getResource()) == Lifecycle.NEW) {
             routing.getRoutedInfo().deny();
             throw new NoSuchKey(routing.getResource().getKey());
         }

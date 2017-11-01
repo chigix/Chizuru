@@ -1,6 +1,6 @@
 package com.chigix.resserver.endpoint.PostBucket;
 
-import com.chigix.resserver.ApplicationContext;
+import com.chigix.resserver.config.ApplicationContext;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.http.LastHttpContent;

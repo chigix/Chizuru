@@ -1,7 +1,7 @@
 package com.chigix.resserver.endpoint.GetService;
 
 import com.chigix.resserver.endpoint.GetBucket.LocationHandler;
-import com.chigix.resserver.ApplicationContext;
+import com.chigix.resserver.config.ApplicationContext;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.SimpleChannelInboundHandler;

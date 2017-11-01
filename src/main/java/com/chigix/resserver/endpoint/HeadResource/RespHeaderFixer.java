@@ -1,7 +1,7 @@
 package com.chigix.resserver.endpoint.HeadResource;
 
-import com.chigix.resserver.sharablehandlers.Context;
-import com.chigix.resserver.util.HttpHeaderNames;
+import com.chigix.resserver.application.Context;
+import com.chigix.resserver.interfaces.handling.http.HttpHeaderNames;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;

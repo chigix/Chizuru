@@ -1,8 +1,8 @@
 package com.chigix.resserver.endpoint.PutBucket;
 
-import com.chigix.resserver.ApplicationContext;
-import com.chigix.resserver.domain.Bucket;
-import com.chigix.resserver.util.HttpHeaderNames;
+import com.chigix.resserver.config.ApplicationContext;
+import com.chigix.resserver.domain.model.bucket.Bucket;
+import com.chigix.resserver.interfaces.handling.http.HttpHeaderNames;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -43,7 +43,7 @@ public class Routing extends RoutingConfig.PUT {
             @Override
             protected void messageReceived(ChannelHandlerContext ctx, HttpRouted msg) throws Exception {
                 msg.allow();
-                Bucket bucket = application.getDaoFactory().getBucketDao().createBucket((String) msg.decodedParams().get("bucketName"));
+                Bucket bucket = application.getEntityManager().getBucketRepository().createBucket((String) msg.decodedParams().get("bucketName"));
                 DefaultFullHttpResponse resp = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
                 resp.headers().add(HttpHeaderNames.LOCATION, "/" + bucket.getName());
                 application.finishRequest(msg);

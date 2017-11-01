@@ -27,7 +27,7 @@
         <property name="mapperInterface" value="com.chigix.resserver.mybatis.dao.MultipartUploadMapper" />
         <property name="sqlSessionFactory" ref="sqlSessionFactory_Upload" />
     </bean>
-    <bean id="MultipartUploadRepository" class="com.chigix.resserver.mybatis.MultipartUploadDaoImpl">
+    <bean id="MultipartUploadRepository" class="com.chigix.resserver.mybatis.MultipartUploadRepositoryImpl">
         <constructor-arg ref="multipartUploadMapper" />
         <constructor-arg ref="chunkMapper" />
         <constructor-arg ref="uploadingResourceMapper" />

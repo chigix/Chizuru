@@ -1,2 +1,4 @@
 * Authentication request should be solved by PHP web service, rather than Netty IO service.
 * The real file name and virtual directory information should be stored in application layer, of course the Strategy of access control should also be implimented in application.
+* Bind EntityManager to Channel instead of ThreadLocal.
+* Domain objects creation should be from factory, instead of directly calling class constructors.

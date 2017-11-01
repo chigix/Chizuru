@@ -1,11 +1,11 @@
 package com.chigix.resserver.mybatis;
 
-import com.chigix.resserver.domain.Bucket;
-import com.chigix.resserver.domain.Chunk;
-import com.chigix.resserver.domain.ChunkedResource;
+import com.chigix.resserver.domain.model.bucket.Bucket;
+import com.chigix.resserver.domain.model.chunk.Chunk;
+import com.chigix.resserver.domain.model.resource.ChunkedResource;
 import com.chigix.resserver.domain.error.NoSuchBucket;
 import com.chigix.resserver.mybatis.dao.ChunkMapper;
-import com.chigix.resserver.util.Authorization;
+import com.chigix.resserver.application.util.Authorization;
 import java.util.Iterator;
 import java.util.UUID;
 import org.junit.After;
@@ -20,7 +20,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.transaction.TransactionConfiguration;
 import org.springframework.transaction.annotation.Transactional;
-import com.chigix.resserver.domain.dao.ChunkDao;
+import com.chigix.resserver.domain.model.chunk.ChunkRepository;
 
 /**
  *
@@ -33,7 +33,7 @@ import com.chigix.resserver.domain.dao.ChunkDao;
 public class ChunkDaoImplTest {
 
     @Autowired
-    private ChunkDao chunkRepository;
+    private ChunkRepository chunkRepository;
 
     @Autowired
     private ChunkMapper chunkDao;
@@ -58,7 +58,7 @@ public class ChunkDaoImplTest {
     }
 
     /**
-     * Test of newChunk method, of class ChunkDaoImpl.
+     * Test of newChunk method, of class ChunkRepositoryImpl.
      */
     @Test
     public void testNewChunk() {
@@ -66,7 +66,7 @@ public class ChunkDaoImplTest {
     }
 
     /**
-     * Test of saveChunkIfAbsent method, of class ChunkDaoImpl.
+     * Test of saveChunkIfAbsent method, of class ChunkRepositoryImpl.
      */
     @Test
     public void testSaveChunkIfAbsent() {
@@ -76,7 +76,7 @@ public class ChunkDaoImplTest {
     }
 
     /**
-     * Test of listChunksByResource method, of class ChunkDaoImpl.
+     * Test of listChunksByResource method, of class ChunkRepositoryImpl.
      */
     @Test
     public void testListChunksByResource() {
@@ -103,7 +103,7 @@ public class ChunkDaoImplTest {
             record.setSize(2048);
             chunkDao.insert(record);
         }
-        ChunkDaoImpl repository = (ChunkDaoImpl) chunkRepository;
+        ChunkRepositoryImpl repository = (ChunkRepositoryImpl) chunkRepository;
         Iterator<Chunk> chunks = repository.listChunksByResource(r);
         for (int i = 0; i < 1000; i++) {
             assertNotNull(chunks.next());

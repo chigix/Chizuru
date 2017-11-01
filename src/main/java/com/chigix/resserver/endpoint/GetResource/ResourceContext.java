@@ -1,8 +1,8 @@
 package com.chigix.resserver.endpoint.GetResource;
 
-import com.chigix.resserver.sharablehandlers.Context;
-import com.chigix.resserver.util.HttpHeaderUtil;
-import com.chigix.resserver.util.HttpHeaderUtil.Range;
+import com.chigix.resserver.application.Context;
+import com.chigix.resserver.interfaces.handling.http.HttpHeaderUtil;
+import com.chigix.resserver.interfaces.handling.http.HttpHeaderUtil.Range;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import java.math.BigInteger;
 import java.text.MessageFormat;

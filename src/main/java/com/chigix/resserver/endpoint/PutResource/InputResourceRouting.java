@@ -1,11 +1,11 @@
 package com.chigix.resserver.endpoint.PutResource;
 
-import com.chigix.resserver.ApplicationContext;
-import com.chigix.resserver.domain.Chunk;
-import com.chigix.resserver.domain.ChunkedResource;
-import com.chigix.resserver.sharablehandlers.Context;
-import com.chigix.resserver.util.Authorization;
-import com.chigix.resserver.util.HttpHeaderNames;
+import com.chigix.resserver.config.ApplicationContext;
+import com.chigix.resserver.domain.model.chunk.Chunk;
+import com.chigix.resserver.domain.model.resource.ChunkedResource;
+import com.chigix.resserver.application.Context;
+import com.chigix.resserver.application.util.Authorization;
+import com.chigix.resserver.interfaces.handling.http.HttpHeaderNames;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandler;
@@ -148,8 +148,8 @@ public class InputResourceRouting {
             routing_ctx.getSha256Digest().update(chunk_content);
             final String chunk_hash = Authorization.HexEncode(digest.digest());
             File chunk_file = new File(application.getChunksDir(), "./" + chunk_hash);
-            final Chunk chunk = application.getDaoFactory().getChunkDao().newChunk(chunk_hash, chunk_content.length);
-            if (application.getDaoFactory().getChunkDao().saveChunkIfAbsent(chunk) == null
+            final Chunk chunk = application.getEntityManager().getChunkRepository().newChunk(chunk_hash, chunk_content.length);
+            if (application.getEntityManager().getChunkRepository().saveChunkIfAbsent(chunk) == null
                     && CHUNK_IN_WRITING.putIfAbsent(chunk_hash, chunk) == null) {
                 try (final OutputStream out = new GZIPOutputStream(new FileOutputStream(chunk_file), true)) {
                     out.write(chunk_content);
@@ -174,7 +174,7 @@ public class InputResourceRouting {
                     CHUNK_IN_WRITING.remove(chunk_hash);
                 }
             }
-            application.getDaoFactory().getResourceDao().putChunk(
+            application.getEntityManager().getResourceRepository().putChunk(
                     (ChunkedResource) routing_ctx.getResource(),
                     chunk,
                     routing_ctx.getChunkCounter().incrementAndGet() - 1);
@@ -195,12 +195,12 @@ public class InputResourceRouting {
             Context routing_ctx = ctx.channel().attr(RESOURCE_CTX).getAndRemove();
             routing_ctx.getResource().setETag(Authorization.HexEncode(routing_ctx.getEtagDigest().digest()));
             if (routing_ctx instanceof MultipartUploadContext) {
-                application.getDaoFactory().getUploadDao().appendChunkedResource(
+                application.getEntityManager().getUploadRepository().appendChunkedResource(
                         ((MultipartUploadContext) routing_ctx).getMultipartUpload(),
                         (ChunkedResource) routing_ctx.getResource(),
                         ((MultipartUploadContext) routing_ctx).getPartNumber() + "");
             } else {
-                application.getDaoFactory().getResourceDao().saveResource(routing_ctx.getResource()); // Individual ChunkedResource
+                application.getEntityManager().getResourceRepository().saveResource(routing_ctx.getResource()); // Individual ChunkedResource
             }
             application.finishRequest(routing_ctx.getRoutedInfo());
             DefaultFullHttpResponse resp = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);

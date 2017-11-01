@@ -1,7 +1,7 @@
 package com.chigix.resserver.endpoint.PostResource;
 
-import com.chigix.resserver.ApplicationContext;
-import com.chigix.resserver.sharablehandlers.Context;
+import com.chigix.resserver.config.ApplicationContext;
+import com.chigix.resserver.application.Context;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;

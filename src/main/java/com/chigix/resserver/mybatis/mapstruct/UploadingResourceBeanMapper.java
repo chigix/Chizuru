@@ -1,6 +1,6 @@
 package com.chigix.resserver.mybatis.mapstruct;
 
-import com.chigix.resserver.domain.AmassedResource;
+import com.chigix.resserver.domain.model.resource.AmassedResource;
 import com.chigix.resserver.domain.error.NoSuchBucket;
 import com.chigix.resserver.mybatis.bean.AmassedResourceBean;
 import com.chigix.resserver.mybatis.bean.BucketBean;

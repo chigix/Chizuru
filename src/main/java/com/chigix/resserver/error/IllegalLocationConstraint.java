@@ -1,6 +1,6 @@
 package com.chigix.resserver.error;
 
-import com.chigix.resserver.util.XPathNode;
+import com.chigix.resserver.interfaces.xml.XPathNode;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.router.HttpException;

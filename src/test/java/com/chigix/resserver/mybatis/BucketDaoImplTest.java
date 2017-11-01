@@ -1,6 +1,6 @@
 package com.chigix.resserver.mybatis;
 
-import com.chigix.resserver.domain.Bucket;
+import com.chigix.resserver.domain.model.bucket.Bucket;
 import com.chigix.resserver.domain.error.BucketAlreadyExists;
 import com.chigix.resserver.domain.error.NoSuchBucket;
 import com.chigix.resserver.mybatis.bean.BucketBean;

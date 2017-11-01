@@ -1,6 +1,6 @@
 package com.chigix.resserver.endpoint.DeleteBucket;
 
-import com.chigix.resserver.ApplicationContext;
+import com.chigix.resserver.config.ApplicationContext;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -48,7 +48,7 @@ public class Routing extends RoutingConfig.DELETE {
             @Override
             protected void messageReceived(ChannelHandlerContext ctx, LastHttpContent msg) throws Exception {
                 HttpRouted routed_info = ctx.channel().attr(ROUTED_INFO).get();
-                application.getDaoFactory().getBucketDao().deleteBucketByName((String) routed_info.decodedParams().get("bucketName"));
+                application.getEntityManager().getBucketRepository().deleteBucketByName((String) routed_info.decodedParams().get("bucketName"));
                 ctx.writeAndFlush(new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NO_CONTENT));
             }
         });

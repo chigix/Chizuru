@@ -1,6 +1,6 @@
 package com.chigix.resserver.error;
 
-import com.chigix.resserver.ApplicationContext;
+import com.chigix.resserver.config.ApplicationContext;
 import com.chigix.resserver.domain.error.BucketInfo;
 import com.chigix.resserver.domain.error.DaoException;
 import io.netty.buffer.ByteBuf;

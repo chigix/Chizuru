@@ -1,7 +1,7 @@
 package com.chigix.resserver.endpoint.HeadBucket;
 
-import com.chigix.resserver.ApplicationContext;
-import com.chigix.resserver.sharablehandlers.ExtractGetResponseHandler;
+import com.chigix.resserver.config.ApplicationContext;
+import com.chigix.resserver.application.ExtractGetResponseHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -39,7 +39,7 @@ public class Routing extends RoutingConfig.HEAD {
         pipeline.addLast(ExtractGetResponseHandler.getInstance(), new SimpleChannelInboundHandler<HttpRouted>() {
             @Override
             protected void messageReceived(ChannelHandlerContext ctx, HttpRouted routed_info) throws Exception {
-                application.getDaoFactory().getBucketDao().findBucketByName((String) routed_info.decodedParams().get("bucketName"));
+                application.getEntityManager().getBucketRepository().findBucketByName((String) routed_info.decodedParams().get("bucketName"));
                 ctx.writeAndFlush(new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK));
             }
         }, new DefaultExceptionForwarder());

@@ -1,7 +1,7 @@
 package com.chigix.resserver.mybatis.bean;
 
-import com.chigix.resserver.domain.Chunk;
-import com.chigix.resserver.domain.ChunkedResource;
+import com.chigix.resserver.domain.model.chunk.Chunk;
+import com.chigix.resserver.domain.model.resource.ChunkedResource;
 import com.chigix.resserver.domain.Lifecycle;
 import com.chigix.resserver.domain.error.NoSuchBucket;
 import com.chigix.resserver.mybatis.EntityManagerImpl;

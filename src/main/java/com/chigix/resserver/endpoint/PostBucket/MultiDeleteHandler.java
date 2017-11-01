@@ -1,6 +1,6 @@
 package com.chigix.resserver.endpoint.PostBucket;
 
-import com.chigix.resserver.ApplicationContext;
+import com.chigix.resserver.config.ApplicationContext;
 import com.chigix.resserver.endpoint.DeleteResource.Context;
 import com.chigix.resserver.domain.error.NoSuchBucket;
 import com.chigix.resserver.domain.error.NoSuchKey;
@@ -73,7 +73,7 @@ public class MultiDeleteHandler extends ChannelHandlerAdapter {
     }
 
     private void handleRoutedInfo(Context ctx, HttpRouted routed) throws NoSuchBucket {
-        ctx.setBucket(application.getDaoFactory().getBucketDao().findBucketByName((String) routed.decodedParams().get("bucketName")));
+        ctx.setBucket(application.getEntityManager().getBucketRepository().findBucketByName((String) routed.decodedParams().get("bucketName")));
     }
 
     private void response(ChannelHandlerContext ctx, Context routing_ctx) {
@@ -104,7 +104,7 @@ public class MultiDeleteHandler extends ChannelHandlerAdapter {
                     continue;
                 }
                 try {
-                    application.getDaoFactory().getResourceDao().removeResource(application.getDaoFactory().getResourceDao().findResource(routing_ctx.getBucket(), key_node.getTextContent()));
+                    application.getEntityManager().getResourceRepository().removeResource(application.getEntityManager().getResourceRepository().findResource(routing_ctx.getBucket(), key_node.getTextContent()));
                 } catch (NoSuchKey | NoSuchBucket ex) {
                     continue;
                 }

@@ -1,7 +1,7 @@
 package com.chigix.resserver.error;
 
-import com.chigix.resserver.ApplicationContext;
-import com.chigix.resserver.util.XPathNode;
+import com.chigix.resserver.config.ApplicationContext;
+import com.chigix.resserver.interfaces.xml.XPathNode;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;

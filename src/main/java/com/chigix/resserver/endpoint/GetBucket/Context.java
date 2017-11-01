@@ -1,7 +1,7 @@
 package com.chigix.resserver.endpoint.GetBucket;
 
-import com.chigix.resserver.ApplicationContext;
-import com.chigix.resserver.domain.Bucket;
+import com.chigix.resserver.config.ApplicationContext;
+import com.chigix.resserver.domain.model.bucket.Bucket;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageDecoder;
@@ -52,7 +52,7 @@ public class Context {
         @Override
         protected void decode(ChannelHandlerContext ctx, HttpRouted msg, List<Object> out) throws Exception {
             out.add(new Context(
-                    application.getDaoFactory().getBucketDao()
+                    application.getEntityManager().getBucketRepository()
                             .findBucketByName((String) msg.decodedParams().get("bucketName")),
                     msg));
         }

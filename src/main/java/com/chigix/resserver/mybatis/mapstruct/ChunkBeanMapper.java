@@ -1,9 +1,9 @@
 package com.chigix.resserver.mybatis.mapstruct;
 
-import com.chigix.resserver.domain.Chunk;
+import com.chigix.resserver.domain.model.chunk.Chunk;
 import org.mapstruct.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import com.chigix.resserver.domain.dao.ChunkDao;
+import com.chigix.resserver.domain.model.chunk.ChunkRepository;
 
 /**
  *
@@ -13,7 +13,7 @@ import com.chigix.resserver.domain.dao.ChunkDao;
 public abstract class ChunkBeanMapper {
     
     @Autowired
-    private ChunkDao chunkRepository;
+    private ChunkRepository chunkRepository;
     
     public Chunk fromRecord(com.chigix.resserver.mybatis.record.Chunk record){
         return chunkRepository.newChunk(record.getContentHash(), record.getSize());

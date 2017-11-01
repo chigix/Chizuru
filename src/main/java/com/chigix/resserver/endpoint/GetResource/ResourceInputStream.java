@@ -1,11 +1,12 @@
 package com.chigix.resserver.endpoint.GetResource;
 
-import com.chigix.resserver.ApplicationContext;
-import com.chigix.resserver.domain.Chunk;
-import com.chigix.resserver.util.IteratorInputStream;
+import com.chigix.resserver.config.ApplicationContext;
+import com.chigix.resserver.domain.model.chunk.Chunk;
+import com.chigix.resserver.interfaces.io.IteratorInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.MessageFormat;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import org.slf4j.Logger;
@@ -48,11 +49,17 @@ public class ResourceInputStream extends IteratorInputStream<Chunk> {
         long nr = 0;
         nr += skipCurrent(n);
         long skipChunks = (n - nr) / this.app.getMaxChunkSize();
-        for (int i = 0; i < skipChunks; i++) {
-            Chunk c = next();
-            if (c != null) {
-                nr += c.getSize();
+        try {
+            for (int i = 0; i < skipChunks; i++) {
+                Chunk c = next();
+                if (c != null) {
+                    nr += c.getSize();
+                }
             }
+        } catch (NoSuchElementException e) {
+            throw new RuntimeException(MessageFormat.format("Unexpected!! "
+                    + "Current Node's MaxChunkSize setting [{}] is less than "
+                    + "some persisted chunk size.", this.app.getMaxChunkSize()));
         }
         next();
         long remainingBytes = n - nr;

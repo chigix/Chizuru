@@ -3,11 +3,11 @@ package com.chigix.resserver.mybatis;
 import com.chigix.resserver.domain.Lifecycle;
 import com.chigix.resserver.mybatis.bean.BeanExt;
 import org.springframework.beans.factory.annotation.Autowired;
-import com.chigix.resserver.domain.dao.BucketDao;
-import com.chigix.resserver.domain.dao.ChunkDao;
-import com.chigix.resserver.domain.dao.MultipartUploadDao;
-import com.chigix.resserver.domain.dao.ResourceDao;
-import com.chigix.resserver.domain.dao.DaoFactory;
+import com.chigix.resserver.domain.model.bucket.BucketRepository;
+import com.chigix.resserver.domain.model.chunk.ChunkRepository;
+import com.chigix.resserver.domain.model.multiupload.MultipartUploadRepository;
+import com.chigix.resserver.domain.model.resource.ResourceRepository;
+import com.chigix.resserver.domain.DaoFactory;
 
 /**
  *
@@ -16,13 +16,13 @@ import com.chigix.resserver.domain.dao.DaoFactory;
 public class EntityManagerImpl implements DaoFactory {
 
     @Autowired
-    private BucketDao bucketRepository;
+    private BucketRepository bucketRepository;
     @Autowired
-    private ChunkDaoImpl chunkRepository;
+    private ChunkRepositoryImpl chunkRepository;
     @Autowired
-    private ResourceDao resourceRepository;
+    private ResourceRepository resourceRepository;
     @Autowired
-    private MultipartUploadDao uploadRepository;
+    private MultipartUploadRepository uploadRepository;
 
     public EntityManagerImpl() {
     }
@@ -32,22 +32,22 @@ public class EntityManagerImpl implements DaoFactory {
     }
 
     @Override
-    public BucketDao getBucketDao() {
+    public BucketRepository getBucketRepository() {
         return bucketRepository;
     }
 
     @Override
-    public ChunkDao getChunkDao() {
+    public ChunkRepository getChunkRepository() {
         return chunkRepository;
     }
 
     @Override
-    public ResourceDao getResourceDao() {
+    public ResourceRepository getResourceRepository() {
         return resourceRepository;
     }
 
     @Override
-    public MultipartUploadDao getUploadDao() {
+    public MultipartUploadRepository getUploadRepository() {
         return uploadRepository;
     }
 

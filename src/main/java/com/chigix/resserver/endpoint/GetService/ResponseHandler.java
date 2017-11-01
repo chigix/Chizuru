@@ -1,8 +1,8 @@
 package com.chigix.resserver.endpoint.GetService;
 
-import com.chigix.resserver.ApplicationContext;
-import com.chigix.resserver.domain.Bucket;
-import com.chigix.resserver.util.HttpHeaderNames;
+import com.chigix.resserver.config.ApplicationContext;
+import com.chigix.resserver.domain.model.bucket.Bucket;
+import com.chigix.resserver.interfaces.handling.http.HttpHeaderNames;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.DefaultHttpResponse;
@@ -59,7 +59,7 @@ public class ResponseHandler extends SimpleChannelInboundHandler<LastHttpContent
             xmlWriter.writeEndElement();// DisplayName
             xmlWriter.writeEndElement();// Owner
             xmlWriter.writeStartElement("Buckets");
-            Iterator<Bucket> it = application.getDaoFactory().getBucketDao().iteratorBucket();
+            Iterator<Bucket> it = application.getEntityManager().getBucketRepository().iteratorBucket();
             while (it.hasNext()) {
                 Bucket next;
                 try {
