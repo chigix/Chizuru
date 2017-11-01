@@ -1,0 +1,29 @@
+> PUT /newupload.txt?partNumber=0&uploadId=SRQlhjGSCwdEaKnDLZeTcF_HENqWY6MX8lcUcJ_h.r2yl1mlbhh4g7PFzzVXnuZxUNrOzF6Ag85erHZg5LKkHXU._Leedm._iEEAEShPUzo- HTTP/1.1
+> Host: oos-for-learning.s3-ap-northeast-1.amazonaws.com
+> Accept: */*
+> Accept-Encoding: deflate, gzip
+> User-Agent: Minio (windows; amd64) minio-go/2.0.2 mc/2016-12-09T18:23:19Z
+> Authorization: AWS4-HMAC-SHA256 ####
+> X-Amz-Content-Sha256: baf754ec98feb0946bef8d679dfc710aaa4daaddbb50c6c5fd04196f90f620f2
+> X-Amz-Date: 20171022T160307Z
+> Expect: 100-continue
+> Content-Length: 10
+
+< HTTP/1.1 400 Bad Request
+< x-amz-request-id: 4F5345E2206058F4
+< x-amz-id-2: ovU98o1vp09qznQMFkTgazobVq7cwGN3SGMGMnNCy4AyKFYHnbwqoaAmi1UMPTFG9uUq3jSqvBg=
+< Content-Type: application/xml
+< Transfer-Encoding: chunked
+< Date: Sun, 22 Oct 2017 16:03:25 GMT
+< Connection: close
+< Server: AmazonS3
+
+<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+	<Code>InvalidArgument</Code>
+	<Message>Part number must be an integer between 1 and 10000, inclusive</Message>
+	<ArgumentName>partNumber</ArgumentName>
+	<ArgumentValue>0</ArgumentValue>
+	<RequestId>4F5345E2206058F4</RequestId>
+	<HostId>ovU98o1vp09qznQMFkTgazobVq7cwGN3SGMGMnNCy4AyKFYHnbwqoaAmi1UMPTFG9uUq3jSqvBg=</HostId>
+</Error>

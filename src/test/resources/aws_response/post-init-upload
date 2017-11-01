@@ -1,0 +1,28 @@
+> POST /newupload.txt?uploads HTTP/1.1
+> Host: oos-for-learning.s3-ap-northeast-1.amazonaws.com
+> Accept: */*
+> Accept-Encoding: deflate, gzip
+> User-Agent: Minio (windows; amd64) minio-go/2.0.2 mc/2016-12-09T18:23:19Z
+> Authorization: AWS4-HMAC-SHA256 ####
+> Expect: 100-continue
+> X-Amz-Content-Sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+> X-Amz-Date: 20171022T154532Z
+> Content-Type: application/json
+> Content-Length: 0
+
+< HTTP/1.1 100 Continue
+
+< HTTP/1.1 200 OK
+< x-amz-id-2: +ghp2b3M+KYy6D+h1yXPSMvxLImIMtA2JWEOab9j4SgWeRI/Y4Z1lcW/iZabw5PKRH28QJs9160=
+< x-amz-request-id: 5F17BE16142DCF4C
+< Date: Sun, 22 Oct 2017 15:46:03 GMT
+< Transfer-Encoding: chunked
+< Server: AmazonS3
+
+<?xml version="1.0" encoding="UTF-8"?>
+<InitiateMultipartUploadResult
+	xmlns="http://s3.amazonaws.com/doc/2006-03-01/">
+	<Bucket>oos-for-learning</Bucket>
+	<Key>newupload.txt</Key>
+	<UploadId>SRQlhjGSCwdEaKnDLZeTcF_HENqWY6MX8lcUcJ_h.r2yl1mlbhh4g7PFzzVXnuZxUNrOzF6Ag85erHZg5LKkHXU._Leedm._iEEAEShPUzo-</UploadId>
+</InitiateMultipartUploadResult>

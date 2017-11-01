@@ -1,0 +1,28 @@
+> GET /?continuation-token=wrong-token&delimiter=%2F&fetch-owner=true&list-type=2&max-keys=1000 HTTP/1.1
+> Host: oos-for-learning.s3-ap-northeast-1.amazonaws.com
+> Accept: */*
+> Accept-Encoding: deflate, gzip
+> User-Agent: Minio (windows; amd64) minio-go/2.0.2 mc/2016-12-09T18:23:19Z
+> Authorization: AWS4-HMAC-SHA256 ####
+> X-Amz-Content-Sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+> X-Amz-Date: 20171025T131955Z
+> Expect: 100-continue
+
+< HTTP/1.1 400 Bad Request
+< x-amz-bucket-region: ap-northeast-1
+< x-amz-request-id: DB751D04AD4495BB
+< x-amz-id-2: a1kBGNa7j+zhM0evKu8OdanYdysDiodEB3LPNMOf7clBmCDVo+SDkkdEWPSAn1leDmXlzk3QHNk=
+< Content-Type: application/xml
+< Transfer-Encoding: chunked
+< Date: Wed, 25 Oct 2017 13:20:21 GMT
+< Connection: close
+< Server: AmazonS3
+
+<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+	<Code>InvalidArgument</Code>
+	<Message>The continuation token provided is incorrect</Message>
+	<ArgumentName>continuation-token</ArgumentName>
+	<RequestId>DB751D04AD4495BB</RequestId>
+	<HostId>a1kBGNa7j+zhM0evKu8OdanYdysDiodEB3LPNMOf7clBmCDVo+SDkkdEWPSAn1leDmXlzk3QHNk=</HostId>
+</Error>

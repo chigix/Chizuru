@@ -1,0 +1,18 @@
+> DELETE /newupload.txt?uploadId=SRQlhjGSCwdEaKnDLZeTcF_HENqWY6MX8lcUcJ_h.r2yl1mlbhh4g7PFzzVXnuZxUNrOzF6Ag85erHZg5LKkHXU._Leedm._iEEAEShPUzo- HTTP/1.1
+> Host: oos-for-learning.s3-ap-northeast-1.amazonaws.com
+> Accept: */*
+> Accept-Encoding: deflate, gzip
+> User-Agent: Minio (windows; amd64) minio-go/2.0.2 mc/2016-12-09T18:23:19Z
+> Authorization: AWS4-HMAC-SHA256 ####
+> X-Amz-Content-Sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+> X-Amz-Date: 20171024T015220Z
+> Expect: 100-continue
+> Content-Type: application/xml
+
+< HTTP/1.1 100 Continue
+
+< HTTP/1.1 204 No Content
+< x-amz-id-2: Z/9Yyy9m5nbIPYv81kD/m8V2HNz0R37AAuDJWD8h351LcbMqNa6mumXraBOhyBG+fecnCm4S9r4=
+< x-amz-request-id: C98E21E0E975512E
+< Date: Tue, 24 Oct 2017 01:52:50 GMT
+< Server: AmazonS3

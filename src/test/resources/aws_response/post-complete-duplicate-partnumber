@@ -1,0 +1,40 @@
+> POST /newupload.txt?uploadId=SRQlhjGSCwdEaKnDLZeTcF_HENqWY6MX8lcUcJ_h.r2yl1mlbhh4g7PFzzVXnuZxUNrOzF6Ag85erHZg5LKkHXU._Leedm._iEEAEShPUzo- HTTP/1.1
+> Host: oos-for-learning.s3-ap-northeast-1.amazonaws.com
+> Accept: */*
+> Accept-Encoding: deflate, gzip
+> User-Agent: Minio (windows; amd64) minio-go/2.0.2 mc/2016-12-09T18:23:19Z
+> Authorization: AWS4-HMAC-SHA256 ####
+> X-Amz-Content-Sha256: 283dbd50ae1a4444a85d5b3a30f110bc6883f223e8914ae8e8cdae917f75ecda
+> X-Amz-Date: 20171024T014114Z
+> Content-Length: 248
+> Expect: 100-continue
+> Content-Type: application/xml
+
+< HTTP/1.1 100 Continue
+| <CompleteMultipartUpload>
+| 	<Part>
+| 		<PartNumber>1</PartNumber>
+| 		<ETag>\"9671596ed4402627cb680bb5bc7a393c\"</ETag>
+| 	</Part>
+| 	<Part>
+| 		<PartNumber>1</PartNumber>
+| 		<ETag>\"9671596ed4402627cb680bb5bc7a393c\"</ETag>
+| 	</Part>
+| </CompleteMultipartUpload>
+
+< HTTP/1.1 400 Bad Request
+< x-amz-request-id: 60E8599D3AFDE87D
+< x-amz-id-2: n44zIzrtBHuuZ5BCDE5HZiL+wg1xm4cf6c2MUTiBqDXIdbBY7LYrIf6cBuDkSrqN/f4KU8cVdqQ=
+< Content-Type: application/xml
+< Transfer-Encoding: chunked
+< Date: Tue, 24 Oct 2017 01:41:37 GMT
+< Connection: close
+< Server: AmazonS3
+
+<Error>
+	<Code>InvalidPartOrder</Code>
+	<Message>The list of parts was not in ascending order. Parts must be ordered by part number.</Message>
+	<UploadId>SRQlhjGSCwdEaKnDLZeTcF_HENqWY6MX8lcUcJ_h.r2yl1mlbhh4g7PFzzVXnuZxUNrOzF6Ag85erHZg5LKkHXU._Leedm._iEEAEShPUzo-</UploadId>
+	<RequestId>60E8599D3AFDE87D</RequestId>
+	<HostId>n44zIzrtBHuuZ5BCDE5HZiL+wg1xm4cf6c2MUTiBqDXIdbBY7LYrIf6cBuDkSrqN/f4KU8cVdqQ=</HostId>
+</Error>

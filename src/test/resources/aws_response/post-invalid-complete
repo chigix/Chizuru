@@ -1,0 +1,66 @@
+> PUT /newupload.txt?partNumber=3&uploadId=SRQlhjGSCwdEaKnDLZeTcF_HENqWY6MX8lcUcJ_h.r2yl1mlbhh4g7PFzzVXnuZxUNrOzF6Ag85erHZg5LKkHXU._Leedm._iEEAEShPUzo- HTTP/1.1
+> Host: oos-for-learning.s3-ap-northeast-1.amazonaws.com
+> Accept: */*
+> Accept-Encoding: deflate, gzip
+> User-Agent: Minio (windows; amd64) minio-go/2.0.2 mc/2016-12-09T18:23:19Z
+> Authorization: AWS4-HMAC-SHA256 ####
+> X-Amz-Content-Sha256: baf754ec98feb0946bef8d679dfc710aaa4daaddbb50c6c5fd04196f90f620f2
+> X-Amz-Date: 20171024T011434Z
+> Expect: 100-continue
+> Content-Length: 10
+
+< HTTP/1.1 100 Continue
+| asdfghjklp
+
+< HTTP/1.1 200 OK
+< x-amz-id-2: qGIctKE+eTkKsbnxD3F6vxG+pgEKLkAgOgcxPkCLLnlm1lnYaoBfLLCE7T9iKO0fpwwvdFPoHpE=
+< x-amz-request-id: 0A150E13F72DEF85
+< Date: Tue, 24 Oct 2017 01:15:03 GMT
+< ETag: "9671596ed4402627cb680bb5bc7a393c"
+< Content-Length: 0
+< Server: AmazonS3
+
+================================================================================
+
+> POST /newupload.txt?uploadId=SRQlhjGSCwdEaKnDLZeTcF_HENqWY6MX8lcUcJ_h.r2yl1mlbhh4g7PFzzVXnuZxUNrOzF6Ag85erHZg5LKkHXU._Leedm._iEEAEShPUzo- HTTP/1.1
+> Host: oos-for-learning.s3-ap-northeast-1.amazonaws.com
+> Accept: */*
+> Accept-Encoding: deflate, gzip
+> User-Agent: Minio (windows; amd64) minio-go/2.0.2 mc/2016-12-09T18:23:19Z
+> Authorization: AWS4-HMAC-SHA256 ####
+> X-Amz-Content-Sha256: a8a26be559a97120870368851047af3353201cb216916e0e473d594ba114b34e
+> X-Amz-Date: 20171024T014332Z
+> Content-Length: 248
+> Expect: 100-continue
+> Content-Type: application/xml
+
+< HTTP/1.1 100 Continue
+| <CompleteMultipartUpload>
+| 	<Part>
+| 		<PartNumber>1</PartNumber>
+| 		<ETag>\"9671596ed4402627cb680bb5bc7a393c\"</ETag>
+| 	</Part>
+| 	<Part>
+| 		<PartNumber>3</PartNumber>
+| 		<ETag>\"9671596ed4402627cb680bb5bc7a393c\"</ETag>
+| 	</Part>
+| </CompleteMultipartUpload>
+
+< HTTP/1.1 400 Bad Request
+< x-amz-request-id: 961D81146C75DBC7
+< x-amz-id-2: 39NSW2hqQB+zK0nVrL7R9rhAikWDGwAjtinK6jEwSCoAQsMsbNF/1O4zOqcwOIQaB177MrDuIdU=
+< Content-Type: application/xml
+< Transfer-Encoding: chunked
+< Date: Tue, 24 Oct 2017 01:43:54 GMT
+< Connection: close
+< Server: AmazonS3
+
+<Error>
+	<Code>InvalidPart</Code>
+	<Message>One or more of the specified parts could not be found.  The part may not have been uploaded, or the specified entity tag may not match the part's entity tag.</Message>
+	<UploadId>SRQlhjGSCwdEaKnDLZeTcF_HENqWY6MX8lcUcJ_h.r2yl1mlbhh4g7PFzzVXnuZxUNrOzF6Ag85erHZg5LKkHXU._Leedm._iEEAEShPUzo-</UploadId>
+	<PartNumber>3</PartNumber>
+	<ETag>\9671596ed4402627cb680bb5bc7a393c\</ETag>
+	<RequestId>961D81146C75DBC7</RequestId>
+	<HostId>39NSW2hqQB+zK0nVrL7R9rhAikWDGwAjtinK6jEwSCoAQsMsbNF/1O4zOqcwOIQaB177MrDuIdU=</HostId>
+</Error>
