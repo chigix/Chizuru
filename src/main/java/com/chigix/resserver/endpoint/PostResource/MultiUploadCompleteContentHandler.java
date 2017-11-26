@@ -27,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.chigix.resserver.domain.model.multiupload.MultipartUploadRepository;
 import com.chigix.resserver.domain.model.resource.ResourceRepository;
+import com.chigix.resserver.domain.model.resource.SubresourceSpecification;
 
 /**
  *
@@ -141,9 +142,30 @@ class MultiUploadCompleteContentHandler extends MultiUploadCompleteHandler.Conte
                     part.getPartNumber(),
                     part.getEtag());
             ctx.getCurrentEtagCalculator().appendChunkResource(part_resource);
-            amassed_resource.setSize(new BigInteger(amassed_resource.getSize())
-                    .add(new BigInteger(part_resource.getSize())).toString());
-            resourcedao.saveResource(part_resource); // Part Resource
+            final BigInteger prev_size = new BigInteger(amassed_resource.getSize());
+            final BigInteger updated_size = prev_size.add(new BigInteger(part_resource.getSize()));
+            amassed_resource.setSize(updated_size.toString());
+            resourcedao.insertSubresource(part_resource, new SubresourceSpecification() {
+                @Override
+                public AmassedResource getParentResource() {
+                    return amassed_resource;
+                }
+
+                @Override
+                public BigInteger getRangeStartInParent() {
+                    return prev_size;
+                }
+
+                @Override
+                public BigInteger getRangeEndInParent() {
+                    return updated_size;
+                }
+
+                @Override
+                public String getPartIndexInParent() {
+                    return part.getPartNumber();
+                }
+            });
             return true;
         }
         return false;

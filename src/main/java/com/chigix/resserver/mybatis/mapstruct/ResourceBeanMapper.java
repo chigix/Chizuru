@@ -10,7 +10,6 @@ import com.chigix.resserver.mybatis.bean.BucketBean;
 import com.chigix.resserver.mybatis.bean.ChunkedResourceBean;
 import com.chigix.resserver.mybatis.bean.ResourceExtension;
 import com.chigix.resserver.mybatis.dao.BucketMapper;
-import com.chigix.resserver.mybatis.dao.ChunkMapper;
 import java.security.InvalidParameterException;
 import org.mapstruct.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,22 +22,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 public abstract class ResourceBeanMapper {
 
     @Autowired
-    private ChunkBeanMapper chunkBeanMapper;
-
-    @Autowired
     private BucketBeanMapper bucketBeanMapper;
-
-    @Autowired
-    private SubresourceBeanMapper subresourceBeanMapper;
-
-    @Autowired
-    private ChunkMapper chunkDao;
 
     @Autowired
     private BucketMapper bucketDao;
 
     @Autowired
     private MetaDataMapper metaDataMapper;
+
+    @Deprecated
+    @Autowired
+    private ChunksAdapterMapper chunksAdapterMapper;
 
     /**
      * @TODO remove
@@ -68,7 +62,7 @@ public abstract class ResourceBeanMapper {
     private ChunkedResourceBean createChunkedResourceBean(com.chigix.resserver.mybatis.record.Resource record) {
         ChunkedResourceBean resource = new ChunkedResourceBean(record.getKey(), record.getVersionId(), record.getKeyhash());
         resource.setBucket(new BucketAdapter(record.getBucketUuid(), bucketDao, bucketBeanMapper));
-        resource.setChunksAdapter(new ChunksAdapter.DefaultChunksAdapter(resource, chunkDao, chunkBeanMapper));
+        resource.setChunksAdapter(chunksAdapterMapper.asAdapter(resource.getVersionId()));
         return resource;
     }
 

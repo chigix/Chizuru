@@ -5,8 +5,6 @@ import com.chigix.resserver.domain.error.BucketAlreadyExists;
 import com.chigix.resserver.domain.error.NoSuchBucket;
 import com.chigix.resserver.mybatis.bean.BucketBean;
 import com.chigix.resserver.mybatis.dao.BucketMapper;
-import com.chigix.resserver.mybatis.record.BucketExample;
-import com.chigix.resserver.mybatis.record.Util;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.UUID;
@@ -93,9 +91,6 @@ public class BucketDaoImplTest implements ApplicationContextAware {
         mapper.insert(record_2);
         assertEquals(to_test.toString(), repository.findBucketByName("BANKAI").getCreationTime().toString());
         assertEquals(32, ((BucketBean) repository.findBucketByName("BANKAI")).getUuid().length());
-        System.out.println(mapper.selectByExample(new BucketExample()));
-        System.out.println(mapper.selectByExampleWithRowbounds(new BucketExample(), Util.ONE_ROWBOUND));
-        BucketExample ex = new BucketExample();
     }
 
     /**

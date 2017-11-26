@@ -32,7 +32,7 @@ public interface MultipartUploadRepository {
 
     /**
      * Saving ChunkedResource Only. **NOTE:** Parent AmassedResource would not
-     * be update, because AmassedResource modification should be done in
+     * be updated, because AmassedResource modification should be done in
      * complete api.
      *
      * @param upload
@@ -43,6 +43,6 @@ public interface MultipartUploadRepository {
      * previously uploaded part is overwritten.
      * @throws NoSuchBucket
      */
-    void appendChunkedResource(MultipartUpload upload, ChunkedResource r, String partNumber) throws NoSuchBucket;
+    void saveSubresource(MultipartUpload upload, ChunkedResource r, String partNumber) throws NoSuchBucket;
 
 }

@@ -9,17 +9,6 @@
           http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-3.2.xsd
 ">
     
-    <bean id="mybatisSessionScope" class="com.chigix.resserver.mybatis.SessionScope" />
-    
-    <bean class="org.springframework.beans.factory.config.CustomScopeConfigurer">
-        <property name="scopes">
-            <map>
-                <entry key="mybatisSession">
-                    <ref bean="mybatisSessionScope" />
-                </entry>
-            </map>
-        </property>
-    </bean>
     
     <bean id="datasource-chizuru" class="com.jolbox.bonecp.BoneCPDataSource" destroy-method="close">
         <property name="driverClass" value="org.h2.Driver" />

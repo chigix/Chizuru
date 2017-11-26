@@ -14,7 +14,6 @@ import com.chigix.resserver.mybatis.dao.ResourceMapper;
 import com.chigix.resserver.mybatis.dao.SubresourceMapper;
 import com.chigix.resserver.mybatis.mapstruct.MultipartUploadBeanMapper;
 import com.chigix.resserver.mybatis.mapstruct.UploadingResourceBeanMapper;
-import com.chigix.resserver.mybatis.mapstruct.UploadingSubresourceBeanMapper;
 import com.chigix.resserver.mybatis.record.MultipartUploadExample;
 import com.chigix.resserver.mybatis.record.Subresource;
 import com.chigix.resserver.mybatis.record.SubresourceExample;
@@ -46,8 +45,6 @@ import org.springframework.transaction.annotation.Transactional;
 @TransactionConfiguration(transactionManager = "transactionManager_Upload")
 public class MultipartUploadRepositoryImplTest {
 
-    @Autowired
-    private UploadingSubresourceBeanMapper uploadingSubresourceBeanMapper;
     @Autowired
     private UploadingResourceBeanMapper uploadingResourceBeanMapper;
     @Autowired
@@ -142,7 +139,8 @@ public class MultipartUploadRepositoryImplTest {
     }
 
     /**
-     * Test of findSubResourcePart method, of class MultipartUploadRepositoryImpl.
+     * Test of findSubResourcePart method, of class
+     * MultipartUploadRepositoryImpl.
      *
      * @throws java.lang.Exception
      */
@@ -174,9 +172,9 @@ public class MultipartUploadRepositoryImplTest {
                 throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
             }
         };
-        uploadRepository.appendChunkedResource(upload, ch, "123");
-        uploadRepository.appendChunkedResource(upload, ch, "123");
-        uploadRepository.appendChunkedResource(upload, ch, "123");
+        uploadRepository.saveSubresource(upload, ch, "123");
+        uploadRepository.saveSubresource(upload, ch, "123");
+        uploadRepository.saveSubresource(upload, ch, "123");
         assertEquals(ch.getVersionId(),
                 uploadRepository.findUploadPart(upload, "123", ch.getETag()).getVersionId());
     }
@@ -218,7 +216,8 @@ public class MultipartUploadRepositoryImplTest {
     }
 
     /**
-     * Test of listUploadsByBucket method, of class MultipartUploadRepositoryImpl.
+     * Test of listUploadsByBucket method, of class
+     * MultipartUploadRepositoryImpl.
      *
      * @throws java.lang.Exception
      */
@@ -247,7 +246,8 @@ public class MultipartUploadRepositoryImplTest {
     }
 
     /**
-     * Test of appendChunkedResource method, of class MultipartUploadRepositoryImpl.
+     * Test of appendChunkedResource method, of class
+     * MultipartUploadRepositoryImpl.
      *
      * @throws java.lang.Exception
      */
@@ -279,16 +279,22 @@ public class MultipartUploadRepositoryImplTest {
             }
         };
         upload = uploadRepository.initiateUpload(r);
-        uploadRepository.appendChunkedResource(upload, create.apply(null), "123");
-        uploadRepository.appendChunkedResource(upload, create.apply(null), "512345678901234567890123456789012");
-        uploadRepository.appendChunkedResource(upload, create.apply(null), "612345678901234567890123456789012");
-        List<Subresource> records = uploadingSubresourceDao.selectByExample(new SubresourceExample());
+        uploadRepository.saveSubresource(upload, create.apply(null),
+                "123");
+        uploadRepository.saveSubresource(upload, create.apply(null),
+                "512345678901234567890123456789012");
+        uploadRepository.saveSubresource(upload, create.apply(null),
+                "612345678901234567890123456789012");
+        List<Subresource> records = uploadingSubresourceDao.selectByExample(
+                new SubresourceExample());
         assertEquals(3, records.size());
-        assertEquals("123", records.get(0).getKey());
+        assertEquals("123", records.get(0).getIndexInParent());
         assertEquals(r.getVersionId(), records.get(0).getParentVersionId());
         assertEquals("ChunkedResource", records.get(0).getType());
-        assertEquals("12345678901234567890123456789012", records.get(1).getKey());
-        assertEquals("12345678901234567890123456789012", records.get(2).getKey());
+        assertEquals("123456789012",
+                records.get(1).getIndexInParent());
+        assertEquals("123456789012",
+                records.get(2).getIndexInParent());
     }
 
 }

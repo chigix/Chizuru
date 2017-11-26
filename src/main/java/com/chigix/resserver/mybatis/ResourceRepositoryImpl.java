@@ -7,6 +7,7 @@ import com.chigix.resserver.domain.model.resource.Resource;
 import com.chigix.resserver.domain.error.NoSuchBucket;
 import com.chigix.resserver.domain.error.NoSuchKey;
 import com.chigix.resserver.domain.error.UnexpectedLifecycleException;
+import com.chigix.resserver.domain.model.resource.SubresourceSpecification;
 import com.chigix.resserver.mybatis.bean.BucketBean;
 import com.chigix.resserver.mybatis.bean.ChunkedResourceBean;
 import com.chigix.resserver.mybatis.bean.ResourceExtension;
@@ -24,13 +25,14 @@ import com.chigix.resserver.mybatis.record.Subresource;
 import com.chigix.resserver.mybatis.record.SubresourceExample;
 import com.chigix.resserver.mybatis.record.Util;
 import com.chigix.resserver.mybatis.specification.ResourceSpecification;
-import java.util.ArrayList;
+import java.math.BigInteger;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.concurrent.atomic.AtomicReference;
 import org.apache.ibatis.session.RowBounds;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -104,10 +106,6 @@ public class ResourceRepositoryImpl implements ResourceRepositoryExtend {
 
     @Override
     public Resource saveResource(final Resource resource) throws NoSuchBucket {
-        if (resource instanceof ChunkedResourceBean
-                && ((ChunkedResourceBean) resource).getParentResource() != null) {
-            return subResourceMapper.insert(subResourceBeanMapper.toRecord((ChunkedResourceBean) resource)) > 0 ? resource : null;
-        }
         com.chigix.resserver.mybatis.record.Resource record
                 = resourceBeanMapper.toRecord(resource);
         if (record.getBucketUuid().length() < 10) {
@@ -115,12 +113,38 @@ public class ResourceRepositoryImpl implements ResourceRepositoryExtend {
         }
         ResourceExample example = new ResourceExample();
         example.createCriteria().andKeyhashEqualTo(record.getKeyhash());
-        if (resource instanceof ChunkedResourceBean && ((ChunkedResourceBean) resource).getParentResource() != null) {
-        }
         if (resourceMapper.merge(record) > 0) {
             return resource;
         }
         return null;
+    }
+
+    @Override
+    public Resource insertSubresource(ChunkedResource r, SubresourceSpecification spec) throws NoSuchBucket {
+        Subresource record = null;
+        try {
+            record = subResourceBeanMapper.toRecord((ChunkedResourceBean) r);
+        } catch (ClassCastException ex) {
+            if (!(r instanceof ChunkedResourceBean)) {
+                throw new RuntimeException("Unexpected!! Unpersisted Subresource Domain Object was passed.");
+            }
+            throw ex;
+        }
+        int[] byte4s = Util.toBase256(spec.getRangeStartInParent());
+        record.setRangeStartByte(byte4s[0]);
+        record.setRangeStart4byte(0);
+        if (byte4s.length > 1) {
+            record.setRangeStart4byte(byte4s[1]);
+        }
+        byte4s = Util.toBase256(spec.getRangeEndInParent());
+        record.setRangeEndByte(byte4s[0]);
+        record.setRangeEnd4byte(0);
+        if (byte4s.length > 1) {
+            record.setRangeEnd4byte(byte4s[1]);
+        }
+        record.setIndexInParent(spec.getPartIndexInParent() + "");
+        record.setParentVersionId(spec.getParentResource().getVersionId());
+        return subResourceMapper.insert(record) > 0 ? r : null;
     }
 
     @Override
@@ -188,43 +212,35 @@ public class ResourceRepositoryImpl implements ResourceRepositoryExtend {
     public Iterator<ChunkedResourceBean> listSubResources(final ResourceSpecification.byParentResource spec) {
         // Subresource querying is disabled for the AmassedResourceBean which 
         // is still persisted in UploadingDatabase.
-        final AtomicInteger continuation_index = new AtomicInteger(Integer.valueOf(spec.getBeginIndex()) - 1);
+        final AtomicIntegerArray continuation_pos = new AtomicIntegerArray(new int[]{0, 0});
+        int[] byte4_values = Util.toBase256(spec.getByteStart());
+        for (int i = 0; i < byte4_values.length; i++) {
+            continuation_pos.set(i, byte4_values[i]);
+        }
         final Iterator<Subresource> records = new IteratorConcater<Subresource>() {
             @Override
             protected Iterator<Subresource> nextIterator() {
                 SubresourceExample example = new SubresourceExample();
-                ArrayList<String> index_range = new ArrayList<>();
-                for (int i = continuation_index.addAndGet(1); i < continuation_index.get() + 20; i++) {
-                    index_range.add(i + "");
-                }
-                spec.build(example.createCriteria()).andKeyIn(index_range);
-                // Because index field stored in database is a string, 
-                // Order through SQL in database system should not be used here.
-                final List<Subresource> records = subResourceMapper
-                        .selectByExampleWithRowbounds(example, new RowBounds(0, 20));
-                final Subresource[] sorted_records = new Subresource[20];
-                for (Subresource record : records) {
-                    sorted_records[Integer.valueOf(record.getKey()) - continuation_index.get()] = record;
-                }
-                final AtomicInteger nextIndex = new AtomicInteger(0);
-                return new Iterator<Subresource>() {
-                    @Override
-                    public boolean hasNext() {
-                        try {
-                            return sorted_records[nextIndex.get()] != null;
-                        } catch (ArrayIndexOutOfBoundsException e) {
-                            return false;
-                        }
-                    }
-
-                    @Override
-                    public Subresource next() {
-                        return sorted_records[nextIndex.getAndAdd(1)];
-                    }
-                };
+                SubresourceExample.Criteria c = example.createCriteria();
+                spec.build(c);
+                c.andRangeStartByteGreaterThanOrEqualTo(continuation_pos.get(0));
+                c.andRangeStart4byteEqualTo(continuation_pos.get(1));
+                c = example.or();
+                spec.build(c);
+                c.andRangeStart4byteGreaterThan(continuation_pos.get(1));
+                // The order of inserting data is reliable, because all of 
+                // subresources are appending in ascending order by part number 
+                // list provided by the Complete Multipart 
+                // Upload Request.
+                return subResourceMapper
+                        .selectByExampleWithRowbounds(example, new RowBounds(0, 20)).iterator();
             }
         }.addListener((r) -> {
-            continuation_index.set(Integer.valueOf(r.getKey()));
+            int[] byte4_values1 = new int[]{r.getRangeEndByte(),
+                r.getRangeEnd4byte()};
+            for (int i = 0; i < byte4_values1.length; i++) {
+                continuation_pos.set(i, byte4_values1[i]);
+            }
         });
         return new Iterator<ChunkedResourceBean>() {
             @Override
@@ -257,6 +273,8 @@ public class ResourceRepositoryImpl implements ResourceRepositoryExtend {
      * @TODO: The resource parameter should be managed ChunkedResourceBean,
      * instead of domain object, which could remove the parameter of
      * {@code chunkIndex}
+     *        -- Should I involve a new property in ChunkedResourceBean? -- no
+     *        -- Because the index could be calculated through size and chunksize.
      *
      * @param r
      * @param c
@@ -264,6 +282,7 @@ public class ResourceRepositoryImpl implements ResourceRepositoryExtend {
      */
     @Override
     public void putChunk(ChunkedResource r, Chunk c, int chunkIndex) {
+        r.setSize(new BigInteger(r.getSize()).add(new BigInteger(c.getSize() + "")).toString());
         com.chigix.resserver.mybatis.record.Chunk record = chunkBeanMapper.toRecord(c);
         record.setParentVersionId(r.getVersionId());
         record.setIndexInParent(chunkIndex + "");

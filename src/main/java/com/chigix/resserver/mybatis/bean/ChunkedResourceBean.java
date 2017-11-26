@@ -25,8 +25,6 @@ public class ChunkedResourceBean extends ChunkedResource implements ResourceExte
 
     private ChunksAdapter chunksAdapter = new ChunksAdapter.EmptyChunksAdapter();
 
-    private ReferenceAdapter<AmassedResourceBean> parentResource = new ReferenceAdapter.NullAdapter<>();
-
     private Lifecycle entityStatus = Lifecycle.MANAGED;
 
     public ChunkedResourceBean(String key, String keyhash) {
@@ -69,32 +67,6 @@ public class ChunkedResourceBean extends ChunkedResource implements ResourceExte
     @Override
     public String getKeyHash() {
         return this.keyHash;
-    }
-
-    /**
-     * @TODO remove. Try to involve a new method {@code appendSubResource} in
-     * ResourceRepository instead this bean method hidden for domain level
-     * operation.
-     * @return
-     * @deprecated
-     */
-    @Deprecated
-    public AmassedResourceBean getParentResource() {
-        return parentResource.getAdapted();
-    }
-
-    /**
-     * @TODO remove.
-     * @param parentResource
-     * @deprecated
-     */
-    @Deprecated
-    public void setParentResource(AmassedResourceBean parentResource) {
-        this.parentResource = () -> parentResource;
-    }
-
-    public void setParentResource(ReferenceAdapter<AmassedResourceBean> parentResource) {
-        this.parentResource = parentResource;
     }
 
     @Override

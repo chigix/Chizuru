@@ -2,6 +2,7 @@ package com.chigix.resserver.mybatis.specification;
 
 import com.chigix.resserver.domain.model.resource.AmassedResource;
 import com.chigix.resserver.mybatis.record.SubresourceExample;
+import java.math.BigInteger;
 
 /**
  *
@@ -13,17 +14,21 @@ public interface ResourceSpecification {
 
         private final AmassedResource parentResource;
 
-        private final String beginIndex;
+        private final BigInteger byteStart;
 
         /**
+         * @TODO This specification is designed for byte range support, however
+         * currently it is used as a Criteria for querying a list of Subresources,
+         * where the fromByte is actually the byte included in the first position
+         * of the Subresources list rather than the real first byte of this list.
          *
          * @param parentResource
-         * @param beginIndex The begin index should be an integer greater than
-         * 1, inclusive.
+         * @param fromByte An integer in byte unit indicating the beginning of
+         * the request range.
          */
-        public byParentResource(AmassedResource parentResource, String beginIndex) {
+        public byParentResource(AmassedResource parentResource, BigInteger fromByte) {
             this.parentResource = parentResource;
-            this.beginIndex = beginIndex;
+            this.byteStart = fromByte;
         }
 
         public SubresourceExample.Criteria build(SubresourceExample.Criteria criteria) {
@@ -31,9 +36,10 @@ public interface ResourceSpecification {
         }
 
         @Override
-        public String getBeginIndex() {
-            return beginIndex;
+        public BigInteger getByteStart() {
+            return byteStart;
         }
+
     }
 
 }

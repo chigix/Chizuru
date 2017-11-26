@@ -16,18 +16,17 @@ public interface ResourceRepository {
 
     Resource findResource(Bucket bucket, String resourceKey) throws NoSuchKey, NoSuchBucket;
 
+    Resource saveResource(Resource resource) throws NoSuchBucket;
+
+    Resource insertSubresource(ChunkedResource r, SubresourceSpecification spec) throws NoSuchBucket;
+
     /**
-     * @deprecated @TODO separate it into three methods. The two are still named
-     * {@code saveResource} samely but with different arguments list
-     * corresponding to {@link AmassedResource} and {@link ChunkedResource}. The
-     * third one is designed as {@code appendSubResource}.
+     * @TODO remove all {@link ResourceRepository#listResources} into one method
+     * using specification query.
      *
-     * @param resource
      * @return
      * @throws NoSuchBucket
      */
-    Resource saveResource(Resource resource) throws NoSuchBucket;
-
     Iterator<Resource> listResources(Bucket bucket, int limit) throws NoSuchBucket;
 
     Iterator<Resource> listResources(Bucket bucket, String continuation, int limit);

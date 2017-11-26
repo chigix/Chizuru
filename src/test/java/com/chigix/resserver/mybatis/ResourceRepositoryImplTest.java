@@ -24,7 +24,12 @@ import com.chigix.resserver.mybatis.record.Subresource;
 import com.chigix.resserver.mybatis.record.Util;
 import com.chigix.resserver.mybatis.specification.ResourceSpecification;
 import com.chigix.resserver.application.util.Authorization;
+import com.chigix.resserver.domain.model.resource.SubresourceSpecification;
+import com.chigix.resserver.mybatis.bean.AmassedResourceBean;
+import com.chigix.resserver.mybatis.record.SubresourceExample;
 import java.io.IOException;
+import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
@@ -37,10 +42,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.junit.runner.RunWith;
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.transaction.TransactionConfiguration;
@@ -54,7 +56,7 @@ import org.springframework.transaction.annotation.Transactional;
 @ContextConfiguration(locations = "classpath:appContext.xml")
 @Transactional
 @TransactionConfiguration(transactionManager = "transactionManager_Chizuru")
-public class ResourceRepositoryImplTest implements ApplicationContextAware {
+public class ResourceRepositoryImplTest {
 
     @Autowired
     private ResourceRepositoryExtend resourceRepository;
@@ -73,14 +75,7 @@ public class ResourceRepositoryImplTest implements ApplicationContextAware {
     @Autowired
     private ResourceBeanMapper resourceBeanMapper;
 
-    private ApplicationContext springContext;
-
     public ResourceRepositoryImplTest() {
-    }
-
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        springContext = applicationContext;
     }
 
     @BeforeClass
@@ -217,8 +212,59 @@ public class ResourceRepositoryImplTest implements ApplicationContextAware {
      */
     @Test
     public void testSaveResource_3() throws Exception {
-        System.out.println("saveResource_2");
+        System.out.println("saveResource_3");
         final BucketBean bb = new BucketBean("TEST_BUCKET");
+        final AmassedResource parent = new AmassedResource("TEST_RESOURCE") {
+            @Override
+            public <T extends ChunkedResource> Iterator<T> getSubResources() {
+                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public Bucket getBucket() throws NoSuchBucket {
+                return bb;
+            }
+        };
+        resourceRepository.saveResource(parent);
+    }
+
+    /**
+     * Test of insertSubresource method, of class ResourceRepositoryImpl.
+     *
+     * @throws java.lang.Exception
+     */
+    @Test
+    public void testInsertSubresource() throws Exception {
+        System.out.println("insertSubresource");
+        BigInteger parent_size = BigInteger.ZERO;
+        final AmassedResourceBean parent = new AmassedResourceBean(
+                "TEST_PARENT", "PARNET_KEYHASH");
+        final BucketBean bb = new BucketBean("TEST_BUCKET");
+        for (int i = 1; i <= 1000; i++) {
+            BigInteger prev_size = parent_size;
+            BigInteger updated_size = parent_size
+                    .add(new BigInteger(i + "")
+                            .multiply(new BigInteger(8 * 1024 * 1024 + "")));
+            parent_size = updated_size;
+            ChunkedResourceBean subresource = new ChunkedResourceBean(i * 2 + 1 + "", "TEST_HASH");
+            subresource.setBucket(bb);
+            resourceRepository.insertSubresource(subresource,
+                    SubresourceSpecification.build(parent,
+                            prev_size, updated_size.subtract(BigInteger.ONE),
+                            i + ""));
+        }
+        List<Subresource> records = subResourceMapper.selectByExample(new SubresourceExample());
+        assertEquals(records.size(), 1000);
+        int counter = 1;
+        BigInteger next_byte_pos = BigInteger.ZERO;
+        for (Subresource record : records) {
+            assertEquals(counter++ + "", record.getIndexInParent());
+            assertEquals(next_byte_pos.toString(),
+                    Integer.toUnsignedString(record.getRangeStartByte()));
+            next_byte_pos = new BigInteger(
+                    Integer.toUnsignedString(record.getRangeEndByte()))
+                    .add(BigInteger.ONE);
+        }
     }
 
     /**
@@ -226,7 +272,7 @@ public class ResourceRepositoryImplTest implements ApplicationContextAware {
      *
      * @TODO test with continuation token. --
      * {@link ResourceExampleExtending.VersionIdOffset} has been error occured
-     * once time for miss of ID field in SQL.
+     * once time for missing ID field in SQL.
      *
      * @throws java.lang.Exception
      */
@@ -274,17 +320,20 @@ public class ResourceRepositoryImplTest implements ApplicationContextAware {
     public void testPutChunk() {
         System.out.println("putChunk");
         ChunkedResource r = new ChunkedResourceBean("RES_TEST", "RES_TEST_KEYHASH");
+        int size_count = 0;
         for (int i = 0; i < 100; i++) {
             resourceRepository.putChunk(r,
                     new Chunk(Authorization.HexEncode(Authorization.SHA256(("RES_" + i).getBytes())), i, "LOCATION_ID"),
                     i);
+            size_count += i;
         }
         ChunkExample example = new ChunkExample();
         example.createCriteria().andParentVersionIdEqualTo(r.getVersionId());
         List<com.chigix.resserver.mybatis.record.Chunk> chunk_records = chunkMapper.selectByExample(example);
         for (int i = 0; i < 100; i++) {
-            chunk_records.get(i).getSize().equals(i);
+            assertEquals(i + "", chunk_records.get(i).getSize() + "");
         }
+        assertEquals(size_count + "", r.getSize());
     }
 
     /**
@@ -305,24 +354,48 @@ public class ResourceRepositoryImplTest implements ApplicationContextAware {
             }
         };
         Subresource[] subresources = new Subresource[1000];
+        BigInteger parent_size_count = BigInteger.ZERO;
         for (int i = 1; i < subresources.length + 1; i++) {
+            int size = 8 * 1024 * 1024;
             Subresource record = new Subresource();
             record.setEtag(UUID.randomUUID().toString().replaceAll("-", ""));
-            record.setKey(i + "");
+            record.setIndexInParent(i + "");
             record.setLastModified(DateTime.now(DateTimeZone.forID("GMT")));
             record.setParentVersionId(resource.getVersionId());
-            record.setSize("8388608");
+            int[] byte4_values = Arrays.copyOf(
+                    Util.toBase256(parent_size_count), 2);
+            record.setRangeStartByte(byte4_values[0]);
+            record.setRangeStart4byte(byte4_values[1]);
+            parent_size_count = parent_size_count.add(new BigInteger(size + ""));
+            byte4_values = Arrays.copyOf(
+                    Util.toBase256(parent_size_count.subtract(BigInteger.ONE)),
+                    2);
+            record.setRangeEndByte(byte4_values[0]);
+            record.setRangeEnd4byte(byte4_values[1]);
+            record.setSize(size + "");
             record.setStorageClass("STANDARD");
             record.setType(ChunkedResourceBean.TYPE);
             record.setVersionId(UUID.randomUUID().toString());
             subresources[i - 1] = record;
             subResourceMapper.insert(record);
         }
-        ResourceSpecification.byParentResource spec = new ResourceSpecification.byParentResource(resource, "1");
+        ResourceSpecification.byParentResource spec = new ResourceSpecification.byParentResource(resource, BigInteger.ZERO);
         Iterator<ChunkedResource> resources = resourceRepository.listSubResources(spec);
+        ChunkedResource lastResource = null;
         for (Subresource subresource : subresources) {
-            assertEquals(subresource.getVersionId(), resources.next().getVersionId());
+            lastResource = resources.next();
+            assertEquals(subresource.getVersionId(), lastResource.getVersionId());
         }
+        SubresourceExample example = new SubresourceExample();
+        example.createCriteria().andParentVersionIdEqualTo(resource.getVersionId())
+                .andIndexInParentEqualTo(lastResource.getKey());
+        Subresource r = subResourceMapper.selectByExample(example).get(0);
+        int[] byte4_values = Util.toBase256(parent_size_count
+                .subtract(BigInteger.ONE));
+        assertEquals(Integer.toUnsignedString(byte4_values[0]),
+                Integer.toUnsignedString(r.getRangeEndByte()));
+        assertEquals(Integer.toUnsignedString(byte4_values[1]),
+                Integer.toUnsignedString(r.getRangeEnd4byte()));
     }
 
 }

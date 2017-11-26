@@ -14,8 +14,8 @@ public class ChunkExampleExtending {
 
         public OffsetIndexInParent(int index, String parent_version_id, boolean include_this) {
             super("table_a.ID >" + (include_this ? "=" : "") + " (SELECT table_b.ID FROM CHUNK table_b "
-                    + "WHERE table_b.INDEX_IN_PARENT= #{criterion.value} "
-                    + "AND table_b.PARENT_VERSION_ID=#{criterion.parentVersionId})");
+                    + "WHERE table_b.\"index_in_parent\"= #{criterion.value} "
+                    + "AND table_b.\"parent_version_id\"=#{criterion.parentVersionId})");
             this.value = index;
             this.parentVersionId = parent_version_id;
         }

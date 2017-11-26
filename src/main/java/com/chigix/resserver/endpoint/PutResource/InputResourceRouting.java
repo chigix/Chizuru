@@ -195,7 +195,7 @@ public class InputResourceRouting {
             Context routing_ctx = ctx.channel().attr(RESOURCE_CTX).getAndRemove();
             routing_ctx.getResource().setETag(Authorization.HexEncode(routing_ctx.getEtagDigest().digest()));
             if (routing_ctx instanceof MultipartUploadContext) {
-                application.getEntityManager().getUploadRepository().appendChunkedResource(
+                application.getEntityManager().getUploadRepository().saveSubresource(
                         ((MultipartUploadContext) routing_ctx).getMultipartUpload(),
                         (ChunkedResource) routing_ctx.getResource(),
                         ((MultipartUploadContext) routing_ctx).getPartNumber() + "");

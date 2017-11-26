@@ -64,7 +64,7 @@ public class ResourceListHandler extends SimpleChannelInboundHandler<Context> {
     /**
      * Response bucket objects list.
      *
-     * @TODO Not support key search. ONLY list all the keys below this bucket.
+     * @TODO Support searching key under a specified bucket.
      * @TODO ONLY SUPPORT standard storage class.
      *
      * @param ctx

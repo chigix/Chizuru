@@ -23,6 +23,9 @@ import com.chigix.resserver.domain.EntityManager;
 /**
  * BeanFactory that enables injection of configured {@link ApplicationContext}.
  *
+ * @TODO Take consideration about the configurable properties for testing
+ * support.
+ *
  * @author Richard Lea <chigix@zoho.com>
  */
 public class ApplicationContextFactoryBean implements FactoryBean<ApplicationContext> {
@@ -50,22 +53,22 @@ public class ApplicationContextFactoryBean implements FactoryBean<ApplicationCon
         Configuration conf = new Configuration();
         String value;
         if ((value = mapping_persisted.get("NODE_ID")) == null) {
-            Utils.insertChizuru("NODE_ID", conf.getCurrentNodeId(), chizuruDao);
+            Utils.updateChizuru("NODE_ID", conf.getCurrentNodeId(), chizuruDao);
         } else {
             conf.setCurrentNodeId(value);
         }
         if ((value = mapping_persisted.get("CREATION_DATE")) == null) {
-            Utils.insertChizuru("CREATION_DATE", conf.getCreationDate().toString(), chizuruDao);
+            Utils.updateChizuru("CREATION_DATE", conf.getCreationDate().toString(), chizuruDao);
         } else {
             conf.setCreationDate(DateTime.parse(value));
         }
         if ((value = mapping_persisted.get("MAX_CHUNKSIZE")) == null) {
-            Utils.insertChizuru("MAX_CHUNKSIZE", conf.getMaxChunkSize() + "", chizuruDao);
+            Utils.updateChizuru("MAX_CHUNKSIZE", conf.getMaxChunkSize() + "", chizuruDao);
         } else {
             conf.setMaxChunkSize(Integer.valueOf(value));
         }
         if ((value = mapping_persisted.get("TRANSFER_BUFFERSIZE")) == null) {
-            Utils.insertChizuru("TRANSFER_BUFFERSIZE", conf.getTransferBufferSize() + "", chizuruDao);
+            Utils.updateChizuru("TRANSFER_BUFFERSIZE", conf.getTransferBufferSize() + "", chizuruDao);
         } else {
             conf.setTransferBufferSize(Integer.valueOf(value));
         }

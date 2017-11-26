@@ -38,7 +38,7 @@ public class AmassedResourceBean extends AmassedResource implements ResourceExte
 
     @Override
     public final Iterator<ChunkedResourceBean> getSubResources() {
-        return subresourceAdapter.iterate(1);
+        return subresourceAdapter.iterateFromByte(0);
     }
 
     public void setSubresourceAdapter(SubresourcesAdapter subresourceAdapter) {

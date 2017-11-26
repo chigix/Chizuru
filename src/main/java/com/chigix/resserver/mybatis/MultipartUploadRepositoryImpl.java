@@ -1,21 +1,17 @@
 package com.chigix.resserver.mybatis;
 
-import com.chigix.resserver.domain.model.resource.AmassedResource;
-import com.chigix.resserver.domain.model.bucket.Bucket;
-import com.chigix.resserver.domain.model.resource.ChunkedResource;
-import com.chigix.resserver.domain.model.multiupload.MultipartUpload;
 import com.chigix.resserver.domain.error.InvalidPart;
 import com.chigix.resserver.domain.error.NoSuchBucket;
 import com.chigix.resserver.domain.error.NoSuchUpload;
 import com.chigix.resserver.domain.error.UnexpectedLifecycleException;
+import com.chigix.resserver.domain.model.bucket.Bucket;
+import com.chigix.resserver.domain.model.multiupload.MultipartUpload;
+import com.chigix.resserver.domain.model.multiupload.MultipartUploadRepository;
+import com.chigix.resserver.domain.model.resource.AmassedResource;
+import com.chigix.resserver.domain.model.resource.ChunkedResource;
 import com.chigix.resserver.mybatis.bean.AmassedResourceBean;
 import com.chigix.resserver.mybatis.bean.BucketBean;
 import com.chigix.resserver.mybatis.bean.ChunkedResourceBean;
-import java.security.InvalidParameterException;
-import java.util.Iterator;
-import java.util.concurrent.atomic.AtomicReference;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import com.chigix.resserver.mybatis.dao.ChunkMapper;
 import com.chigix.resserver.mybatis.dao.MultipartUploadMapper;
 import com.chigix.resserver.mybatis.dao.ResourceMapper;
@@ -29,9 +25,13 @@ import com.chigix.resserver.mybatis.record.ResourceExample;
 import com.chigix.resserver.mybatis.record.Subresource;
 import com.chigix.resserver.mybatis.record.SubresourceExample;
 import com.chigix.resserver.mybatis.record.Util;
+import java.security.InvalidParameterException;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.Iterator;
 import java.util.List;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.springframework.beans.factory.annotation.Autowired;
-import com.chigix.resserver.domain.model.multiupload.MultipartUploadRepository;
 
 /**
  *
@@ -117,13 +117,14 @@ public class MultipartUploadRepositoryImpl implements MultipartUploadRepository 
     }
 
     @Override
-    public ChunkedResource findUploadPart(MultipartUpload upload, String partNumber, String etag) throws InvalidPart {
-        String key = partNumber;
-        if (key.length() > 32) {
-            key = key.substring(key.length() - 32);
+    public ChunkedResource findUploadPart(MultipartUpload upload, final String partNumber, String etag) throws InvalidPart {
+        String part_number = partNumber;
+        if (part_number.length() > 32) {
+            part_number = part_number.substring(part_number.length() - 32);
         }
         SubresourceExample example = new SubresourceExample();
-        example.createCriteria().andKeyEqualTo(key).andParentVersionIdEqualTo(upload.getResource().getVersionId()).andEtagEqualTo(etag);
+        example.createCriteria().andIndexInParentEqualTo(part_number).andParentVersionIdEqualTo(upload.getResource().getVersionId()).andEtagEqualTo(etag);
+        example.setOrderByClause("\"parent_version_id\", \"index_in_parent\" desc");
         List<Subresource> records = uploadingSubResourceDao.selectByExampleWithRowbounds(example, Util.ONE_ROWBOUND);
         if (records.size() < 1) {
             throw new InvalidPart();
@@ -134,7 +135,6 @@ public class MultipartUploadRepositoryImpl implements MultipartUploadRepository 
         } catch (NoSuchBucket ex) {
             throw new RuntimeException("Unexpected!!!!AmassedResource's BucketBean object isn't put previously.");
         }
-        resource_bean.setParentResource((AmassedResourceBean) upload.getResource());
         return resource_bean;
     }
 
@@ -189,19 +189,23 @@ public class MultipartUploadRepositoryImpl implements MultipartUploadRepository 
     }
 
     @Override
-    public void appendChunkedResource(MultipartUpload upload, ChunkedResource r, String partNumber) throws NoSuchBucket {
+    public void saveSubresource(MultipartUpload upload, ChunkedResource r, String partNumber) throws NoSuchBucket {
         if (!(upload.getResource() instanceof AmassedResourceBean)) {
             throw new InvalidParameterException("MultipartUpload object should be fetched persisted object.");
         }
         final AmassedResourceBean amassed_resource = (AmassedResourceBean) upload.getResource();
-        String key = partNumber;
-        if (key.length() > 32) {
-            key = key.substring(key.length() - 32);
-        }
         Subresource record = subResourceBeanMapper.toRecord(r);
-        record.setKey(key);
+        if (partNumber.length() > 12) {
+            record.setIndexInParent(
+                    partNumber.substring(partNumber.length() - 12));
+        } else {
+            record.setIndexInParent(partNumber);
+        }
         record.setParentVersionId(amassed_resource.getVersionId());
-        // @TODO: Involve Merge support.
+        // Insert directly here is reliable, without consideration about merge 
+        // because duplicated partnumber resource in uploading is allowed, 
+        // for which LIMIT ONE from last records when querying uploading temp 
+        // database is applied.
         uploadingSubResourceDao.insert(record);
     }
 

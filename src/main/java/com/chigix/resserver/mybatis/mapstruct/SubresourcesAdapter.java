@@ -4,6 +4,7 @@ import com.chigix.resserver.domain.model.resource.AmassedResource;
 import com.chigix.resserver.mybatis.ResourceRepositoryExtend;
 import com.chigix.resserver.mybatis.bean.ChunkedResourceBean;
 import com.chigix.resserver.mybatis.specification.ResourceSpecification;
+import java.math.BigInteger;
 import java.util.Collections;
 import java.util.Iterator;
 
@@ -15,7 +16,7 @@ import java.util.Iterator;
  */
 public interface SubresourcesAdapter {
 
-    <T extends ChunkedResourceBean> Iterator<T> iterate(int start_index);
+    <T extends ChunkedResourceBean> Iterator<T> iterateFromByte(int byte_pos);
 
     public static class DefaultSubresourcesAdapter implements SubresourcesAdapter {
 
@@ -30,10 +31,10 @@ public interface SubresourcesAdapter {
         }
 
         @Override
-        public Iterator<ChunkedResourceBean> iterate(final int start_index) {
+        public <T extends ChunkedResourceBean> Iterator<T> iterateFromByte(int byte_pos) {
             return resourceRepository.listSubResources(
                     new ResourceSpecification.byParentResource(
-                            parentResource, start_index + ""));
+                            parentResource, new BigInteger(byte_pos + "")));
         }
     }
 
@@ -43,7 +44,7 @@ public interface SubresourcesAdapter {
         }
 
         @Override
-        public Iterator<ChunkedResourceBean> iterate(int start_index) {
+        public <T extends ChunkedResourceBean> Iterator<T> iterateFromByte(int byte_pos) {
             return Collections.emptyIterator();
         }
 
