@@ -23,5 +23,6 @@
     <bean id="ApplicationContext" class="com.chigix.resserver.config.ApplicationContextFactoryBean"></bean>
     <bean id="entityManager" class="com.chigix.resserver.mybatis.EntityManagerImpl"></bean>
     <import resource="Specifications.xml" />
+    <import resource="ChannelHandlers.xml" />
     <tx:annotation-driven />
 </beans>

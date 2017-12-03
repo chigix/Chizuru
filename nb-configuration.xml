@@ -13,6 +13,7 @@ Without this configuration present, some functionality in the IDE may be limited
             <config-file>src/main/resources/datasource.xml</config-file>
             <config-file>src/main/resources/ChizuruMybatisMappers.xml</config-file>
             <config-file>src/main/resources/UploadingMybatisMappers.xml</config-file>
+            <config-file>src/main/resources/ChannelHandlers.xml</config-file>
         </config-files>
         <config-file-groups/>
     </spring-data>
