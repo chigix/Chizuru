@@ -7,6 +7,7 @@ import com.chigix.resserver.application.ResourceInfoHandler;
 import com.chigix.resserver.application.ResourceRespEncoder;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.http.router.RoutingConfig;
+import io.netty.handler.routing.DefaultExceptionForwarder;
 
 /**
  * HEAD Object
@@ -38,7 +39,8 @@ public class Routing extends RoutingConfig.HEAD {
                 ExtractGetResponseHandler.getInstance(),
                 ResourceInfoHandler.getInstance(application),
                 ContentRespHeaderBuildingHandler.getInstance(application),
-                RespHeaderFixer.DEFAULT
+                RespHeaderFixer.DEFAULT,
+                new DefaultExceptionForwarder()
         );
     }
 
