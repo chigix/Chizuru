@@ -539,7 +539,4 @@
       #{size,jdbcType=VARCHAR}, #{storageClass,jdbcType=VARCHAR}, #{versionId,jdbcType=CHAR}, 
       #{metaData,jdbcType=CLOB})
   </update>
-  <delete id="deleteByUploadId">
-      DELETE FROM resource WHERE "version_id"=(SELECT FROM ** WHERE "upload_id" = #{upload_id} LIMIT 1)
-  </delete>
 </mapper>

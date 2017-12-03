@@ -1,5 +1,6 @@
 package com.chigix.resserver.domain.model.resource;
 
+import com.chigix.resserver.domain.Specification;
 import com.chigix.resserver.domain.model.bucket.Bucket;
 import com.chigix.resserver.domain.model.chunk.Chunk;
 import com.chigix.resserver.domain.error.NoSuchBucket;
@@ -21,15 +22,14 @@ public interface ResourceRepository {
     Resource insertSubresource(ChunkedResource r, SubresourceSpecification spec) throws NoSuchBucket;
 
     /**
-     * @TODO remove all {@link ResourceRepository#listResources} into one method
-     * using specification query.
+     * Fetch Resources through an iterator via specifications as criteria.
      *
+     * @param specification
+     * @param limit
      * @return
      * @throws NoSuchBucket
      */
-    Iterator<Resource> listResources(Bucket bucket, int limit) throws NoSuchBucket;
-
-    Iterator<Resource> listResources(Bucket bucket, String continuation, int limit);
+    Iterator<Resource> fetchResources(Specification<Resource> specification, int limit) throws NoSuchBucket;
 
     void removeResource(Resource resource) throws NoSuchKey, NoSuchBucket;
 

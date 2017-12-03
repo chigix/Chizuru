@@ -27,7 +27,7 @@ public class ResourceExampleExtending {
         private final String value;
 
         public KeyhashOffset(String keyhash, boolean include_this) {
-            super("table_a.ID >" + (include_this ? "=" : "") + " (SELECT table_b.\"keyhash\" FROM resource table_b WHERE table_b.\"keyhash\"= #{criterion.value})");
+            super("table_a.ID >" + (include_this ? "=" : "") + " (SELECT table_b.ID FROM resource table_b WHERE table_b.\"keyhash\"= #{criterion.value} LIMIT 1)");
             value = keyhash;
         }
 

@@ -2,20 +2,23 @@ package com.chigix.resserver.endpoint.PostResource;
 
 import com.chigix.resserver.Application;
 import com.chigix.resserver.config.ApplicationContext;
-import com.chigix.resserver.domain.model.resource.AmassedResource;
-import com.chigix.resserver.domain.model.chunk.Chunk;
-import com.chigix.resserver.domain.model.resource.ChunkedResource;
 import com.chigix.resserver.domain.error.InvalidPart;
 import com.chigix.resserver.domain.error.NoSuchBucket;
-import com.chigix.resserver.scheduledtask.ReadStreamTaskHooker;
+import com.chigix.resserver.domain.model.chunk.Chunk;
+import com.chigix.resserver.domain.model.multiupload.MultipartUploadRepository;
+import com.chigix.resserver.domain.model.resource.AmassedResource;
+import com.chigix.resserver.domain.model.resource.ChunkedResource;
+import com.chigix.resserver.domain.model.resource.ResourceRepository;
+import com.chigix.resserver.domain.model.resource.SpecificationFactory;
 import com.chigix.resserver.interfaces.io.IteratorInputStream;
 import com.chigix.resserver.interfaces.xml.XPathNode;
+import com.chigix.resserver.scheduledtask.ReadStreamTaskHooker;
 import com.fasterxml.aalto.AsyncXMLStreamReader;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
-import java.io.IOException;
 import java.io.InputStream;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.LinkedList;
 import java.util.List;
@@ -25,9 +28,7 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.chigix.resserver.domain.model.multiupload.MultipartUploadRepository;
-import com.chigix.resserver.domain.model.resource.ResourceRepository;
-import com.chigix.resserver.domain.model.resource.SubresourceSpecification;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
@@ -36,12 +37,16 @@ import com.chigix.resserver.domain.model.resource.SubresourceSpecification;
 @ChannelHandler.Sharable
 class MultiUploadCompleteContentHandler extends MultiUploadCompleteHandler.Content {
 
-    private final ApplicationContext application;
+    @Autowired
+    private ApplicationContext application;
+
+    @Autowired
+    private SpecificationFactory specifications;
 
     private static final Logger LOG = LoggerFactory.getLogger(MultiUploadCompleteContentHandler.class.getName());
 
-    public MultiUploadCompleteContentHandler(ApplicationContext application) {
-        this.application = application;
+    public MultiUploadCompleteContentHandler() {
+        // Intentionally Empty.
     }
 
     @Override
@@ -145,27 +150,10 @@ class MultiUploadCompleteContentHandler extends MultiUploadCompleteHandler.Conte
             final BigInteger prev_size = new BigInteger(amassed_resource.getSize());
             final BigInteger updated_size = prev_size.add(new BigInteger(part_resource.getSize()));
             amassed_resource.setSize(updated_size.toString());
-            resourcedao.insertSubresource(part_resource, new SubresourceSpecification() {
-                @Override
-                public AmassedResource getParentResource() {
-                    return amassed_resource;
-                }
-
-                @Override
-                public BigInteger getRangeStartInParent() {
-                    return prev_size;
-                }
-
-                @Override
-                public BigInteger getRangeEndInParent() {
-                    return updated_size;
-                }
-
-                @Override
-                public String getPartIndexInParent() {
-                    return part.getPartNumber();
-                }
-            });
+            resourcedao.insertSubresource(part_resource,
+                    specifications.subresourceInfo(
+                            amassed_resource,
+                            prev_size, updated_size, part.getPartNumber()));
             return true;
         }
         return false;

@@ -22,5 +22,6 @@
     <context:component-scan base-package="com.chigix.resserver.mybatis.mapstruct" />
     <bean id="ApplicationContext" class="com.chigix.resserver.config.ApplicationContextFactoryBean"></bean>
     <bean id="entityManager" class="com.chigix.resserver.mybatis.EntityManagerImpl"></bean>
+    <import resource="Specifications.xml" />
     <tx:annotation-driven />
 </beans>

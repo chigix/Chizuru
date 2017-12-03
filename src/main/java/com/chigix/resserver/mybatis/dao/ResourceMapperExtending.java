@@ -1,7 +1,6 @@
 package com.chigix.resserver.mybatis.dao;
 
 import com.chigix.resserver.mybatis.record.Resource;
-import org.apache.ibatis.annotations.Param;
 
 /**
  *
@@ -18,11 +17,4 @@ public interface ResourceMapperExtending {
      */
     int mergeUploadingResource(Resource r);
 
-    /**
-     * @TODO: remove
-     *
-     * @param uploadId
-     * @return
-     */
-    int deleteByUploadId(@Param("upload_id") String uploadId);
 }

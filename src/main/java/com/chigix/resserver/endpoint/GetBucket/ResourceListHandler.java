@@ -4,6 +4,7 @@ import com.chigix.resserver.config.ApplicationContext;
 import com.chigix.resserver.domain.model.bucket.Bucket;
 import com.chigix.resserver.domain.model.resource.Resource;
 import com.chigix.resserver.domain.error.NoSuchBucket;
+import com.chigix.resserver.domain.model.resource.SpecificationFactory;
 import com.chigix.resserver.interfaces.handling.http.HttpHeaderNames;
 import com.chigix.resserver.interfaces.handling.http.HttpHeaderUtil;
 import com.chigix.resserver.interfaces.io.InputStreamProxy;
@@ -34,6 +35,7 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 import org.apache.commons.io.input.ClosedInputStream;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * GET Bucket (List Objects) Version 2
@@ -44,21 +46,16 @@ import org.apache.commons.io.input.ClosedInputStream;
 @ChannelHandler.Sharable
 public class ResourceListHandler extends SimpleChannelInboundHandler<Context> {
 
-    private static ResourceListHandler INSTANCE = null;
+    @Autowired
+    SpecificationFactory resourceSpecifications;
 
     private static final XMLOutputFactory XML_FACTORY = XMLOutputFactory.newInstance();
 
-    private final ApplicationContext application;
+    @Autowired
+    private ApplicationContext application;
 
-    public static ResourceListHandler getInstance(ApplicationContext ctx) {
-        if (INSTANCE == null) {
-            INSTANCE = new ResourceListHandler(ctx);
-        }
-        return INSTANCE;
-    }
-
-    public ResourceListHandler(ApplicationContext application) {
-        this.application = application;
+    public ResourceListHandler() {
+        // intentionally empty
     }
 
     /**
@@ -126,9 +123,18 @@ public class ResourceListHandler extends SimpleChannelInboundHandler<Context> {
                         final Iterator<Resource> resources;
                         try {
                             if (listCtx.continuationToken == null) {
-                                resources = application.getEntityManager().getResourceRepository().listResources(route_ctx.getTargetBucket(), listCtx.maxKeys + 1);
+                                resources = application.getEntityManager()
+                                        .getResourceRepository()
+                                        .fetchResources(
+                                                resourceSpecifications.bucketIs(route_ctx.getTargetBucket()),
+                                                listCtx.maxKeys + 1);
                             } else {
-                                resources = application.getEntityManager().getResourceRepository().listResources(route_ctx.getTargetBucket(), listCtx.nextContinuationToken, listCtx.maxKeys + 1);
+                                resources = application.getEntityManager()
+                                        .getResourceRepository()
+                                        .fetchResources(
+                                                resourceSpecifications.bucketIs(route_ctx.getTargetBucket())
+                                                        .and(resourceSpecifications.continuateFrom(listCtx.nextContinuationToken)),
+                                                listCtx.maxKeys + 1);
                             }
                         } catch (NoSuchBucket ex) {
                             setStream(new ClosedInputStream());

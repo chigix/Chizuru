@@ -41,7 +41,8 @@ public class MultiUploadCompleteHandler {
 
     public static final ChannelHandler contentHandler(ApplicationContext application) {
         if (content == null) {
-            content = new MultiUploadCompleteContentHandler(application);
+            content = application
+                    .getSharableHandler(MultiUploadCompleteContentHandler.class);
         }
         return content;
     }

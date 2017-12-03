@@ -1,5 +1,6 @@
 package com.chigix.resserver.mybatis;
 
+import com.chigix.resserver.domain.Specification;
 import com.chigix.resserver.domain.model.bucket.Bucket;
 import com.chigix.resserver.domain.model.chunk.Chunk;
 import com.chigix.resserver.domain.model.resource.ChunkedResource;
@@ -24,6 +25,9 @@ import com.chigix.resserver.mybatis.record.ResourceExampleExtending;
 import com.chigix.resserver.mybatis.record.Subresource;
 import com.chigix.resserver.mybatis.record.SubresourceExample;
 import com.chigix.resserver.mybatis.record.Util;
+import com.chigix.resserver.mybatis.specification.AbstractSpecification;
+import com.chigix.resserver.mybatis.specification.InvalidSpecificationException;
+import com.chigix.resserver.mybatis.specification.QueryCriteriaSpecification;
 import com.chigix.resserver.mybatis.specification.ResourceSpecification;
 import java.math.BigInteger;
 import java.util.Collections;
@@ -148,25 +152,16 @@ public class ResourceRepositoryImpl implements ResourceRepositoryExtend {
     }
 
     @Override
-    public Iterator<Resource> listResources(Bucket bucket, int limit) throws NoSuchBucket {
-        return listResources(bucket, null, limit);
-    }
-
-    /**
-     *
-     * @param bucket
-     * @param con_token KeyHash of the resource is used as the continuation
-     * token.
-     * @param limit
-     * @return
-     */
-    @Override
-    public Iterator<Resource> listResources(Bucket bucket, String con_token, int limit) {
-        if (!(bucket instanceof BucketBean)) {
-            throw new RuntimeException("Unexpected!! Unpersisted Bucket Domain Object was passed.");
+    public Iterator<Resource> fetchResources(Specification<Resource> specification, int limit) {
+        if (!(specification instanceof AbstractSpecification)) {
+            throw new InvalidSpecificationException();
         }
-        BucketBean bb = (BucketBean) bucket;
-        final AtomicReference<String> continuation = new AtomicReference<>(con_token);
+        QueryCriteriaSpecification<Resource, ResourceExample.Criteria> spec
+                = (QueryCriteriaSpecification<Resource, ResourceExample.Criteria>) specification;
+        final AtomicReference<String> continuation = new AtomicReference<>();
+        if (spec.getContinuationSpec() != null) {
+            continuation.set(spec.getContinuationSpec().getContinuationToken());
+        }
         final AtomicBoolean include_continuation = new AtomicBoolean(true);
         final AtomicInteger remaining = new AtomicInteger(limit);
         final IteratorConcater<com.chigix.resserver.mybatis.record.Resource> records = new IteratorConcater<com.chigix.resserver.mybatis.record.Resource>() {
@@ -183,16 +178,21 @@ public class ResourceRepositoryImpl implements ResourceRepositoryExtend {
                 }
                 final ResourceExample example = new ResourceExample();
                 ResourceExample.Criteria criteria = example.createCriteria();
-                criteria.andBucketUuidEqualTo(bb.getUuid());
+                spec.appendCriteria(criteria);
                 if (continuation.get() == null) {
                     include_continuation.set(false);
                 } else {
-                    criteria.getCriteria().add(new ResourceExampleExtending.VersionIdOffset(continuation.get(), include_continuation.getAndSet(false)));
+                    criteria.getCriteria().add(
+                            new ResourceExampleExtending.KeyhashOffset(
+                                    continuation.get(),
+                                    include_continuation.getAndSet(false))
+                    );
                 }
-                return resourceMapper.selectByExampleWithBLOBsWithRowbounds(example, limit).iterator();
+                return resourceMapper.selectByExampleWithBLOBsWithRowbounds(
+                        example, limit).iterator();
             }
         }.addListener((resource) -> {
-            continuation.set(resource.getVersionId());
+            continuation.set(resource.getKeyhash());
             remaining.decrementAndGet();
         });
         return new Iterator<Resource>() {
@@ -272,9 +272,9 @@ public class ResourceRepositoryImpl implements ResourceRepositoryExtend {
     /**
      * @TODO: The resource parameter should be managed ChunkedResourceBean,
      * instead of domain object, which could remove the parameter of
-     * {@code chunkIndex}
-     *        -- Should I involve a new property in ChunkedResourceBean? -- no
-     *        -- Because the index could be calculated through size and chunksize.
+     * {@code chunkIndex} -- Should I involve a new property in
+     * ChunkedResourceBean? -- no -- Because the index could be calculated
+     * through size and chunksize.
      *
      * @param r
      * @param c

@@ -24,7 +24,7 @@ import com.chigix.resserver.mybatis.record.Subresource;
 import com.chigix.resserver.mybatis.record.Util;
 import com.chigix.resserver.mybatis.specification.ResourceSpecification;
 import com.chigix.resserver.application.util.Authorization;
-import com.chigix.resserver.domain.model.resource.SubresourceSpecification;
+import com.chigix.resserver.domain.model.resource.SpecificationFactory;
 import com.chigix.resserver.mybatis.bean.AmassedResourceBean;
 import com.chigix.resserver.mybatis.record.SubresourceExample;
 import java.io.IOException;
@@ -74,6 +74,8 @@ public class ResourceRepositoryImplTest {
     private BucketBeanMapper bucketBeanMapper;
     @Autowired
     private ResourceBeanMapper resourceBeanMapper;
+    @Autowired
+    private SpecificationFactory specificiations;
 
     public ResourceRepositoryImplTest() {
     }
@@ -249,7 +251,7 @@ public class ResourceRepositoryImplTest {
             ChunkedResourceBean subresource = new ChunkedResourceBean(i * 2 + 1 + "", "TEST_HASH");
             subresource.setBucket(bb);
             resourceRepository.insertSubresource(subresource,
-                    SubresourceSpecification.build(parent,
+                    specificiations.subresourceInfo(parent,
                             prev_size, updated_size.subtract(BigInteger.ONE),
                             i + ""));
         }
@@ -270,10 +272,6 @@ public class ResourceRepositoryImplTest {
     /**
      * Test of listResources method, of class ResourceDaoImpl.
      *
-     * @TODO test with continuation token. --
-     * {@link ResourceExampleExtending.VersionIdOffset} has been error occured
-     * once time for missing ID field in SQL.
-     *
      * @throws java.lang.Exception
      */
     @Test
@@ -287,10 +285,16 @@ public class ResourceRepositoryImplTest {
             resources[i].setBucket(bb);
             resourceMapper.insert(resourceBeanMapper.toRecord(resources[i]));
         }
-        Iterator<Resource> it = resourceRepository.listResources(bb, 10004);
+        Iterator<Resource> it = resourceRepository.fetchResources(
+                specificiations.bucketIs(bb), 10004);
         for (ChunkedResourceBean resource : resources) {
             assertEquals(resource.getVersionId(), it.next().getVersionId());
         }
+        it = resourceRepository.fetchResources(
+                specificiations.bucketIs(bb)
+                        .and(specificiations.continuateFrom(resources[1000].getKeyHash())),
+                10004);
+        assertEquals(resources[1000].getKey(), it.next().getKey());
     }
 
     /**

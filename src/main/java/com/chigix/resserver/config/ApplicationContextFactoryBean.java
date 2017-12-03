@@ -19,6 +19,9 @@ import org.joda.time.DateTime;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.chigix.resserver.domain.EntityManager;
+import io.netty.channel.ChannelHandler;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContextAware;
 
 /**
  * BeanFactory that enables injection of configured {@link ApplicationContext}.
@@ -28,11 +31,14 @@ import com.chigix.resserver.domain.EntityManager;
  *
  * @author Richard Lea <chigix@zoho.com>
  */
-public class ApplicationContextFactoryBean implements FactoryBean<ApplicationContext> {
+public class ApplicationContextFactoryBean implements FactoryBean<ApplicationContext>,
+        ApplicationContextAware {
 
     private final File dataDir = new File("./data");
 
     private final File chunksDir = new File(dataDir, "/chunks");
+
+    private org.springframework.context.ApplicationContext springContext;
 
     @Autowired
     private ChizuruMapper chizuruDao;
@@ -155,6 +161,11 @@ public class ApplicationContextFactoryBean implements FactoryBean<ApplicationCon
             public void finishRequest(HttpRouted routed_info) {
                 entityManager.close();
             }
+
+            @Override
+            public <T extends ChannelHandler> T getSharableHandler(Class<T> handler) {
+                return springContext.getBean(handler);
+            }
         };
     }
 
@@ -166,6 +177,11 @@ public class ApplicationContextFactoryBean implements FactoryBean<ApplicationCon
     @Override
     public boolean isSingleton() {
         return true;
+    }
+
+    @Override
+    public void setApplicationContext(org.springframework.context.ApplicationContext applicationContext) throws BeansException {
+        this.springContext = applicationContext;
     }
 
     private static final class Utils {

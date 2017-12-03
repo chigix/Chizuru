@@ -69,7 +69,8 @@ public class Routing extends RoutingConfig.GET {
             protected void initRouter(ChannelHandlerContext ctx) throws Exception {
                 this.newRouting(ctx, ROUTING_NAME + ":RESOURCE_LIST").addLast(
                         new ChunkedWriteHandler(),
-                        ResourceListHandler.getInstance(application), new DefaultExceptionForwarder());
+                        application.getSharableHandler(ResourceListHandler.class),
+                        new DefaultExceptionForwarder());
                 this.newRouting(ctx, ROUTING_NAME + ":BUCKET_LOCATION").addLast(LocationHandler.getInstance(application), new DefaultExceptionForwarder());
                 this.newRouting(ctx, ROUTING_NAME + ":LIST_UPLOADS").addLast(
                         new ChunkedWriteHandler(),
