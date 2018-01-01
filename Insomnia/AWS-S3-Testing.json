@@ -1,358 +1,440 @@
 {
 	"_type": "export",
 	"__export_format": 3,
-	"__export_date": "2017-10-25T15:23:56.370Z",
-	"__export_source": "insomnia.desktop.app:v5.9.6",
+	"__export_date": "2017-12-29T16:22:17.412Z",
+	"__export_source": "insomnia.desktop.app:v5.12.4",
 	"resources": [
 		{
 			"_id": "wrk_d7e15440ea814c59be68ee895bb7329b",
-			"parentId": null,
-			"modified": 1508681741030,
 			"created": 1508681741030,
-			"name": "AWS S3 Testing",
 			"description": "",
-			"certificates": [],
+			"modified": 1508681741030,
+			"name": "AWS S3 Testing",
+			"parentId": null,
 			"_type": "workspace"
 		},
 		{
 			"_id": "env_edc847f50d314c8a95fbbc3d9a021992",
-			"parentId": "wrk_d7e15440ea814c59be68ee895bb7329b",
-			"modified": 1508681741044,
-			"created": 1508681741044,
-			"name": "Base Environment",
-			"data": {},
 			"color": null,
+			"created": 1508681741044,
+			"data": {},
 			"isPrivate": false,
+			"modified": 1508681741044,
+			"name": "Base Environment",
+			"parentId": "wrk_d7e15440ea814c59be68ee895bb7329b",
 			"_type": "environment"
 		},
 		{
 			"_id": "jar_92e1657c085442c5a13f5ac5451c97a7",
-			"parentId": "wrk_d7e15440ea814c59be68ee895bb7329b",
-			"modified": 1508681741032,
-			"created": 1508681741032,
-			"name": "Default Jar",
 			"cookies": [],
+			"created": 1508681741032,
+			"modified": 1508681741032,
+			"name": "Default Jar",
+			"parentId": "wrk_d7e15440ea814c59be68ee895bb7329b",
 			"_type": "cookie_jar"
 		},
 		{
 			"_id": "fld_32d503410a7449c08e264d89e31e1a99",
-			"parentId": "wrk_d7e15440ea814c59be68ee895bb7329b",
-			"modified": 1508937014610,
 			"created": 1508807965289,
-			"name": "Multipart Upload",
 			"description": "",
 			"environment": {},
 			"metaSortKey": -1508807965389,
+			"modified": 1508937014610,
+			"name": "Multipart Upload",
+			"parentId": "wrk_d7e15440ea814c59be68ee895bb7329b",
 			"_type": "request_group"
 		},
 		{
 			"_id": "req_6ccdb3c7cb394cc0b4b76c81dfba84cb",
-			"parentId": "wrk_d7e15440ea814c59be68ee895bb7329b",
-			"modified": 1508937619153,
-			"created": 1508936993437,
-			"url": "oos-for-learning.s3-ap-northeast-1.amazonaws.com/",
-			"name": "GET BUCKET(List Objects)",
-			"description": "",
-			"method": "GET",
+			"authentication": {},
 			"body": {},
-			"parameters": [
-				{
-					"name": "continuation-token",
-					"value": "wrong-token",
-					"id": "pair_7f4eaab190824483beb9fd12a5911272"
-				},
-				{
-					"name": "delimiter",
-					"value": "/",
-					"id": "pair_9c3ec114f2d44e79b47cf94112873c02"
-				},
-				{
-					"name": "fetch-owner",
-					"value": "true",
-					"id": "pair_08c61bc0807a44c2ba04832cbfd2e6ae"
-				},
-				{
-					"name": "list-type",
-					"value": "2",
-					"id": "pair_88455bfb76f045eeab8c200a245398f2"
-				},
-				{
-					"name": "max-keys",
-					"value": "1000",
-					"id": "pair_631badff6c794ca6b43fbbd15d1a7840"
-				}
-			],
+			"created": 1508936993437,
+			"description": "",
 			"headers": [
 				{
-					"name": "User-Agent",
-					"value": "Minio (windows; amd64) minio-go/2.0.2 mc/2016-12-09T18:23:19Z",
-					"id": "pair_fbf9eb80fc524cb6bafe543cce1a86bf"
-				},
-				{
 					"name": "Authorization",
-					"value": "AWS4-HMAC-SHA256 ####",
-					"id": "pair_c16289cac6a04617b3a31cbe8f862616"
+					"value": "AWS4-HMAC-SHA256 ####"
 				},
 				{
 					"name": "X-Amz-Content-Sha256",
-					"value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-					"id": "pair_1b9253ea74e74cb9b5688e0d2712efc6"
+					"value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 				},
 				{
 					"name": "X-Amz-Date",
-					"value": "20171025T131955Z",
-					"id": "pair_be85bd58313d4720b4c4d1efb5011c37"
+					"value": "20171229T150310Z"
+				},
+				{
+					"name": "User-Agent",
+					"value": "Minio (windows; amd64) minio-go/2.0.2 mc/2016-12-09T18:23:19Z"
 				},
 				{
 					"name": "Expect",
-					"value": "100-continue",
-					"id": "pair_2c037f3c6c254723a781809941ef0627"
+					"value": "100-continue"
 				}
 			],
-			"authentication": {},
 			"metaSortKey": -1508807965339,
-			"settingStoreCookies": true,
-			"settingSendCookies": true,
+			"method": "GET",
+			"modified": 1514559805655,
+			"name": "GET BUCKET(List Objects)",
+			"parameters": [
+				{
+					"disabled": true,
+					"id": "pair_7f4eaab190824483beb9fd12a5911272",
+					"name": "continuation-token",
+					"value": "wrong-token"
+				},
+				{
+					"id": "pair_9c3ec114f2d44e79b47cf94112873c02",
+					"name": "delimiter",
+					"value": "/"
+				},
+				{
+					"id": "pair_08c61bc0807a44c2ba04832cbfd2e6ae",
+					"name": "fetch-owner",
+					"value": "true"
+				},
+				{
+					"id": "pair_88455bfb76f045eeab8c200a245398f2",
+					"name": "list-type",
+					"value": "2"
+				},
+				{
+					"id": "pair_631badff6c794ca6b43fbbd15d1a7840",
+					"name": "max-keys",
+					"value": "1000"
+				}
+			],
+			"parentId": "wrk_d7e15440ea814c59be68ee895bb7329b",
 			"settingDisableRenderRequestBody": false,
 			"settingEncodeUrl": true,
+			"settingSendCookies": true,
+			"settingStoreCookies": true,
+			"url": "oos-for-learning.s3-ap-northeast-1.amazonaws.com/",
+			"_type": "request"
+		},
+		{
+			"_id": "req_cdf48b1b7fa348a5ad26634c560a9cbe",
+			"authentication": {},
+			"body": {},
+			"created": 1514559202749,
+			"description": "",
+			"headers": [
+				{
+					"id": "pair_72cf987f9ee847af8e8cfa8ddea38542",
+					"name": "Authorization",
+					"value": "AWS4-HMAC-SHA256 ####"
+				},
+				{
+					"id": "pair_ae35cf1f2c5043d3ac866904e90f6adb",
+					"name": "X-Amz-Content-Sha256",
+					"value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+				},
+				{
+					"id": "pair_3364b4ecc10f42ba8bfb20d3baf06575",
+					"name": "X-Amz-Date",
+					"value": "20171229T150647Z"
+				},
+				{
+					"id": "pair_429ab9f095d544d2b8423e8b9f0c357a",
+					"name": "User-Agent",
+					"value": "Minio (windows; amd64) minio-go/2.0.2 mc/2016-12-09T18:23:19Z"
+				},
+				{
+					"id": "pair_0003d73aac604f248003fdf7beaa5b44",
+					"name": "Expect",
+					"value": "100-continue"
+				}
+			],
+			"metaSortKey": -1508807965289,
+			"method": "HEAD",
+			"modified": 1514564424328,
+			"name": "Head Resource",
+			"parameters": [],
+			"parentId": "wrk_d7e15440ea814c59be68ee895bb7329b",
+			"settingDisableRenderRequestBody": false,
+			"settingEncodeUrl": true,
+			"settingSendCookies": true,
+			"settingStoreCookies": true,
+			"url": "https://oos-for-learning.s3-ap-northeast-1.amazonaws.com/bankai/not_uploaded.txt",
+			"_type": "request"
+		},
+		{
+			"_id": "req_9020280a091d49ef96be68a10e388514",
+			"authentication": {},
+			"body": {},
+			"created": 1514564030167,
+			"description": "",
+			"headers": [
+				{
+					"name": "Authorization",
+					"value": "AWS4-HMAC-SHA256 ####"
+				},
+				{
+					"name": "X-Amz-Content-Sha256",
+					"value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+				},
+				{
+					"name": "X-Amz-Date",
+					"value": "20171229T161607Z"
+				},
+				{
+					"name": "User-Agent",
+					"value": "Minio (windows; amd64) minio-go/2.0.2 mc/2016-12-09T18:23:19Z"
+				},
+				{
+					"name": "Expect",
+					"value": "100-continue"
+				}
+			],
+			"metaSortKey": -1508807965314,
+			"method": "GET",
+			"modified": 1514564182425,
+			"name": "GET  OBJECT",
+			"parameters": [],
+			"parentId": "wrk_d7e15440ea814c59be68ee895bb7329b",
+			"settingDisableRenderRequestBody": false,
+			"settingEncodeUrl": true,
+			"settingSendCookies": true,
+			"settingStoreCookies": true,
+			"url": "https://oos-for-learning.s3-ap-northeast-1.amazonaws.com/build.log",
 			"_type": "request"
 		},
 		{
 			"_id": "req_33bc2918bcb34897b3d617de5c09f93a",
-			"parentId": "fld_32d503410a7449c08e264d89e31e1a99",
-			"modified": 1508807976310,
-			"created": 1508681813964,
-			"url": "https://oos-for-learning.s3-ap-northeast-1.amazonaws.com/newupload.txt",
-			"name": "Upload Part",
-			"description": "",
-			"method": "PUT",
+			"authentication": {},
 			"body": {
 				"mimeType": "",
 				"text": "asdfghjklp"
 			},
-			"parameters": [
-				{
-					"name": "partNumber",
-					"value": "3",
-					"id": "pair_25a5ad0e0c414c0e83cc4304bb070b65"
-				},
-				{
-					"name": "uploadId",
-					"value": "SRQlhjGSCwdEaKnDLZeTcF_HENqWY6MX8lcUcJ_h.r2yl1mlbhh4g7PFzzVXnuZxUNrOzF6Ag85erHZg5LKkHXU._Leedm._iEEAEShPUzo-",
-					"id": "pair_d5ad335839ee44e6b96822beba68f0c5"
-				}
-			],
+			"created": 1508681813964,
+			"description": "",
 			"headers": [
 				{
+					"id": "pair_0048e3e757c3469494ed906b9ca87fde",
 					"name": "User-Agent",
-					"value": "Minio (windows; amd64) minio-go/2.0.2 mc/2016-12-09T18:23:19Z",
-					"id": "pair_0048e3e757c3469494ed906b9ca87fde"
+					"value": "Minio (windows; amd64) minio-go/2.0.2 mc/2016-12-09T18:23:19Z"
 				},
 				{
+					"id": "pair_2e5aa492fe9e401fbf907728de8cd997",
 					"name": "Authorization",
-					"value": "AWS4-HMAC-SHA256 ####",
-					"id": "pair_2e5aa492fe9e401fbf907728de8cd997"
+					"value": "AWS4-HMAC-SHA256 ####"
 				},
 				{
+					"id": "pair_2860d951654b4f98a10e8ff581308aff",
 					"name": "X-Amz-Content-Sha256",
-					"value": "baf754ec98feb0946bef8d679dfc710aaa4daaddbb50c6c5fd04196f90f620f2",
-					"id": "pair_2860d951654b4f98a10e8ff581308aff"
+					"value": "baf754ec98feb0946bef8d679dfc710aaa4daaddbb50c6c5fd04196f90f620f2"
 				},
 				{
+					"id": "pair_497448930ba441ba85855dea239acd6a",
 					"name": "X-Amz-Date",
-					"value": "20171024T011434Z",
-					"id": "pair_497448930ba441ba85855dea239acd6a"
+					"value": "20171024T011434Z"
 				},
 				{
+					"id": "pair_e1a20933d236427c99b60610d6321e6d",
 					"name": "Expect",
-					"value": "100-continue",
-					"id": "pair_e1a20933d236427c99b60610d6321e6d"
+					"value": "100-continue"
 				},
 				{
+					"id": "pair_54059a075f604bffbe6ee440e5fe400c",
 					"name": "Content-Length",
-					"value": "10",
-					"id": "pair_54059a075f604bffbe6ee440e5fe400c"
+					"value": "10"
 				}
 			],
-			"authentication": {},
 			"metaSortKey": -1508807934526,
-			"settingStoreCookies": true,
-			"settingSendCookies": true,
+			"method": "PUT",
+			"modified": 1508807976310,
+			"name": "Upload Part",
+			"parameters": [
+				{
+					"id": "pair_25a5ad0e0c414c0e83cc4304bb070b65",
+					"name": "partNumber",
+					"value": "3"
+				},
+				{
+					"id": "pair_d5ad335839ee44e6b96822beba68f0c5",
+					"name": "uploadId",
+					"value": "SRQlhjGSCwdEaKnDLZeTcF_HENqWY6MX8lcUcJ_h.r2yl1mlbhh4g7PFzzVXnuZxUNrOzF6Ag85erHZg5LKkHXU._Leedm._iEEAEShPUzo-"
+				}
+			],
+			"parentId": "fld_32d503410a7449c08e264d89e31e1a99",
 			"settingDisableRenderRequestBody": false,
 			"settingEncodeUrl": true,
+			"settingSendCookies": true,
+			"settingStoreCookies": true,
+			"url": "https://oos-for-learning.s3-ap-northeast-1.amazonaws.com/newupload.txt",
 			"_type": "request"
 		},
 		{
 			"_id": "req_ad3adb6d531d488dad8e387d7f06f677",
-			"parentId": "fld_32d503410a7449c08e264d89e31e1a99",
-			"modified": 1508807994019,
-			"created": 1508682867137,
-			"url": "https://oos-for-learning.s3-ap-northeast-1.amazonaws.com/newupload.txt?uploads",
-			"name": "Initiate Multipart Upload",
-			"description": "",
-			"method": "POST",
+			"authentication": {},
 			"body": {},
-			"parameters": [],
+			"created": 1508682867137,
+			"description": "",
 			"headers": [
 				{
+					"id": "pair_2f3e7a374bdb48e597cd99b9202522fc",
 					"name": "User-Agent",
-					"value": "Minio (windows; amd64) minio-go/2.0.2 mc/2016-12-09T18:23:19Z",
-					"id": "pair_2f3e7a374bdb48e597cd99b9202522fc"
+					"value": "Minio (windows; amd64) minio-go/2.0.2 mc/2016-12-09T18:23:19Z"
 				},
 				{
+					"id": "pair_c230783949604fdcbc1a4add59e693eb",
 					"name": "Authorization",
-					"value": "AWS4-HMAC-SHA256 ####",
-					"id": "pair_c230783949604fdcbc1a4add59e693eb"
+					"value": "AWS4-HMAC-SHA256 ####"
 				},
 				{
+					"id": "pair_42f2f13b245d4356a4128780a98dbbd2",
 					"name": "X-Amz-Content-Sha256",
-					"value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-					"id": "pair_42f2f13b245d4356a4128780a98dbbd2"
+					"value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 				},
 				{
+					"id": "pair_accb295e247143ff8eb3b853563abd5d",
 					"name": "X-Amz-Date",
-					"value": "20171022T154532Z",
-					"id": "pair_accb295e247143ff8eb3b853563abd5d"
+					"value": "20171022T154532Z"
 				},
 				{
+					"id": "pair_2005570793a34627848c9bdefc9e8066",
 					"name": "Expect",
-					"value": "100-continue",
-					"id": "pair_2005570793a34627848c9bdefc9e8066"
+					"value": "100-continue"
 				},
 				{
+					"id": "pair_7a492ba5576048438e298f21200184f0",
 					"name": "Content-Type",
-					"value": "application/json",
-					"id": "pair_7a492ba5576048438e298f21200184f0"
+					"value": "application/json"
 				}
 			],
-			"authentication": {},
 			"metaSortKey": -1508807934576,
-			"settingStoreCookies": true,
-			"settingSendCookies": true,
+			"method": "POST",
+			"modified": 1508807994019,
+			"name": "Initiate Multipart Upload",
+			"parameters": [],
+			"parentId": "fld_32d503410a7449c08e264d89e31e1a99",
 			"settingDisableRenderRequestBody": false,
 			"settingEncodeUrl": true,
+			"settingSendCookies": true,
+			"settingStoreCookies": true,
+			"url": "https://oos-for-learning.s3-ap-northeast-1.amazonaws.com/newupload.txt?uploads",
 			"_type": "request"
 		},
 		{
 			"_id": "req_32b59e0c440243148b2ba9988517bb15",
-			"parentId": "fld_32d503410a7449c08e264d89e31e1a99",
-			"modified": 1508809431249,
-			"created": 1508807903813,
-			"url": "oos-for-learning.s3-ap-northeast-1.amazonaws.com/newupload.txt",
-			"name": "Complete Multipart Upload",
-			"description": "",
-			"method": "POST",
+			"authentication": {},
 			"body": {
 				"mimeType": "application/xml",
 				"text": "<CompleteMultipartUpload>\n\t<Part>\n\t\t<PartNumber>1</PartNumber>\n\t\t<ETag>\\\"9671596ed4402627cb680bb5bc7a393c\\\"</ETag>\n\t</Part>\n\t<Part>\n\t\t<PartNumber>3</PartNumber>\n\t\t<ETag>\\\"9671596ed4402627cb680bb5bc7a393c\\\"</ETag>\n\t</Part>\n</CompleteMultipartUpload>"
 			},
-			"parameters": [
-				{
-					"name": "uploadId",
-					"value": "SRQlhjGSCwdEaKnDLZeTcF_HENqWY6MX8lcUcJ_h.r2yl1mlbhh4g7PFzzVXnuZxUNrOzF6Ag85erHZg5LKkHXU._Leedm._iEEAEShPUzo-",
-					"id": "pair_8b17ca204d72409dbc57d392e355ceac"
-				}
-			],
+			"created": 1508807903813,
+			"description": "",
 			"headers": [
 				{
+					"id": "pair_3c5e3a0f62904fe4a8c6e3acf063dc8b",
 					"name": "User-Agent",
-					"value": "Minio (windows; amd64) minio-go/2.0.2 mc/2016-12-09T18:23:19Z",
-					"id": "pair_3c5e3a0f62904fe4a8c6e3acf063dc8b"
+					"value": "Minio (windows; amd64) minio-go/2.0.2 mc/2016-12-09T18:23:19Z"
 				},
 				{
+					"id": "pair_61a94abc1d7b45a4afe973a98329c9f3",
 					"name": "Authorization",
-					"value": "AWS4-HMAC-SHA256 ####",
-					"id": "pair_61a94abc1d7b45a4afe973a98329c9f3"
+					"value": "AWS4-HMAC-SHA256 ####"
 				},
 				{
+					"id": "pair_8931d5af24b74d048deddf82116da0db",
 					"name": "X-Amz-Content-Sha256",
-					"value": "a8a26be559a97120870368851047af3353201cb216916e0e473d594ba114b34e",
-					"id": "pair_8931d5af24b74d048deddf82116da0db"
+					"value": "a8a26be559a97120870368851047af3353201cb216916e0e473d594ba114b34e"
 				},
 				{
+					"id": "pair_add7e118066b4ce48cfa6c385298cea2",
 					"name": "X-Amz-Date",
-					"value": "20171024T014332Z",
-					"id": "pair_add7e118066b4ce48cfa6c385298cea2"
+					"value": "20171024T014332Z"
 				},
 				{
+					"id": "pair_0c0bf72d60764b608e42d303b2e0d245",
 					"name": "Content-Length",
-					"value": "248",
-					"id": "pair_0c0bf72d60764b608e42d303b2e0d245"
+					"value": "248"
 				},
 				{
+					"id": "pair_e214f657f65447278834e13575764635",
 					"name": "Expect",
-					"value": "100-continue",
-					"id": "pair_e214f657f65447278834e13575764635"
+					"value": "100-continue"
 				},
 				{
+					"id": "pair_313583739d374894a35d94891ea36a61",
 					"name": "Content-Type",
-					"value": "application/xml",
-					"id": "pair_313583739d374894a35d94891ea36a61"
+					"value": "application/xml"
 				}
 			],
-			"authentication": {},
 			"metaSortKey": -1508807934476,
-			"settingStoreCookies": true,
-			"settingSendCookies": true,
+			"method": "POST",
+			"modified": 1508809431249,
+			"name": "Complete Multipart Upload",
+			"parameters": [
+				{
+					"id": "pair_8b17ca204d72409dbc57d392e355ceac",
+					"name": "uploadId",
+					"value": "SRQlhjGSCwdEaKnDLZeTcF_HENqWY6MX8lcUcJ_h.r2yl1mlbhh4g7PFzzVXnuZxUNrOzF6Ag85erHZg5LKkHXU._Leedm._iEEAEShPUzo-"
+				}
+			],
+			"parentId": "fld_32d503410a7449c08e264d89e31e1a99",
 			"settingDisableRenderRequestBody": false,
 			"settingEncodeUrl": true,
+			"settingSendCookies": true,
+			"settingStoreCookies": true,
+			"url": "oos-for-learning.s3-ap-northeast-1.amazonaws.com/newupload.txt",
 			"_type": "request"
 		},
 		{
 			"_id": "req_da30c26bcb0d45cd8e615ddb26c28b6f",
-			"parentId": "fld_32d503410a7449c08e264d89e31e1a99",
-			"modified": 1508809965500,
-			"created": 1508809680579,
-			"url": "oos-for-learning.s3-ap-northeast-1.amazonaws.com/newupload.txt",
-			"name": "Abort Multipart Upload",
-			"description": "",
-			"method": "DELETE",
+			"authentication": {},
 			"body": {},
-			"parameters": [
-				{
-					"name": "uploadId",
-					"value": "SRQlhjGSCwdEaKnDLZeTcF_HENqWY6MX8lcUcJ_h.r2yl1mlbhh4g7PFzzVXnuZxUNrOzF6Ag85erHZg5LKkHXU._Leedm._iEEAEShPUzo-",
-					"id": "pair_e87c56465d2e4dcf9e52850897bb2134"
-				}
-			],
+			"created": 1508809680579,
+			"description": "",
 			"headers": [
 				{
+					"id": "pair_a1db331e0a554258b9f12f835e944e34",
 					"name": "User-Agent",
-					"value": "Minio (windows; amd64) minio-go/2.0.2 mc/2016-12-09T18:23:19Z",
-					"id": "pair_a1db331e0a554258b9f12f835e944e34"
+					"value": "Minio (windows; amd64) minio-go/2.0.2 mc/2016-12-09T18:23:19Z"
 				},
 				{
+					"id": "pair_3b2f7714cc2e44d1adfa7811bcce839c",
 					"name": "Authorization",
-					"value": "AWS4-HMAC-SHA256 ####",
-					"id": "pair_3b2f7714cc2e44d1adfa7811bcce839c"
+					"value": "AWS4-HMAC-SHA256 ####"
 				},
 				{
+					"id": "pair_67e5db9dda164ed3bea8b49bd5cc3da7",
 					"name": "X-Amz-Content-Sha256",
-					"value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-					"id": "pair_67e5db9dda164ed3bea8b49bd5cc3da7"
+					"value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 				},
 				{
+					"id": "pair_4754fd51ab3c4f95a90d96aa0e87943a",
 					"name": "X-Amz-Date",
-					"value": "20171024T015220Z",
-					"id": "pair_4754fd51ab3c4f95a90d96aa0e87943a"
+					"value": "20171024T015220Z"
 				},
 				{
+					"id": "pair_aad61f01be4d46d7830d18d1de9da007",
 					"name": "Expect",
-					"value": "100-continue",
-					"id": "pair_aad61f01be4d46d7830d18d1de9da007"
+					"value": "100-continue"
 				},
 				{
+					"id": "pair_372b76a4828f413aa02b4245443e9e40",
 					"name": "Content-Type",
-					"value": "application/xml",
-					"id": "pair_372b76a4828f413aa02b4245443e9e40"
+					"value": "application/xml"
 				}
 			],
-			"authentication": {},
 			"metaSortKey": -1508807934426,
-			"settingStoreCookies": true,
-			"settingSendCookies": true,
+			"method": "DELETE",
+			"modified": 1508809965500,
+			"name": "Abort Multipart Upload",
+			"parameters": [
+				{
+					"id": "pair_e87c56465d2e4dcf9e52850897bb2134",
+					"name": "uploadId",
+					"value": "SRQlhjGSCwdEaKnDLZeTcF_HENqWY6MX8lcUcJ_h.r2yl1mlbhh4g7PFzzVXnuZxUNrOzF6Ag85erHZg5LKkHXU._Leedm._iEEAEShPUzo-"
+				}
+			],
+			"parentId": "fld_32d503410a7449c08e264d89e31e1a99",
 			"settingDisableRenderRequestBody": false,
 			"settingEncodeUrl": true,
+			"settingSendCookies": true,
+			"settingStoreCookies": true,
+			"url": "oos-for-learning.s3-ap-northeast-1.amazonaws.com/newupload.txt",
 			"_type": "request"
 		}
 	]

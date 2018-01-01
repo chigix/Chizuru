@@ -8,6 +8,7 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
+import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
@@ -52,20 +53,25 @@ public class DaoExceptionHandler extends HttpExceptionInboundHandler<DaoExceptio
     @Override
     protected void handleException(ChannelHandlerContext ctx, HttpException exc) {
         DaoException daoexception = (DaoException) exc.getCause();
+        FullHttpResponse resp = null;
         switch (daoexception.getCode()) {
             case "NoSuchKey":
             case "NoSuchBucket":
-                ctx.writeAndFlush(new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NOT_FOUND, generateXmlMessage(daoexception, exc.getHttpRequest())));
-                return;
+                resp = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NOT_FOUND, generateXmlMessage(daoexception, exc.getHttpRequest()));
+                break;
             case "BucketAlreadyOwnedByYou":
             case "BucketAlreadyExists":
-                ctx.writeAndFlush(new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.CONFLICT, generateXmlMessage(daoexception, exc.getHttpRequest())));
-                return;
+                resp = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.CONFLICT, generateXmlMessage(daoexception, exc.getHttpRequest()));
+                break;
             case "InvalidPart":
-                ctx.writeAndFlush(new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.BAD_REQUEST, generateXmlMessage(daoexception, exc.getHttpRequest())));
-                return;
+                resp = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.BAD_REQUEST, generateXmlMessage(daoexception, exc.getHttpRequest()));
+                break;
         }
-        LOG.error("DAOException: [{}] is not handled.", daoexception.getCode());
+        if (resp == null) {
+            LOG.error("DAOException: [{}] is not handled.", daoexception.getCode());
+            return;
+        }
+        ctx.writeAndFlush(daoexception.fixResponse(resp));
     }
 
     private ByteBuf generateXmlMessage(DaoException daoerror, HttpRequest request) {

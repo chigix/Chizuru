@@ -94,6 +94,8 @@ public class Context {
 
     /**
      * @todo remove all reference on this method and use the new decorating
+     * constructor.<p>
+     * ----- Why not set a clone method into this class instead of proxy-liked
      * constructor.
      * @deprecated
      * @param resource

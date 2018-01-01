@@ -45,7 +45,6 @@ public class ContentRespHeaderBuildingHandler extends SimpleChannelInboundHandle
             routing.getRoutedInfo().deny();
             throw new NoSuchKey(routing.getResource().getKey());
         }
-        routing.getRoutedInfo().allow();
         final ResourceContext resource_routing;
         try {
             resource_routing = new ResourceContext(routing);

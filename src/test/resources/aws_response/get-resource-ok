@@ -1,0 +1,63 @@
+* Preparing request to https://oos-for-learning.s3-ap-northeast-1.amazonaws.com/build.log
+* Using libcurl/7.51.0-DEV OpenSSL/1.0.2j zlib/1.2.8 libssh2/1.6.1_DEV
+* Enable automatic URL encoding
+* Enable SSL validation
+* Enable cookie sending with jar of 0 cookies
+*   Trying 52.219.4.55...
+* TCP_NODELAY set
+* Connected to oos-for-learning.s3-ap-northeast-1.amazonaws.com (52.219.4.55) port 443 (#1)
+* ALPN, offering http/1.1
+* Cipher selection: ALL:!EXPORT:!EXPORT40:!EXPORT56:!aNULL:!LOW:!RC4:@STRENGTH
+* successfully set certificate verify locations:
+*   CAfile: C:\Users\chigi\AppData\Local\Temp\insomnia_5.12.4\2017-01-18.pem
+*   CApath: none
+* TLSv1.2 (OUT), TLS header, Certificate Status (22):
+* TLSv1.2 (OUT), TLS handshake, Client hello (1):
+* TLSv1.2 (IN), TLS handshake, Server hello (2):
+* TLSv1.2 (IN), TLS handshake, Certificate (11):
+* TLSv1.2 (IN), TLS handshake, Server key exchange (12):
+* TLSv1.2 (IN), TLS handshake, Server finished (14):
+* TLSv1.2 (OUT), TLS handshake, Client key exchange (16):
+* TLSv1.2 (OUT), TLS change cipher, Client hello (1):
+* TLSv1.2 (OUT), TLS handshake, Finished (20):
+* TLSv1.2 (IN), TLS change cipher, Client hello (1):
+* TLSv1.2 (IN), TLS handshake, Finished (20):
+* SSL connection using TLSv1.2 / ECDHE-RSA-AES128-SHA
+* ALPN, server did not agree to a protocol
+* Server certificate:
+*  subject: C=US; ST=Washington; L=Seattle; O=Amazon.com Inc.; CN=*.s3-ap-northeast-1.amazonaws.com
+*  start date: Sep 26 00:00:00 2017 GMT
+*  expire date: Sep 26 12:00:00 2018 GMT
+*  subjectAltName: host "oos-for-learning.s3-ap-northeast-1.amazonaws.com" matched cert's "*.s3-ap-northeast-1.amazonaws.com"
+*  issuer: C=US; O=DigiCert Inc; OU=www.digicert.com; CN=DigiCert Baltimore CA-2 G2
+*  SSL certificate verify ok.
+> GET /build.log HTTP/1.1
+> Host: oos-for-learning.s3-ap-northeast-1.amazonaws.com
+> Authorization: AWS4-HMAC-SHA256 ####
+> X-Amz-Content-Sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+> X-Amz-Date: 20171229T161607Z
+> User-Agent: Minio (windows; amd64) minio-go/2.0.2 mc/2016-12-09T18:23:19Z
+> Expect: 100-continue
+> Accept: */*
+< HTTP/1.1 200 OK
+< x-amz-id-2: eQd/vXSSW4i+vot8YgGRpjZLYFqSy+xZEEoC0jR0OuZLuglamTeRUcWIg8KLPvpGqX0fZSIRvks=
+< x-amz-request-id: 6478E8AD6BB421DE
+< Date: Fri, 29 Dec 2017 16:16:24 GMT
+< Last-Modified: Thu, 12 Jan 2017 09:25:14 GMT
+< ETag: "bee9cd71554a137502ad2054d90c5e13"
+< Accept-Ranges: bytes
+< Content-Type: application/octet-stream
+< Content-Length: 62312
+< Connection: close
+< Server: AmazonS3
+
+* Received 16 KB chunk
+* Received 669 B chunk
+* Received 16 KB chunk
+* Received 1061 B chunk
+* Received 16 KB chunk
+* Received 1061 B chunk
+* Received 10.2 KB chunk
+* Curl_http_done: called premature == 0
+* Closing connection 1
+* TLSv1.2 (OUT), TLS alert, Client hello (1):
