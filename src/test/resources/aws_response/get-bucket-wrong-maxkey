@@ -1,0 +1,28 @@
+> GET /?delimiter=%2F&fetch-owner=true&list-type=2&max-keys=-1 HTTP/1.1
+> Host: oos-for-learning.s3-ap-northeast-1.amazonaws.com
+> Authorization: AWS4-HMAC-SHA256 ####
+> X-Amz-Content-Sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+> X-Amz-Date: 20180102T151435Z
+> User-Agent: Minio (windows; amd64) minio-go/2.0.2 mc/2016-12-09T18:23:19Z
+> Expect: 100-continue
+> Accept: */*
+
+< HTTP/1.1 400 Bad Request
+< x-amz-bucket-region: ap-northeast-1
+< x-amz-request-id: FAB3F6AAFB6870C9
+< x-amz-id-2: 8W2ZWqDON7sX8h33WKQLIqjFJ7uLCScp88dopBNCwLYDwzRzi47qhaQvw8uqmZg7ZYpqx/XJnr0=
+< Content-Type: application/xml
+< Transfer-Encoding: chunked
+< Date: Tue, 02 Jan 2018 15:14:49 GMT
+< Connection: close
+< Server: AmazonS3
+
+<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+	<Code>InvalidArgument</Code>
+	<Message>Argument maxKeys must be an integer between 0 and 2147483647</Message>
+	<ArgumentName>maxKeys</ArgumentName>
+	<ArgumentValue>-1</ArgumentValue>
+	<RequestId>FAB3F6AAFB6870C9</RequestId>
+	<HostId>8W2ZWqDON7sX8h33WKQLIqjFJ7uLCScp88dopBNCwLYDwzRzi47qhaQvw8uqmZg7ZYpqx/XJnr0=</HostId>
+</Error>

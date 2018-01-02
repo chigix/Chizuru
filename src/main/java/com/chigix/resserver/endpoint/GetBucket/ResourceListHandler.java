@@ -1,6 +1,7 @@
 package com.chigix.resserver.endpoint.GetBucket;
 
 import com.chigix.resserver.config.ApplicationContext;
+import com.chigix.resserver.domain.error.InvalidArgument;
 import com.chigix.resserver.domain.model.bucket.Bucket;
 import com.chigix.resserver.domain.model.resource.Resource;
 import com.chigix.resserver.domain.error.NoSuchBucket;
@@ -187,16 +188,35 @@ public class ResourceListHandler extends SimpleChannelInboundHandler<Context> {
         ctx.writeAndFlush(new HttpChunkedInput(new ChunkedStream(result))).addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
     }
 
-    private ListResponseContext buildListResponseContext(QueryStringDecoder query, Bucket bucket) {
+    private ListResponseContext buildListResponseContext(
+            QueryStringDecoder query, Bucket bucket)
+            throws InvalidArgument {
         ListResponseContext resp = new ListResponseContext(bucket);
         resp.delimiter = decodeQueryParamString(query, "delimiter");
         resp.startAfter = decodeQueryParamString(query, "start-after");
         resp.encodingType = decodeQueryParamString(query, "encoding-type");
         resp.prefix = decodeQueryParamString(query, "prefix");
-        String max_keys = decodeQueryParamString(query, "max-keys");
+        final String max_keys = decodeQueryParamString(query, "max-keys");
         if (max_keys != null) {
-            // @TODO Check exception for invalid format of integer number.
-            int max_keys_int = Integer.valueOf(max_keys);
+            final int max_keys_int;
+            try {
+                max_keys_int = Integer.valueOf(max_keys);
+            } catch (NumberFormatException numberFormatException) {
+                throw new InvalidMaxKeys() {
+                    @Override
+                    public String getArgumentValue() {
+                        return max_keys;
+                    }
+                };
+            }
+            if (max_keys_int < 0 || max_keys_int > 2147483647) {
+                throw new InvalidMaxKeys() {
+                    @Override
+                    public String getArgumentValue() {
+                        return max_keys_int + "";
+                    }
+                };
+            }
             resp.maxKeys = max_keys_int;
         }
         resp.continuationToken = decodeQueryParamString(query, "continuation-token");
@@ -365,6 +385,23 @@ public class ResourceListHandler extends SimpleChannelInboundHandler<Context> {
 
         public ListResponseContext(Bucket bucket) {
             this.bucket = bucket;
+        }
+
+    }
+
+    private static abstract class InvalidMaxKeys extends InvalidArgument implements
+            InvalidArgument.ArgumentNameInclude,
+            InvalidArgument.ArgumentValueInclude {
+
+        @Override
+        public String getMessage() {
+            return "Argument maxKeys must be an integer "
+                    + "between 0 and 2147483647";
+        }
+
+        @Override
+        public String getArgumentName() {
+            return "maxKeys";
         }
 
     }
