@@ -21,6 +21,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.transaction.TransactionConfiguration;
 import org.springframework.transaction.annotation.Transactional;
 import com.chigix.resserver.domain.model.chunk.ChunkRepository;
+import org.springframework.test.annotation.DirtiesContext;
 
 /**
  *
@@ -30,6 +31,7 @@ import com.chigix.resserver.domain.model.chunk.ChunkRepository;
 @ContextConfiguration(locations = "classpath:appContext.xml")
 @Transactional
 @TransactionConfiguration(transactionManager = "transactionManager_Chizuru")
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class ChunkDaoImplTest {
 
     @Autowired

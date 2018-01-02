@@ -19,7 +19,6 @@ import com.chigix.resserver.mybatis.mapstruct.ResourceBeanMapper;
 import com.chigix.resserver.mybatis.record.BucketExample;
 import com.chigix.resserver.mybatis.record.ChunkExample;
 import com.chigix.resserver.mybatis.record.ResourceExample;
-import com.chigix.resserver.mybatis.record.ResourceExampleExtending;
 import com.chigix.resserver.mybatis.record.Subresource;
 import com.chigix.resserver.mybatis.record.Util;
 import com.chigix.resserver.mybatis.specification.ResourceSpecification;
@@ -43,6 +42,7 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.transaction.TransactionConfiguration;
@@ -56,6 +56,7 @@ import org.springframework.transaction.annotation.Transactional;
 @ContextConfiguration(locations = "classpath:appContext.xml")
 @Transactional
 @TransactionConfiguration(transactionManager = "transactionManager_Chizuru")
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class ResourceRepositoryImplTest {
 
     @Autowired

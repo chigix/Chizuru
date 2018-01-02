@@ -35,6 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 @ContextConfiguration(locations = "classpath:appContext.xml")
 @Transactional
 @TransactionConfiguration(transactionManager = "transactionManager_Chizuru")
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class BucketDaoImplTest implements ApplicationContextAware {
 
     @Autowired
@@ -97,7 +98,6 @@ public class BucketDaoImplTest implements ApplicationContextAware {
      * Test of iteratorBucket method, of class BucketRepositoryImpl.
      */
     @Test
-    @DirtiesContext
     public void testIteratorBucket() {
         System.out.println("iteratorBucket");
         String[] names = new String[]{"YUI", "MIO", "TUMUGI", "RITU", "AZUSA"};
