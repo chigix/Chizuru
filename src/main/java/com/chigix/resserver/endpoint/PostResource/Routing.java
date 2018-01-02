@@ -1,7 +1,7 @@
 package com.chigix.resserver.endpoint.PostResource;
 
 import com.chigix.resserver.config.ApplicationContext;
-import com.chigix.resserver.application.Context;
+import com.chigix.resserver.application.ResourceInfoContext;
 import com.chigix.resserver.application.ResourceInfoHandler;
 import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.channel.ChannelHandlerContext;
@@ -61,9 +61,9 @@ public class Routing extends RoutingConfig.POST {
     public void configurePipeline(ChannelPipeline pipeline) {
         final DefaultExceptionForwarder forwarder = new DefaultExceptionForwarder();
         pipeline.addLast(ResourceInfoHandler.getInstance(application),
-                new SimpleIntervalRouter<Context, LastHttpContent>(false, "PostResourceParamRouter") {
+                new SimpleIntervalRouter<ResourceInfoContext, LastHttpContent>(false, "PostResourceParamRouter") {
             @Override
-            protected ChannelPipeline routeBegin(ChannelHandlerContext ctx, Context msg, Map<String, ChannelPipeline> routingPipelines) throws Exception {
+            protected ChannelPipeline routeBegin(ChannelHandlerContext ctx, ResourceInfoContext msg, Map<String, ChannelPipeline> routingPipelines) throws Exception {
                 QueryStringDecoder decoder = new QueryStringDecoder(msg.getRoutedInfo().getRequestMsg().uri());
                 if (decoder.parameters().get("uploads") != null) {
                     LOG.debug(configureRoutingName() + ":MultipartUploadInitiate");

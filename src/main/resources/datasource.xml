@@ -22,7 +22,7 @@
         <property name="acquireIncrement" value="5"/>
         <property name="statementsCacheSize" value="100"/>
     </bean>
-    
+
     <bean id="datasource-upload" class="com.jolbox.bonecp.BoneCPDataSource" destroy-method="close">
         <property name="driverClass" value="org.h2.Driver" />
         <property name="jdbcUrl" value="jdbc:h2:./data/Uploading;LOCK_MODE=0" />
@@ -36,9 +36,13 @@
         <property name="acquireIncrement" value="5"/>
         <property name="statementsCacheSize" value="100"/>
     </bean>
-    
-    <jdbc:initialize-database enabled="true" data-source="datasource-upload" ignore-failures="ALL">
-        <jdbc:script location="classpath:/com/chigix/resserver/mybatis/schema/uploading_db.sql" />
-    </jdbc:initialize-database>
-    
+
+    <bean id="datasource-upload-init" class="org.springframework.jdbc.datasource.init.ResourceDatabasePopulator">
+        <property name="scripts">
+            <list>
+                <value>classpath:/com/chigix/resserver/mybatis/schema/uploading_db.sql</value>
+            </list>
+        </property>
+        <property name="continueOnError" value="true" />
+    </bean>
 </beans>

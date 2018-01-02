@@ -3,7 +3,7 @@ package com.chigix.resserver.endpoint.PostResource;
 import com.chigix.resserver.config.ApplicationContext;
 import com.chigix.resserver.domain.model.multiupload.MultipartUpload;
 import com.chigix.resserver.domain.error.NoSuchUpload;
-import com.chigix.resserver.application.Context;
+import com.chigix.resserver.application.ResourceInfoContext;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 
@@ -21,7 +21,7 @@ public class MultiUploadCompleteBeginHandler extends MultiUploadCompleteHandler.
     }
 
     @Override
-    protected void messageReceived(ChannelHandlerContext ctx, Context msg) throws Exception {
+    protected void messageReceived(ChannelHandlerContext ctx, ResourceInfoContext msg) throws Exception {
         String uploadId;
         try {
             uploadId = msg.getQueryDecoder().parameters().get("uploadId").get(0);

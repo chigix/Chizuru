@@ -1,7 +1,7 @@
 package com.chigix.resserver.endpoint.PostResource;
 
 import com.chigix.resserver.config.ApplicationContext;
-import com.chigix.resserver.application.Context;
+import com.chigix.resserver.application.ResourceInfoContext;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -54,7 +54,7 @@ public class MultiUploadCompleteHandler {
         return response;
     }
 
-    static abstract class Begin extends SimpleChannelInboundHandler<Context> {
+    static abstract class Begin extends SimpleChannelInboundHandler<ResourceInfoContext> {
 
         protected void setContext(ChannelHandlerContext ctx, MultipartUploadContext routing_ctx) {
             ctx.attr(ROUTING_CTX).set(routing_ctx);

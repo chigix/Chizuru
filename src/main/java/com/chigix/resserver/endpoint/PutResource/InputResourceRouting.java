@@ -3,7 +3,7 @@ package com.chigix.resserver.endpoint.PutResource;
 import com.chigix.resserver.config.ApplicationContext;
 import com.chigix.resserver.domain.model.chunk.Chunk;
 import com.chigix.resserver.domain.model.resource.ChunkedResource;
-import com.chigix.resserver.application.Context;
+import com.chigix.resserver.application.ResourceInfoContext;
 import com.chigix.resserver.application.util.Authorization;
 import com.chigix.resserver.interfaces.handling.http.HttpHeaderNames;
 import io.netty.buffer.ByteBuf;
@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
  */
 public class InputResourceRouting {
 
-    private static final AttributeKey<Context> RESOURCE_CTX = AttributeKey.newInstance(UUID.randomUUID().toString());
+    private static final AttributeKey<ResourceInfoContext> RESOURCE_CTX = AttributeKey.newInstance(UUID.randomUUID().toString());
 
     private static CtxReceiver routingCtxReceiver = null;
     private static ContentReceiver contentReceiver = null;
@@ -70,10 +70,10 @@ public class InputResourceRouting {
     }
 
     @ChannelHandler.Sharable
-    private static class CtxReceiver extends SimpleChannelInboundHandler<Context> {
+    private static class CtxReceiver extends SimpleChannelInboundHandler<ResourceInfoContext> {
 
         @Override
-        protected void messageReceived(ChannelHandlerContext ctx, Context msg) throws Exception {
+        protected void messageReceived(ChannelHandlerContext ctx, ResourceInfoContext msg) throws Exception {
             ctx.attr(RESOURCE_CTX).set(msg);
         }
     }
@@ -89,7 +89,7 @@ public class InputResourceRouting {
 
         @Override
         protected void messageReceived(ChannelHandlerContext ctx, HttpContent msg) throws Exception {
-            Context routing_ctx = ctx.channel().attr(RESOURCE_CTX).get();
+            ResourceInfoContext routing_ctx = ctx.channel().attr(RESOURCE_CTX).get();
             ByteBuf caching = routing_ctx.getCachingChunkBuf();
             if (caching == null) {
                 caching = Unpooled.buffer(application.getMaxChunkSize(), application.getMaxChunkSize());
@@ -139,7 +139,7 @@ public class InputResourceRouting {
 
         @Override
         protected void messageReceived(ChannelHandlerContext ctx, ByteBuf msg) throws Exception {
-            Context routing_ctx = ctx.channel().attr(RESOURCE_CTX).get();
+            ResourceInfoContext routing_ctx = ctx.channel().attr(RESOURCE_CTX).get();
             MessageDigest digest = Chunk.contentHashDigest();
             final byte[] chunk_content = new byte[msg.writerIndex()];
             msg.readBytes(chunk_content);
@@ -192,7 +192,7 @@ public class InputResourceRouting {
 
         @Override
         protected void messageReceived(ChannelHandlerContext ctx, LastHttpContent msg) throws Exception {
-            Context routing_ctx = ctx.channel().attr(RESOURCE_CTX).getAndRemove();
+            ResourceInfoContext routing_ctx = ctx.channel().attr(RESOURCE_CTX).getAndRemove();
             routing_ctx.getResource().setETag(Authorization.HexEncode(routing_ctx.getEtagDigest().digest()));
             if (routing_ctx instanceof MultipartUploadContext) {
                 application.getEntityManager().getUploadRepository().saveSubresource(

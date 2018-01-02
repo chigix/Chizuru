@@ -2,14 +2,14 @@ package com.chigix.resserver.endpoint.PutResource;
 
 import com.chigix.resserver.domain.model.multiupload.MultipartUpload;
 import com.chigix.resserver.domain.model.resource.Resource;
-import com.chigix.resserver.application.Context;
+import com.chigix.resserver.application.ResourceInfoContext;
 import io.netty.handler.codec.http.router.HttpRouted;
 
 /**
  *
  * @author Richard Lea <chigix@zoho.com>
  */
-class MultipartUploadContext extends Context {
+class MultipartUploadContext extends ResourceInfoContext {
 
     private MultipartUpload multipartUpload;
 

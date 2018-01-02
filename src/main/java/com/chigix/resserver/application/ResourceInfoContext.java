@@ -15,10 +15,15 @@ import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
+ * Build a context relative to a given Resource involving relative metadata from
+ * request headers.
+ *
+ * The list of modifiable metadata for resources are referenced from:
+ * https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingMetadata.html#SysMetadata
  *
  * @author Richard Lea <chigix@zoho.com>
  */
-public class Context {
+public class ResourceInfoContext {
 
     private final HttpResponse resourceResp;
 
@@ -36,7 +41,7 @@ public class Context {
 
     private final AtomicInteger chunkCounter;
 
-    private Context(HttpRouted routedInfo, Resource resource, HttpResponse httpresp) {
+    private ResourceInfoContext(HttpRouted routedInfo, Resource resource, HttpResponse httpresp) {
         try {
             this.etagDigest = MessageDigest.getInstance("MD5");
         } catch (NoSuchAlgorithmException ex) {
@@ -68,14 +73,13 @@ public class Context {
             resource.setMetaData("Content-Encoding", content_enc);
         }
         resourceResp = httpresp;
-        //@TODO: discuss later whether content-length is needed to extract.
     }
 
-    public Context(HttpRouted routedInfo, Resource resource) {
+    public ResourceInfoContext(HttpRouted routedInfo, Resource resource) {
         this(routedInfo, resource, new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK));
     }
 
-    public Context(Context src) {
+    public ResourceInfoContext(ResourceInfoContext src) {
         this(src.routedInfo, src.resource, src.getResourceResp());
         this.cachingChunkBuf = src.cachingChunkBuf;
     }
@@ -131,7 +135,7 @@ public class Context {
         return resourceResp;
     }
 
-    public void copyTo(Context target) {
+    public void copyTo(ResourceInfoContext target) {
         target.cachingChunkBuf = this.cachingChunkBuf;
         target.resource = this.resource;
     }

@@ -4,7 +4,7 @@ import com.chigix.resserver.config.ApplicationContext;
 import com.chigix.resserver.domain.Lifecycle;
 import com.chigix.resserver.domain.error.NoSuchKey;
 import com.chigix.resserver.error.InvalidRange;
-import com.chigix.resserver.application.Context;
+import com.chigix.resserver.application.ResourceInfoContext;
 import com.chigix.resserver.interfaces.handling.http.HttpHeaderNames;
 import com.chigix.resserver.interfaces.handling.http.HttpHeaderUtil;
 import io.netty.channel.ChannelHandler;
@@ -22,7 +22,7 @@ import java.util.Locale;
  * @author Richard Lea <chigix@zoho.com>
  */
 @ChannelHandler.Sharable
-public class ContentRespHeaderBuildingHandler extends SimpleChannelInboundHandler<Context> {
+public class ContentRespHeaderBuildingHandler extends SimpleChannelInboundHandler<ResourceInfoContext> {
 
     private static ContentRespHeaderBuildingHandler instance = null;
 
@@ -40,7 +40,7 @@ public class ContentRespHeaderBuildingHandler extends SimpleChannelInboundHandle
     }
 
     @Override
-    protected void messageReceived(ChannelHandlerContext ctx, Context routing) throws Exception {
+    protected void messageReceived(ChannelHandlerContext ctx, ResourceInfoContext routing) throws Exception {
         if (application.getEntityManager().getEntityState(routing.getResource()) == Lifecycle.NEW) {
             routing.getRoutedInfo().deny();
             throw new NoSuchKey(routing.getResource().getKey());

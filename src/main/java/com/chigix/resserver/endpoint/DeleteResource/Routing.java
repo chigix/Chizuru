@@ -1,7 +1,7 @@
 package com.chigix.resserver.endpoint.DeleteResource;
 
 import com.chigix.resserver.config.ApplicationContext;
-import com.chigix.resserver.application.Context;
+import com.chigix.resserver.application.ResourceInfoContext;
 import com.chigix.resserver.application.ResourceInfoHandler;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
@@ -25,7 +25,7 @@ public class Routing extends RoutingConfig.DELETE {
 
     private final ApplicationContext application;
 
-    private static final AttributeKey<Context> CONTEXT = AttributeKey.newInstance(UUID.randomUUID().toString());
+    private static final AttributeKey<ResourceInfoContext> CONTEXT = AttributeKey.newInstance(UUID.randomUUID().toString());
 
     public Routing(ApplicationContext application) {
         this.application = application;
@@ -44,15 +44,15 @@ public class Routing extends RoutingConfig.DELETE {
     @Override
     public void configurePipeline(ChannelPipeline pipeline) {
         pipeline.addLast(new ResourceInfoHandler(application),
-                new SimpleChannelInboundHandler<Context>() {
+                new SimpleChannelInboundHandler<ResourceInfoContext>() {
             @Override
-            protected void messageReceived(ChannelHandlerContext ctx, Context msg) throws Exception {
+            protected void messageReceived(ChannelHandlerContext ctx, ResourceInfoContext msg) throws Exception {
                 ctx.attr(CONTEXT).set(msg);
             }
         }, new SimpleChannelInboundHandler<LastHttpContent>() {
             @Override
             protected void messageReceived(ChannelHandlerContext ctx, LastHttpContent msg) throws Exception {
-                Context routing_ctx = ctx.attr(CONTEXT).getAndRemove();
+                ResourceInfoContext routing_ctx = ctx.attr(CONTEXT).getAndRemove();
                 application.getEntityManager().getResourceRepository()
                         .removeResource(routing_ctx.getResource());
                 application.finishRequest(routing_ctx.getRoutedInfo());

@@ -8,7 +8,7 @@ import com.chigix.resserver.domain.model.resource.ChunkedResource;
 import com.chigix.resserver.domain.model.resource.Resource;
 import com.chigix.resserver.domain.error.NoSuchBucket;
 import com.chigix.resserver.domain.error.NoSuchKey;
-import com.chigix.resserver.application.Context;
+import com.chigix.resserver.application.ResourceInfoContext;
 import com.chigix.resserver.interfaces.handling.http.HttpHeaderNames;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandler;
@@ -41,7 +41,7 @@ public class CopyResourceRouting {
 
     private static LastHttpReceiver lastReceiver = null;
 
-    private static final AttributeKey<Context> RESOURCE_CTX = AttributeKey.newInstance(UUID.randomUUID().toString());
+    private static final AttributeKey<ResourceInfoContext> RESOURCE_CTX = AttributeKey.newInstance(UUID.randomUUID().toString());
 
     public static void makeRouting(ChannelPipeline pipeline, ApplicationContext app) {
         if (lastReceiver == null) {
@@ -51,10 +51,10 @@ public class CopyResourceRouting {
     }
 
     @ChannelHandler.Sharable
-    private static class CtxReceiver extends SimpleChannelInboundHandler<Context> {
+    private static class CtxReceiver extends SimpleChannelInboundHandler<ResourceInfoContext> {
 
         @Override
-        protected void messageReceived(ChannelHandlerContext ctx, Context msg) throws Exception {
+        protected void messageReceived(ChannelHandlerContext ctx, ResourceInfoContext msg) throws Exception {
             ctx.attr(RESOURCE_CTX).set(msg);
         }
     }
@@ -70,7 +70,7 @@ public class CopyResourceRouting {
 
         @Override
         protected void messageReceived(ChannelHandlerContext ctx, LastHttpContent msg) throws Exception {
-            final Context resource_ctx = ctx.attr(RESOURCE_CTX).getAndRemove();
+            final ResourceInfoContext resource_ctx = ctx.attr(RESOURCE_CTX).getAndRemove();
             final HttpHeaders headers = resource_ctx.getRoutedInfo().getRequestMsg().headers();
             final MetaDataDirective metadata_directive;
             if ("REPLACE".equalsIgnoreCase(headers.getAndConvert(HttpHeaderNames.AMZ_METADATA_DIRECTIVE))) {

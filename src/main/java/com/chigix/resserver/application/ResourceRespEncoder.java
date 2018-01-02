@@ -23,14 +23,14 @@ public class ResourceRespEncoder extends ChannelHandlerAdapter {
 
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
-        if (msg instanceof Context) {
-            encodeContext(ctx, (Context) msg, promise);
+        if (msg instanceof ResourceInfoContext) {
+            encodeContext(ctx, (ResourceInfoContext) msg, promise);
             return;
         }
         super.write(ctx, msg, promise);
     }
 
-    private void encodeContext(ChannelHandlerContext ctx, Context resource_ctx, ChannelPromise p) throws Exception {
+    private void encodeContext(ChannelHandlerContext ctx, ResourceInfoContext resource_ctx, ChannelPromise p) throws Exception {
         ctx.write(resource_ctx.getResourceResp(), p);
     }
 

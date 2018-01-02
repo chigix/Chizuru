@@ -6,7 +6,7 @@ import com.chigix.resserver.domain.model.chunk.Chunk;
 import com.chigix.resserver.domain.model.resource.ChunkedResource;
 import com.chigix.resserver.domain.model.resource.Resource;
 import com.chigix.resserver.domain.error.NoSuchBucket;
-import com.chigix.resserver.application.Context;
+import com.chigix.resserver.application.ResourceInfoContext;
 import com.chigix.resserver.application.ResourceInfoHandler;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -16,13 +16,13 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * Replace the {@link Resource} in {@link Context} from
+ * Replace the {@link Resource} in {@link ResourceInfoContext} from
  * {@link ResourceInfoHandler} with a newly created {@link ChunkedResource}.
  *
  * @author Richard Lea <chigix@zoho.com>
  */
 @ChannelHandler.Sharable
-public class PutResourceContextBuildHandler extends SimpleChannelInboundHandler<Context> {
+public class PutResourceContextBuildHandler extends SimpleChannelInboundHandler<ResourceInfoContext> {
 
     private static PutResourceContextBuildHandler instance = null;
 
@@ -40,9 +40,9 @@ public class PutResourceContextBuildHandler extends SimpleChannelInboundHandler<
     }
 
     @Override
-    protected void messageReceived(ChannelHandlerContext ctx, Context msg) throws Exception {
+    protected void messageReceived(ChannelHandlerContext ctx, ResourceInfoContext msg) throws Exception {
         final Resource prebuilt = msg.getResource();
-        Context routing_ctx = msg;
+        ResourceInfoContext routing_ctx = msg;
         final Bucket b = msg.getResource().getBucket();
         String key = msg.getResource().getKey();
         QueryStringDecoder decoder = msg.getQueryDecoder();

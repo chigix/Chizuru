@@ -1,7 +1,7 @@
 package com.chigix.resserver.endpoint.GetResource;
 
 import com.chigix.resserver.config.ApplicationContext;
-import com.chigix.resserver.application.Context;
+import com.chigix.resserver.application.ResourceInfoContext;
 import com.chigix.resserver.interfaces.handling.http.HttpHeaderNames;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandler;
@@ -19,7 +19,7 @@ import io.netty.util.CharsetUtil;
  * @author Richard Lea <chigix@zoho.com>
  */
 @ChannelHandler.Sharable
-public class AclHandler extends SimpleChannelInboundHandler<Context> {
+public class AclHandler extends SimpleChannelInboundHandler<ResourceInfoContext> {
 
     private static AclHandler instance;
 
@@ -37,7 +37,7 @@ public class AclHandler extends SimpleChannelInboundHandler<Context> {
     }
 
     @Override
-    protected void messageReceived(ChannelHandlerContext ctx, Context msg) throws Exception {
+    protected void messageReceived(ChannelHandlerContext ctx, ResourceInfoContext msg) throws Exception {
         StringBuilder sb = new StringBuilder("<AccessControlPolicy>");
         sb.append("<Owner>");
         sb.append("<ID>").append("Chizuru").append("</ID>");

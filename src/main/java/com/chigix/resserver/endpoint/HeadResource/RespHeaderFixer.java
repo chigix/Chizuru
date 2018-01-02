@@ -1,6 +1,6 @@
 package com.chigix.resserver.endpoint.HeadResource;
 
-import com.chigix.resserver.application.Context;
+import com.chigix.resserver.application.ResourceInfoContext;
 import com.chigix.resserver.domain.error.NoSuchKey;
 import com.chigix.resserver.interfaces.handling.http.HttpHeaderNames;
 import io.netty.buffer.Unpooled;
@@ -17,12 +17,12 @@ import io.netty.handler.codec.http.HttpResponse;
  * @author Richard Lea <chigix@zoho.com>
  */
 @ChannelHandler.Sharable
-class RespHeaderFixer extends SimpleChannelInboundHandler<Context> {
+class RespHeaderFixer extends SimpleChannelInboundHandler<ResourceInfoContext> {
 
     public static final ChannelHandler DEFAULT = new RespHeaderFixer();
 
     @Override
-    protected void messageReceived(ChannelHandlerContext ctx, Context msg) throws Exception {
+    protected void messageReceived(ChannelHandlerContext ctx, ResourceInfoContext msg) throws Exception {
         HttpResponse resp = msg.getResourceResp();
         resp.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.CLOSE);
         ctx.writeAndFlush(msg).addListener(ChannelFutureListener.CLOSE);

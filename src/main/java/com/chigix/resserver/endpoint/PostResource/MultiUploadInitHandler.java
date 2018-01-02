@@ -6,7 +6,7 @@ import com.chigix.resserver.domain.model.bucket.Bucket;
 import com.chigix.resserver.domain.model.resource.ChunkedResource;
 import com.chigix.resserver.domain.model.multiupload.MultipartUpload;
 import com.chigix.resserver.domain.error.NoSuchBucket;
-import com.chigix.resserver.application.Context;
+import com.chigix.resserver.application.ResourceInfoContext;
 import com.chigix.resserver.interfaces.handling.http.HttpHeaderNames;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandler;
@@ -28,7 +28,7 @@ import java.util.UUID;
  * @author Richard Lea <chigix@zoho.com>
  */
 @ChannelHandler.Sharable
-public class MultiUploadInitHandler extends SimpleChannelInboundHandler<Context> {
+public class MultiUploadInitHandler extends SimpleChannelInboundHandler<ResourceInfoContext> {
 
     private final ApplicationContext application;
 
@@ -56,7 +56,7 @@ public class MultiUploadInitHandler extends SimpleChannelInboundHandler<Context>
     }
 
     @Override
-    protected void messageReceived(ChannelHandlerContext ctx, Context msg) throws Exception {
+    protected void messageReceived(ChannelHandlerContext ctx, ResourceInfoContext msg) throws Exception {
         final AmassedResource r = new AmassedResource(msg.getResource().getKey()) {
             @Override
             public Iterator<ChunkedResource> getSubResources() {

@@ -2,7 +2,7 @@ package com.chigix.resserver.endpoint.PostResource;
 
 import com.chigix.resserver.domain.model.resource.AmassedResource;
 import com.chigix.resserver.domain.model.multiupload.MultipartUpload;
-import com.chigix.resserver.application.Context;
+import com.chigix.resserver.application.ResourceInfoContext;
 import com.chigix.resserver.interfaces.xml.XPathNode;
 import com.fasterxml.aalto.AsyncByteArrayFeeder;
 import com.fasterxml.aalto.AsyncXMLStreamReader;
@@ -15,7 +15,7 @@ import javax.xml.stream.XMLStreamReader;
  *
  * @author Richard Lea <chigix@zoho.com>
  */
-class MultipartUploadContext extends Context {
+class MultipartUploadContext extends ResourceInfoContext {
 
     private MultipartUpload upload;
 

@@ -1,6 +1,6 @@
 package com.chigix.resserver.endpoint.GetResource;
 
-import com.chigix.resserver.application.Context;
+import com.chigix.resserver.application.ResourceInfoContext;
 import com.chigix.resserver.interfaces.handling.http.HttpHeaderUtil;
 import com.chigix.resserver.interfaces.handling.http.HttpHeaderUtil.Range;
 import io.netty.handler.codec.http.HttpHeaderNames;
@@ -12,11 +12,11 @@ import java.util.LinkedList;
  *
  * @author Richard Lea <chigix@zoho.com>
  */
-public class ResourceContext extends Context {
+public class ResourceContext extends ResourceInfoContext {
 
     private final HttpHeaderUtil.Range range;
 
-    public ResourceContext(Context src) throws HttpHeaderUtil.InvalidRangeHeader {
+    public ResourceContext(ResourceInfoContext src) throws HttpHeaderUtil.InvalidRangeHeader {
         super(src);
         final CharSequence range_string = getRoutedInfo().getRequestMsg().headers().get(HttpHeaderNames.RANGE);
         HttpHeaderUtil.Range[] raws = new HttpHeaderUtil.Range[0];

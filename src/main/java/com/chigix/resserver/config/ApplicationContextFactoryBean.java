@@ -20,14 +20,14 @@ import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.chigix.resserver.domain.EntityManager;
 import io.netty.channel.ChannelHandler;
+import javax.sql.DataSource;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.jdbc.datasource.init.DatabasePopulator;
+import org.springframework.jdbc.datasource.init.DatabasePopulatorUtils;
 
 /**
  * BeanFactory that enables injection of configured {@link ApplicationContext}.
- *
- * @TODO Take consideration about the configurable properties for testing
- * support.
  *
  * @author Richard Lea <chigix@zoho.com>
  */
@@ -85,6 +85,11 @@ public class ApplicationContextFactoryBean implements FactoryBean<ApplicationCon
     @Override
     public ApplicationContext getObject() throws Exception {
         Utils.clearUploadingTempDb(dataDir);
+        DatabasePopulatorUtils.execute(
+                this.springContext.getBean(
+                        "datasource-upload-init", DatabasePopulator.class),
+                this.springContext.getBean(
+                        "datasource-upload", DataSource.class));
         final Configuration conf = initConfiguration();
         Utils.checkChunksDir(chunksDir);
         final String request_id_header_name = Long.toHexString(Double.doubleToLongBits(Math.random()));

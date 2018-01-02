@@ -3,7 +3,7 @@ package com.chigix.resserver.endpoint.GetResource;
 import com.chigix.resserver.config.ApplicationContext;
 import com.chigix.resserver.domain.Lifecycle;
 import com.chigix.resserver.domain.error.NoSuchKey;
-import com.chigix.resserver.application.Context;
+import com.chigix.resserver.application.ResourceInfoContext;
 import com.chigix.resserver.application.ExtractGetResponseHandler;
 import com.chigix.resserver.application.ResourceInfoHandler;
 import com.chigix.resserver.application.ResourceRespEncoder;
@@ -46,9 +46,9 @@ public class Routing extends RoutingConfig.GET {
                 ResourceRespEncoder.getInstance(),
                 ExtractGetResponseHandler.getInstance(),
                 ResourceInfoHandler.getInstance(application),
-                new SimpleMessageRouter<Context>(false, "GetResourceParamRouter") {
+                new SimpleMessageRouter<ResourceInfoContext>(false, "GetResourceParamRouter") {
             @Override
-            protected ChannelPipeline dispatch(ChannelHandlerContext ctx, Context msg, Map<String, ChannelPipeline> routings) throws Exception {
+            protected ChannelPipeline dispatch(ChannelHandlerContext ctx, ResourceInfoContext msg, Map<String, ChannelPipeline> routings) throws Exception {
                 if (application.getEntityManager().getEntityState(msg.getResource()) == Lifecycle.NEW) {
                     msg.getRoutedInfo().deny();
                     throw new NoSuchKey(msg.getResource().getKey());

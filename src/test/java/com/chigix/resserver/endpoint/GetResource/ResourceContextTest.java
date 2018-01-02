@@ -1,7 +1,7 @@
 package com.chigix.resserver.endpoint.GetResource;
 
 import com.chigix.resserver.mybatis.bean.ChunkedResourceBean;
-import com.chigix.resserver.application.Context;
+import com.chigix.resserver.application.ResourceInfoContext;
 import com.chigix.resserver.interfaces.handling.http.HttpHeaderUtil.InvalidRangeHeader;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.DefaultFullHttpRequest;
@@ -86,7 +86,7 @@ public class ResourceContextTest {
     private ResourceContext buildContextTesting(HttpRequest http_req, String chunksize) throws InvalidRangeHeader {
         ChunkedResourceBean chunk_resource = new ChunkedResourceBean("TESTING_KEY", UUID.randomUUID().toString());
         chunk_resource.setSize(chunksize);
-        return new ResourceContext(new Context(new HttpRouted(http_req) {
+        return new ResourceContext(new ResourceInfoContext(new HttpRouted(http_req) {
             @Override
             public Map<String, Object> decodedParams() {
                 return new HashMap<>();

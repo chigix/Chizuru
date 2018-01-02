@@ -1,6 +1,6 @@
 package com.chigix.resserver.endpoint.PutResource;
 
-import com.chigix.resserver.application.Context;
+import com.chigix.resserver.application.ResourceInfoContext;
 import com.chigix.resserver.config.ApplicationContext;
 import com.chigix.resserver.domain.model.resource.ChunkedResource;
 import com.chigix.resserver.application.ResourceInfoHandler;
@@ -49,9 +49,9 @@ public class Routing extends RoutingConfig.PUT {
         final DefaultExceptionForwarder forwarder = new DefaultExceptionForwarder();
         pipeline.addLast(ResourceInfoHandler.getInstance(application),
                 PutResourceContextBuildHandler.getInstance(application),
-                new SimpleIntervalRouter<Context, LastHttpContent>(false, "PutResourceParamRouter") {
+                new SimpleIntervalRouter<ResourceInfoContext, LastHttpContent>(false, "PutResourceParamRouter") {
             @Override
-            protected ChannelPipeline routeBegin(ChannelHandlerContext ctx, Context msg, Map<String, ChannelPipeline> routingPipelines) throws Exception {
+            protected ChannelPipeline routeBegin(ChannelHandlerContext ctx, ResourceInfoContext msg, Map<String, ChannelPipeline> routingPipelines) throws Exception {
                 HttpHeaders headers = msg.getRoutedInfo().getRequestMsg().headers();
                 if (headers.contains(HttpHeaderNames.AMZ_COPY_RESOURCE)) {
                     return routingPipelines.get("PUT_RESOURCE_COPY");

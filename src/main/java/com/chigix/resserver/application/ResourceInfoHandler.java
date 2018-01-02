@@ -59,7 +59,7 @@ public class ResourceInfoHandler extends SimpleChannelInboundHandler<HttpRouted>
             msg.deny();
             throw ex;
         }
-        Context routing_ctx = new Context(msg, r);
+        ResourceInfoContext routing_ctx = new ResourceInfoContext(msg, r);
         ctx.fireChannelRead(routing_ctx);
     }
 
