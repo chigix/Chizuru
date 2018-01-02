@@ -1,0 +1,116 @@
+> GET /?fetch-owner=true&list-type=2&max-keys=1000 HTTP/1.1
+> Host: oos-for-learning.s3-ap-northeast-1.amazonaws.com
+> Authorization: AWS4-HMAC-SHA256 ####
+> X-Amz-Content-Sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+> X-Amz-Date: 20180102T153955Z
+> User-Agent: Minio (windows; amd64) minio-go/2.0.2 mc/2016-12-09T18:23:19Z
+> Expect: 100-continue
+> Accept: */*
+
+< HTTP/1.1 200 OK
+< x-amz-id-2: 2B0xtwp0RYp6PzSf032XyBu6gePSRw5SYnsD2175jlCZkCKvQ0irbPwjC/feGCc+numIyxoJUGE=
+< x-amz-request-id: D95325A5704281A2
+< Date: Tue, 02 Jan 2018 15:40:10 GMT
+< x-amz-bucket-region: ap-northeast-1
+< Content-Type: application/xml
+< Transfer-Encoding: chunked
+< Connection: close
+< Server: AmazonS3
+
+<?xml version="1.0" encoding="UTF-8"?>
+<ListBucketResult
+	xmlns="http://s3.amazonaws.com/doc/2006-03-01/">
+	<Name>oos-for-learning</Name>
+	<Prefix></Prefix>
+	<KeyCount>8</KeyCount>
+	<MaxKeys>1000</MaxKeys>
+	<IsTruncated>false</IsTruncated>
+	<Contents>
+		<Key>Gatebox - Virtual Home Robot [PV]_english.mp4</Key>
+		<LastModified>2017-12-04T12:10:48.000Z</LastModified>
+		<ETag>&quot;f4b9861d73b47f3d81bb7ca73892adf6&quot;</ETag>
+		<Size>6157050</Size>
+		<Owner>
+			<ID>####</ID>
+			<DisplayName>chigix</DisplayName>
+		</Owner>
+		<StorageClass>STANDARD</StorageClass>
+	</Contents>
+	<Contents>
+		<Key>bankai/</Key>
+		<LastModified>2017-01-01T14:23:32.000Z</LastModified>
+		<ETag>&quot;d41d8cd98f00b204e9800998ecf8427e&quot;</ETag>
+		<Size>0</Size>
+		<Owner>
+			<ID>####</ID>
+			<DisplayName>chigix</DisplayName>
+		</Owner>
+		<StorageClass>STANDARD</StorageClass>
+	</Contents>
+	<Contents>
+		<Key>bankai/Gatebox - Virtual Home Robot [PV]_english.mp4</Key>
+		<LastModified>2018-01-02T15:39:38.000Z</LastModified>
+		<ETag>&quot;f4b9861d73b47f3d81bb7ca73892adf6&quot;</ETag>
+		<Size>6157050</Size>
+		<Owner>
+			<ID>e0455b7089090a533ff84adf12e4d26b1bec51a6e1b203301749b1e640895b59</ID>
+			<DisplayName>chigix</DisplayName>
+		</Owner>
+		<StorageClass>STANDARD</StorageClass>
+	</Contents>
+	<Contents>
+		<Key>build.log</Key>
+		<LastModified>2017-01-12T09:25:14.000Z</LastModified>
+		<ETag>&quot;bee9cd71554a137502ad2054d90c5e13&quot;</ETag>
+		<Size>62312</Size>
+		<Owner>
+			<ID>####</ID>
+			<DisplayName>chigix</DisplayName>
+		</Owner>
+		<StorageClass>STANDARD</StorageClass>
+	</Contents>
+	<Contents>
+		<Key>new-empty.log</Key>
+		<LastModified>2017-08-18T15:59:56.000Z</LastModified>
+		<ETag>&quot;d41d8cd98f00b204e9800998ecf8427e&quot;</ETag>
+		<Size>0</Size>
+		<Owner>
+			<ID>####</ID>
+			<DisplayName>chigix</DisplayName>
+		</Owner>
+		<StorageClass>STANDARD</StorageClass>
+	</Contents>
+	<Contents>
+		<Key>new-folder/</Key>
+		<LastModified>2017-08-18T16:04:18.000Z</LastModified>
+		<ETag>&quot;d41d8cd98f00b204e9800998ecf8427e&quot;</ETag>
+		<Size>0</Size>
+		<Owner>
+			<ID>####</ID>
+			<DisplayName>chigix</DisplayName>
+		</Owner>
+		<StorageClass>STANDARD</StorageClass>
+	</Contents>
+	<Contents>
+		<Key>p086-090.pdf</Key>
+		<LastModified>2016-12-20T16:44:41.000Z</LastModified>
+		<ETag>&quot;994f096f47480a2fd8e3d066536951f8&quot;</ETag>
+		<Size>6583194</Size>
+		<Owner>
+			<ID>####</ID>
+			<DisplayName>chigix</DisplayName>
+		</Owner>
+		<StorageClass>STANDARD</StorageClass>
+	</Contents>
+	<Contents>
+		<Key>video.mp4</Key>
+		<LastModified>2017-02-11T14:58:01.000Z</LastModified>
+		<ETag>&quot;92a4a34286e2cec4091bdbcbb7a5c2c4&quot;</ETag>
+		<Size>3885299</Size>
+		<Owner>
+			<ID>####</ID>
+			<DisplayName>chigix</DisplayName>
+		</Owner>
+		<StorageClass>STANDARD</StorageClass>
+	</Contents>
+</ListBucketResult>

@@ -84,6 +84,20 @@ public class ResourceSpecification implements SpecificationFactory {
         return spec;
     }
 
+    @Override
+    public QueryCriteriaSpecification<Resource, ResourceExample.Criteria>
+            keyStartWith(final String prefix) {
+        return new QueryCriteriaSpecification<Resource, ResourceExample.Criteria>() {
+            @Override
+            public ResourceExample.Criteria appendCriteria(ResourceExample.Criteria criteria) {
+                if (prefix == null || prefix.length() < 1) {
+                    return criteria;
+                }
+                return criteria.andKeyLike(prefix + "%");
+            }
+        };
+    }
+
     public static class byParentResource implements IndexOfParentOffset {
 
         private final AmassedResource parentResource;

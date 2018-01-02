@@ -32,4 +32,6 @@ public interface SpecificationFactory {
     SubresourceSpecification subresourceInfo(AmassedResource parent,
             BigInteger range_start, BigInteger range_end,
             String index_in_parent);
+
+    <T extends Specification<Resource>> T keyStartWith(String prefix);
 }

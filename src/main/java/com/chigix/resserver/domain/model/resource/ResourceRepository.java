@@ -27,9 +27,8 @@ public interface ResourceRepository {
      * @param specification
      * @param limit
      * @return
-     * @throws NoSuchBucket
      */
-    Iterator<Resource> fetchResources(Specification<Resource> specification, int limit) throws NoSuchBucket;
+    Iterator<Resource> fetchResources(Specification<Resource> specification, int limit);
 
     void removeResource(Resource resource) throws NoSuchKey, NoSuchBucket;
 

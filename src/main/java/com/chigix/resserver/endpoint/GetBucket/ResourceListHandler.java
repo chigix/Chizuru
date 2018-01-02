@@ -1,10 +1,10 @@
 package com.chigix.resserver.endpoint.GetBucket;
 
 import com.chigix.resserver.config.ApplicationContext;
+import com.chigix.resserver.domain.Specification;
 import com.chigix.resserver.domain.error.InvalidArgument;
 import com.chigix.resserver.domain.model.bucket.Bucket;
 import com.chigix.resserver.domain.model.resource.Resource;
-import com.chigix.resserver.domain.error.NoSuchBucket;
 import com.chigix.resserver.domain.model.resource.SpecificationFactory;
 import com.chigix.resserver.interfaces.handling.http.HttpHeaderNames;
 import com.chigix.resserver.interfaces.handling.http.HttpHeaderUtil;
@@ -62,7 +62,6 @@ public class ResourceListHandler extends SimpleChannelInboundHandler<Context> {
     /**
      * Response bucket objects list.
      *
-     * @TODO Support searching key under a specified bucket.
      * @TODO ONLY SUPPORT standard storage class.
      *
      * @param ctx
@@ -121,26 +120,19 @@ public class ResourceListHandler extends SimpleChannelInboundHandler<Context> {
                                 throw e;
                             }
                         }
-                        final Iterator<Resource> resources;
-                        try {
-                            if (listCtx.continuationToken == null) {
-                                resources = application.getEntityManager()
-                                        .getResourceRepository()
-                                        .fetchResources(
-                                                resourceSpecifications.bucketIs(route_ctx.getTargetBucket()),
-                                                listCtx.maxKeys + 1);
-                            } else {
-                                resources = application.getEntityManager()
-                                        .getResourceRepository()
-                                        .fetchResources(
-                                                resourceSpecifications.bucketIs(route_ctx.getTargetBucket())
-                                                        .and(resourceSpecifications.continuateFrom(listCtx.nextContinuationToken)),
-                                                listCtx.maxKeys + 1);
-                            }
-                        } catch (NoSuchBucket ex) {
-                            setStream(new ClosedInputStream());
-                            return super.read();
+                        Specification<Resource> resourceSpecs = resourceSpecifications
+                                .bucketIs(route_ctx.getTargetBucket())
+                                .and(resourceSpecifications.keyStartWith(listCtx.prefix));
+                        if (listCtx.continuationToken != null) {
+                            resourceSpecs.and(resourceSpecifications
+                                    .continuateFrom(listCtx.nextContinuationToken));
                         }
+                        final Iterator<Resource> resources;
+                        resources = application.getEntityManager()
+                                .getResourceRepository()
+                                .fetchResources(
+                                        resourceSpecs,
+                                        listCtx.maxKeys + 1);
                         setStream(new IteratorInputStream<Resource>(resources) {
                             @Override
                             protected InputStream inputStreamProvider(Resource item) throws NoSuchElementException {
