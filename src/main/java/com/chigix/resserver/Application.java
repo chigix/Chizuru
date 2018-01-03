@@ -123,7 +123,9 @@ public class Application {
             public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
                 if (cause instanceof IOException) {
                     if (ctx.channel().isOpen()) {
-                        LOG.warn(cause.getMessage() + ", Channel is not closed.");
+                        LOG.warn(cause.getMessage()
+                                + ", Channel[" + ctx.channel().id() + "] "
+                                + "is not closed.");
                     }
                     ctx.close();
                     return;
