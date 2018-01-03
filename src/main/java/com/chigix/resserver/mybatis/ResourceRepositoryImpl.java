@@ -289,4 +289,12 @@ public class ResourceRepositoryImpl implements ResourceRepositoryExtend {
         chunkMapper.insert(record);
     }
 
+    @Override
+    public String markContinuationInFetchList(Iterator<Resource> fetched, Resource continuePos) {
+        if (continuePos instanceof ResourceExtension) {
+            return ((ResourceExtension) continuePos).getKeyHash();
+        }
+        throw new RuntimeException("Unexpected!! Unpersisted Subresource Domain Object was passed.");
+    }
+
 }

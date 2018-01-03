@@ -125,7 +125,7 @@ public class ResourceListHandler extends SimpleChannelInboundHandler<Context> {
                                 .and(resourceSpecifications.keyStartWith(listCtx.prefix));
                         if (listCtx.continuationToken != null) {
                             resourceSpecs.and(resourceSpecifications
-                                    .continuateFrom(listCtx.nextContinuationToken));
+                                    .continuateFrom(listCtx.continuationToken));
                         }
                         final Iterator<Resource> resources;
                         resources = application.getEntityManager()
@@ -135,10 +135,13 @@ public class ResourceListHandler extends SimpleChannelInboundHandler<Context> {
                                         listCtx.maxKeys + 1);
                         setStream(new IteratorInputStream<Resource>(resources) {
                             @Override
-                            protected InputStream inputStreamProvider(Resource item) throws NoSuchElementException {
+                            protected InputStream inputStreamProvider(Resource item)
+                                    throws NoSuchElementException {
                                 if (listCtx.keyCountTotal >= listCtx.maxKeys) {
                                     listCtx.isTruncated = true;
-                                    listCtx.nextContinuationToken = item.getVersionId();
+                                    listCtx.nextContinuationToken = application
+                                            .getEntityManager().getResourceRepository()
+                                            .markContinuationInFetchList(resources, item);
                                     return new ClosedInputStream();
                                 }
                                 byte_charging.setStream(new ByteArrayOutputStream());

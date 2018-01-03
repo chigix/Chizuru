@@ -30,6 +30,17 @@ public interface ResourceRepository {
      */
     Iterator<Resource> fetchResources(Specification<Resource> specification, int limit);
 
+    /**
+     * Marks a resource in a fetched list relative to the iterator given as a
+     * continuation point and returns the continuation token for next fetching
+     * which could start from this target resource.
+     *
+     * @param fetched
+     * @param continuePos
+     * @return
+     */
+    String markContinuationInFetchList(Iterator<Resource> fetched, Resource continuePos);
+
     void removeResource(Resource resource) throws NoSuchKey, NoSuchBucket;
 
     /**
