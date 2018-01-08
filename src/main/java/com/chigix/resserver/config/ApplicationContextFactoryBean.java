@@ -94,6 +94,12 @@ public class ApplicationContextFactoryBean implements FactoryBean<ApplicationCon
         Utils.checkChunksDir(chunksDir);
         final String request_id_header_name = Long.toHexString(Double.doubleToLongBits(Math.random()));
         ((ChunkRepositoryImpl) entityManager.getChunkRepository()).setAspectForNewChunk(new ChunkRepositoryImpl(null) {
+            /**
+             * @deprecated remove this override with a component injection
+             * through spring instead. For this problem, a special component for
+             * serving chunk file stream should be provided and host by spring
+             * container.
+             */
             @Override
             public Chunk newChunk(String contentHash, int chunk_size) {
                 return new Chunk(contentHash, chunk_size, conf.getCurrentNodeId()) {

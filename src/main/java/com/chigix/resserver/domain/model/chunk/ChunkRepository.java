@@ -6,6 +6,17 @@ package com.chigix.resserver.domain.model.chunk;
  */
 public interface ChunkRepository {
 
+    /**
+     * @deprecated Remove this method, and the usage in endpoint could be the
+     * primitive construction. The stream provide when construct chunk object in
+     * repository should be delegated to spring with corresponding stream
+     * provide component.
+     *
+     * @param contentHash
+     * @param chunk_size
+     * @return
+     */
+    @Deprecated
     Chunk newChunk(String contentHash, int chunk_size);
 
     // INCREASE REFERENCE COUNT
